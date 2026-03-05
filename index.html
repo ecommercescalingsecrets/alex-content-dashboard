@@ -64,6 +64,19 @@
         .empty-schedule { text-align: center; color: #64748b; padding: 2rem; font-style: italic; }
         .day-column.today { background: #1e40af; }
         .day-column.today .day-header { color: #93c5fd; }
+        .feedback-section { margin-top: 1rem; }
+        .btn-feedback { background: #334155; color: #94a3b8; }
+        .btn-feedback:hover { background: #475569; }
+        .feedback-area { margin-top: 0.75rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; }
+        .feedback-form { margin-bottom: 1rem; }
+        .feedback-textarea { width: 100%; background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.75rem; color: #e2e8f0; font-family: inherit; font-size: 0.9rem; resize: vertical; margin-bottom: 0.5rem; }
+        .feedback-textarea::placeholder { color: #94a3b8; }
+        .feedback-textarea:focus { outline: none; border-color: #60a5fa; }
+        .btn-save-feedback { background: #2563eb; color: white; }
+        .feedback-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .feedback-item { background: #334155; border-radius: 6px; padding: 0.75rem; }
+        .feedback-text { color: #e2e8f0; margin-bottom: 0.5rem; }
+        .feedback-date { color: #94a3b8; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -221,6 +234,24 @@
                         ${item.status === 'posted' ? `<span class="meta">Posted ${item.postedAt ? new Date(item.postedAt).toLocaleString() : ''}</span>` : ''}
                         <button class="btn btn-delete" onclick="deletePost('${item.id}')">🗑</button>
                     </div>
+                    
+                    <div class="feedback-section">
+                        <button class="btn btn-feedback" onclick="toggleFeedback('${item.id}')">💬 Feedback${item.feedbackHistory && item.feedbackHistory.length > 0 ? ` (${item.feedbackHistory.length})` : ''}</button>
+                        <div class="feedback-area" id="feedback-area-${item.id}" style="display: none;">
+                            <div class="feedback-form">
+                                <textarea id="feedback-text-${item.id}" class="feedback-textarea" rows="3" placeholder="What would you change about this post?"></textarea>
+                                <button class="btn btn-save-feedback" onclick="saveFeedback('${item.id}')">Save Feedback</button>
+                            </div>
+                            <div class="feedback-list" id="feedback-list-${item.id}">
+                                ${item.feedbackHistory && item.feedbackHistory.length > 0 ? item.feedbackHistory.map(fb => `
+                                    <div class="feedback-item">
+                                        <div class="feedback-text">${escapeHtml(fb.text)}</div>
+                                        <div class="feedback-date">${new Date(fb.createdAt).toLocaleString()}</div>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                        </div>
+                    </div>
                     <div class="meta">Target: ${item.target || 'Solo founders'} · Created: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Unknown'}</div>
                 </div>
             `).join('');
@@ -312,6 +343,44 @@
             await fetch(`/api/content/${id}`, { method: 'DELETE' });
             showToast('🗑 Deleted');
             loadContent();
+        }
+
+        function toggleFeedback(id) {
+            const feedbackArea = document.getElementById(`feedback-area-${id}`);
+            if (feedbackArea.style.display === 'none') {
+                feedbackArea.style.display = 'block';
+            } else {
+                feedbackArea.style.display = 'none';
+            }
+        }
+
+        async function saveFeedback(id) {
+            const textarea = document.getElementById(`feedback-text-${id}`);
+            const feedbackText = textarea.value.trim();
+            
+            if (!feedbackText) {
+                showToast('❌ Please enter feedback text', '#dc2626');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/content/${id}/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ feedback: feedbackText })
+                });
+                
+                if (res.ok) {
+                    showToast('💬 Feedback saved!');
+                    textarea.value = ''; // Clear the textarea
+                    loadContent(); // Refresh to show the new feedback
+                } else {
+                    const error = await res.json();
+                    showToast('❌ ' + error.error, '#dc2626');
+                }
+            } catch (e) {
+                showToast('❌ Error saving feedback', '#dc2626');
+            }
         }
 
         // Filter buttons

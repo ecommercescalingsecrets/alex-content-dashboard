@@ -276,6 +276,7 @@ NOW GO PRINT 🔥`,
 Object.values(contentDatabase).forEach(item => {
     if (!item.hasOwnProperty('scheduledAt')) item.scheduledAt = null;
     if (!item.hasOwnProperty('scheduledStatus')) item.scheduledStatus = null;
+    if (!item.hasOwnProperty('feedbackHistory')) item.feedbackHistory = [];
 });
 
 // Scheduler - check every minute for content that should be posted
@@ -371,6 +372,24 @@ app.post('/api/content/:id/schedule', (req, res) => {
     item.scheduledAt = scheduledAt;
     item.scheduledStatus = 'scheduled';
     
+    res.json(item);
+});
+
+app.post('/api/content/:id/feedback', (req, res) => {
+    const item = contentDatabase[req.params.id];
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    
+    const { feedback } = req.body;
+    if (!feedback || feedback.trim() === '') {
+        return res.status(400).json({ error: 'Feedback text is required' });
+    }
+    
+    const feedbackEntry = {
+        text: feedback.trim(),
+        createdAt: new Date().toISOString()
+    };
+    
+    item.feedbackHistory.push(feedbackEntry);
     res.json(item);
 });
 
