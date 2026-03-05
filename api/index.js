@@ -27,15 +27,15 @@ let contentDatabase = {
         mediaType: "video",
         content: `This brand is printing.
 
-PureLife Organics. 41 days running this exact ad. They're not stopping because it's working.
+PureLife Organics. 41 days on this exact ad.
 
-Look at this shit. UGC. Woman lifting her shirt. No fancy studio. No $10K production. Just a real person with a real gut problem.
+UGC. Woman lifting her shirt. No fancy fucking studio. Just a real person with a real gut problem.
 
-The hook — "Doing This Deflated My Cortisol Belly" — is fucking smart. Nobody knows what cortisol is but it sounds scientific enough to make you stop scrolling. And "deflated" is way better than "lose weight." It's specific. It's visual. You can feel it.
+The hook — "Doing This Deflated My Cortisol Belly" — is smart. Nobody knows what cortisol is but it sounds scientific enough to stop the scroll. And "deflated" hits different than "lose weight." It's visual. You can feel it.
 
-They niched down HARD. This isn't for "people who want to lose weight." This is for stressed out women 40+ who've tried everything and still have that stubborn belly. That specificity is why their CPMs are probably stupid low.
+They niched down HARD. Stressed women 40+ who've tried everything. That specificity is why their CPMs are stupid low.
 
-Cortisol is the new gut health. Every supplement brand should be testing this angle yesterday.
+Cortisol is the new gut health. Test this angle yesterday.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -51,19 +51,17 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-Happy Mammoth. "Hormone Harmony." Running 91-score ads targeting women 40+ going through menopause.
+Happy Mammoth. "Hormone Harmony." Targeting women 40+ in menopause.
 
-Read that copy. "At 52, I got my figure back. It's been 12 years since I've felt this good in my body."
+"At 52, I got my figure back." That's not an ad. That's a testimonial that hits you in the chest.
 
-That's not an ad. That's a fucking testimonial that hits you in the chest. Every woman over 45 just stopped scrolling.
+Product shot with REAL stats. Not "clinically proven" bullshit. Actual numbers. They let the results sell it.
 
-Product shot with REAL stats. Not "clinically proven" bullshit. Actual numbers — weight loss, energy, bloating. They let the results sell it.
+Pink branding. Clean. Feminine. Looks like something your girlfriend would recommend — not a supplement company. That's intentional.
 
-Pink branding. Clean. Feminine. Doesn't look like a supplement — looks like something your girlfriend would recommend. That's intentional. They're building a lifestyle brand, not a pill company.
+"Hormone Harmony" as a product name? Two words that tell you exactly what it does. Zero confusion.
 
-And "Hormone Harmony" as a product name? Genius. It tells you EXACTLY what it does in two words. No confusion. No explanation needed.
-
-The menopause supplement market is absolutely massive and most brands are running garbage creative. Happy Mammoth gets it — lead with the transformation, not the ingredients.
+Menopause market is massive. Most brands run garbage creative. Lead with the transformation, not the ingredients.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -77,17 +75,15 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-O Positiv with URO. A vaginal health vitamin. Yeah, you read that right.
+O Positiv. URO. A vaginal health vitamin.
 
-"I used to avoid sex. Now I want him all the time." That's the actual ad copy. On Facebook. And it's working.
+"I used to avoid sex. Now I want him all the time." That's the ad copy. On Facebook. And it's working.
 
-Why? Because everyone else in this space is being clinical and boring. "Supports vaginal pH balance." Cool, nobody gives a shit. O Positiv went straight for the emotional outcome. Better sex life. Period.
+Everyone else in this space says "supports vaginal pH balance." Nobody gives a shit. O Positiv went straight for the emotional outcome. Better sex life.
 
-UGC selfie. Woman holding the product, smiling. Bright pink bottle. Looks like she's recommending it to her best friend, not selling you something.
+UGC selfie. Woman holding the product. Bright pink bottle. Looks like a friend recommending it, not a brand selling you something.
 
-This is a masterclass in going where other brands won't. Most supplement companies would never run copy this direct. And that's exactly why it works — it cuts through all the safe, sanitized garbage in the feed.
-
-The women's health supplement space is wide open for brands willing to actually talk like real people. If your ad copy reads like a doctor's note, you've already lost.
+Women's health is wide open for brands willing to talk like real people. If your ad copy reads like a doctor's note, you've already lost.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -102,19 +98,17 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-Purely Nutrient. Black seed oil. They found an angle nobody else is using.
+Purely Nutrient. Black seed oil.
 
-"Watch what happens when you put a parasite in contact with Oregano Oil." Actual microscope footage of a parasite dying. On your feed. While you're eating breakfast.
+"Watch what happens when you put a parasite in contact with Oregano Oil." Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
 
-Disgusting? Yes. Scroll-stopping? Absolutely.
+You can't NOT watch it. And once you're watching a parasite squirm, you're buying whatever kills it.
 
-This is the gross-out hook done perfectly. You can't NOT watch it. And once you're watching a parasite squirm under a microscope, you're 100% buying whatever kills it.
+The real play — they're not even selling oregano oil. They're selling black seed oil. The parasite video is just the hook. Bait and switch but make it educational.
 
-But here's the real play — they're not even selling oregano oil. They're selling black seed oil with higher thymoquinone concentration. The parasite video is just the hook to get you in the door. Bait and switch but make it educational.
+Parasite cleanse market is blowing up. People are convinced they have parasites (thanks TikTok). Smart brands are riding that wave.
 
-The gut health / parasite cleanse market is blowing up right now. People are convinced they have parasites (thanks TikTok). Smart brands are riding that wave hard.
-
-If you're in the supplement space and not testing a "what's living inside you" angle... you're sleeping.
+Test a "what's living inside you" angle. You're sleeping on it.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -128,17 +122,17 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-Dr. Blane Schilling. 200+ knee replacements. Full scrubs. Hospital hallway. And he's telling you surgery might not be the answer.
+Dr. Blane Schilling. 200+ knee replacements. Full scrubs. Hospital hallway.
 
-"For years, I believed it was the right thing to do..."
+And he's telling you surgery might not be the answer.
 
-A surgeon telling you NOT to get surgery. That's the hook. That's the whole ad. Your brain short-circuits because it goes against everything you'd expect.
+"For years, I believed it was the right thing to do..." A surgeon saying NOT to get surgery. Your brain short-circuits. Goes against everything you'd expect.
 
-This is authority marketing at its absolute peak. Real doctor. Real credentials. Real setting. And the contrarian angle — the surgeon who changed his mind — makes it impossible to ignore.
+Authority marketing at its peak. Real doctor. Real setting. Contrarian angle. Impossible to ignore.
 
-The ad doesn't even need to be good after the hook. You're already in. You're already thinking "wait, what does he recommend instead?"
+After that hook the ad doesn't even need to be good. You're already thinking "wait, what does he recommend instead?"
 
-If you're selling a joint supplement and you're not using doctor authority content, you're fighting with one hand tied behind your back. Find a real practitioner. Put them in scrubs. Give them a contrarian take. Let them sell.
+Selling a joint supplement without doctor authority content? One hand tied behind your back.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -153,17 +147,15 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-SereneSkincare. PDRN patches. Anti-aging but with a twist.
+SereneSkincare. PDRN patches.
 
-"I'm 42 and people think I'm in my early 30s." Five stars. Testimonial lead. Nothing fancy.
+"I'm 42 and people think I'm in my early 30s." Testimonial lead. Simple.
 
-But here's what's smart — PDRN. Most people have never heard of it. That's the secret weapon. It's not retinol. It's not collagen. It's something NEW. And "new" in skincare is crack for women scrolling Facebook at 10pm.
+PDRN. Most people have never heard of it. It's not retinol. It's not collagen. It's NEW. And "new" in skincare is crack for women scrolling Facebook at 10pm.
 
-The "secret weapon" framing turns a random ingredient into something exclusive. Like she found a cheat code nobody else knows about.
+Patches as delivery? Genius. Not another cream or serum. A patch feels medical. Feels like it actually does something.
 
-Patches as a delivery mechanism is also genius. It's different. It's visual. It's not another cream or serum. People are tired of those. A patch feels medical. Feels serious. Feels like it actually does something.
-
-Anti-aging is a $60B+ market and it's crowded as hell. But if you find a novel mechanism — something people haven't seen 10,000 times — you can still carve out space fast.
+Anti-aging is a $60B market and crowded as hell. But find a novel mechanism people haven't seen 10,000 times and you carve out space fast.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -178,17 +170,15 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-FemiClear. 34 days running. Doctor authority + embarrassing health problem = unstoppable combo.
+FemiClear. 34 days running. Selling a herpes treatment. On Facebook. With a woman in a lab coat.
 
-"Over 90% of users reported less severe symptoms." They're selling a herpes treatment. On Facebook. With a woman in a lab coat.
+Most brands wouldn't touch this. That's exactly why FemiClear is crushing it. Zero creative competition because everyone's too scared.
 
-Most brands wouldn't touch this niche with a ten-foot pole. And that's exactly why FemiClear is crushing it. Zero competition on the creative side because everyone else is too scared to run ads about it.
+"Before you panic... watch this." That hook is doing therapy and selling product at the same time.
 
-Think about the person seeing this ad. They've been too embarrassed to go to the pharmacy. Too ashamed to ask their doctor. And here's a solution showing up in their feed that looks clinical and legitimate.
+The doctor figure removes the shame. Makes it medical, not personal. The person seeing this ad has been too embarrassed to go to the pharmacy. And here's a solution in their feed that looks legitimate.
 
-The doctor/authority figure removes the shame. Makes it feel medical, not personal. "Before you panic... watch this" — that hook is doing therapy and selling product at the same time.
-
-Taboo health niches are goldmines if you have the balls to run the ads. Less competition. Desperate buyers. High LTV because they NEED the product.
+Taboo health niches are goldmines. Less competition. Desperate buyers. High LTV because they NEED the product.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -202,17 +192,17 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-Savanna Skin. Tanning gummies. A supplement that gives you a tan without the sun.
+Savanna Skin. Tanning gummies. Get a tan without the sun.
 
-Look at this creative. Woman laying in bed, tanned, with cheeky text written on her back. It's fun. It's sexy. It doesn't feel like an ad at all — it feels like a meme your friend sent you.
+Woman laying in bed, tanned, cheeky text on her back. Doesn't feel like an ad. Feels like a meme your friend sent you.
 
-That's the whole play. In a feed full of "CLINICAL STUDIES SHOW" and "DOCTOR RECOMMENDED" bullshit, this looks like entertainment. And entertainment gets engagement.
+In a feed full of "CLINICAL STUDIES SHOW" bullshit, this looks like entertainment. Entertainment gets engagement.
 
-Tanning gummies are a perfect DTC product. Consumable. Repeat purchase. Massive TAM (every woman who wants a tan). Low COGS. And the before/after content practically makes itself.
+Perfect DTC product. Consumable. Repeat purchase. Massive TAM. Low COGS. Before/after content makes itself.
 
-The branding is smart too. Brown pouch, minimal design. Looks premium. Looks Instagram-worthy. She'll post it on her story. Free marketing.
+Brown pouch. Minimal design. Instagram-worthy. She'll post it on her story. Free marketing.
 
-Novel product formats win on Facebook. Nobody's scrolling past "gummies that make you tan." It's too weird NOT to click.
+Nobody's scrolling past "gummies that make you tan." Too weird NOT to click.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -230,15 +220,13 @@ Emunah Beauty. Hair vitamins. But the ad isn't from the brand — it's from a "C
 
 "I've tested hundreds of hair vitamins. Here are the top 5 that actually work."
 
-This is the listicle authority play. And it's one of the most effective formats on Facebook right now. Here's why:
+Doesn't feel like an ad. Feels like expert advice. You trust it immediately.
 
-It doesn't feel like an ad. It feels like expert advice. A specialist who's tested everything is telling you what actually works. You trust it immediately.
+Clean creative. Split layout — problem on the left, solution on the right. Your eye goes straight to "which ones made the cut?"
 
-The creative is clean as hell too. Split layout — problem on the left (thinning hair photo), solution on the right (list format). Your eye goes straight to "which ones made the cut?"
+This isn't even Emunah's page running the ad. It's the specialist's page. Brand pays the expert, expert recommends the product, customer trusts the expert. Everyone wins.
 
-And notice — this isn't even Emunah's page running the ad. It's the specialist's page. Third-party credibility. The brand pays the expert, the expert recommends the product, the customer trusts the expert over the brand. Everyone wins.
-
-If you're selling any supplement and not running a "specialist reviews top 5" format, test it this week. It works across every health niche.
+Not running a "specialist reviews top 5" format? Test it this week. Works across every health niche.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -253,17 +241,17 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-Try UltimaPeak. Shilajit + Ashwagandha + Sea Moss. All in one gummy.
+UltimaPeak. Shilajit + Ashwagandha + Sea Moss. One gummy.
 
-They took the three most hyped men's health ingredients on TikTok and combined them into a single product. That's not innovation — that's reading the room and moving fast.
+Three most hyped men's health ingredients on TikTok combined into a single product. That's not innovation — that's reading the room.
 
-The hook on this video is a POV shot looking down at your feet in the bathroom. Weird? Yes. Attention-grabbing? Hell yes. You have no idea what's coming next and that's the whole point.
+POV hook looking down at your feet in the bathroom. You have no idea what's coming. That's the point.
 
-"See results in 6-8 weeks." They're setting expectations upfront. Smart. Under-promise so when guys feel something in 2 weeks, they think it's a miracle. That's how you get organic reviews and repeat orders.
+"See results in 6-8 weeks." Under-promise. Guys feel something in 2 weeks, think it's a miracle. That's how you get organic reviews and repeat orders.
 
-The men's supplement stack market is exploding. Shilajit went from nobody knowing what it is to every dude on the internet talking about it in like 6 months. Sea moss same thing.
+Shilajit went from unknown to everywhere in 6 months. Sea moss same.
 
-Trend-jacking ingredients while they're hot is one of the fastest ways to build a supplement brand. You don't need to invent anything. Just combine what's already working.
+Trend-jack ingredients while they're hot. Don't invent anything. Combine what's already working.
 
 NOW GO PRINT 🔥`,
         status: "review",
