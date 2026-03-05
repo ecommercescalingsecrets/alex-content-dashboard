@@ -22,8 +22,9 @@ let contentDatabase = {
     "post-1": {
         id: "post-1",
         title: "PureLife Organics — Cortisol Belly",
-        mediaUrl: "/media/purelife_cortisol_thumb.jpg",
-        mediaType: "image",
+        mediaUrl: "/media/purelife_cortisol.mp4",
+        videoUrl: "/media/purelife_cortisol.mp4",
+        mediaType: "video",
         content: `This brand is printing.
 
 PureLife Organics. 41 days running this exact ad. They're not stopping because it's working.
@@ -96,8 +97,9 @@ NOW GO PRINT 🔥`,
     "post-4": {
         id: "post-4",
         title: "Purely Nutrient — Black Seed Oil / Parasite Hook",
-        mediaUrl: "/media/purely_nutrient_blackseed_thumb.jpg",
-        mediaType: "image",
+        mediaUrl: "/media/purely_nutrient_blackseed.mp4",
+        videoUrl: "/media/purely_nutrient_blackseed.mp4",
+        mediaType: "video",
         content: `This brand is printing.
 
 Purely Nutrient. Black seed oil. They found an angle nobody else is using.
@@ -146,8 +148,9 @@ NOW GO PRINT 🔥`,
     "post-6": {
         id: "post-6",
         title: "SereneSkincare — PDRN Patches",
-        mediaUrl: "/media/serene_skincare_thumb.jpg",
-        mediaType: "image",
+        mediaUrl: "/media/serene_skincare.mp4",
+        videoUrl: "/media/serene_skincare.mp4",
+        mediaType: "video",
         content: `This brand is printing.
 
 SereneSkincare. PDRN patches. Anti-aging but with a twist.
@@ -170,8 +173,9 @@ NOW GO PRINT 🔥`,
     "post-7": {
         id: "post-7",
         title: "FemiClear — Taboo Health Niche",
-        mediaUrl: "/media/femiclear_thumb.jpg",
-        mediaType: "image",
+        mediaUrl: "/media/femiclear.mp4",
+        videoUrl: "/media/femiclear.mp4",
+        mediaType: "video",
         content: `This brand is printing.
 
 FemiClear. 34 days running. Doctor authority + embarrassing health problem = unstoppable combo.
@@ -244,8 +248,9 @@ NOW GO PRINT 🔥`,
     "post-10": {
         id: "post-10",
         title: "Try UltimaPeak — Shilajit/Ashwagandha/Sea Moss Stack",
-        mediaUrl: "/media/ultimapeak_thumb.jpg",
-        mediaType: "image",
+        mediaUrl: "/media/ultimapeak.mp4",
+        videoUrl: "/media/ultimapeak.mp4",
+        mediaType: "video",
         content: `This brand is printing.
 
 Try UltimaPeak. Shilajit + Ashwagandha + Sea Moss. All in one gummy.
