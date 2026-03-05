@@ -6,70 +6,177 @@
     <title>Alex's Tactical Content Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0f172a; color: #e2e8f0; line-height: 1.6;
-        }
-        .header {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            padding: 1.5rem 2rem; border-bottom: 1px solid #334155;
-        }
-        .header h1 { color: #60a5fa; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .header p { color: #94a3b8; }
-        .dashboard { padding: 2rem; max-width: 1400px; margin: 0 auto; }
-        .content-item {
-            background: #1e293b; border: 1px solid #f59e0b; border-radius: 12px;
-            padding: 1.5rem; margin-bottom: 1.5rem; cursor: pointer;
-        }
-        .content-title { color: #e2e8f0; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .content-preview { color: #94a3b8; margin-bottom: 1rem; }
-        .btn {
-            padding: 0.75rem 1.5rem; border: none; border-radius: 8px;
-            font-weight: 600; cursor: pointer; margin-right: 0.5rem;
-        }
-        .btn-success { background: #059669; color: white; }
-        .btn-primary { background: #2563eb; color: white; }
-        .tactical-badge { 
-            background: #dc2626; color: white; padding: 0.25rem 0.5rem; 
-            border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem; 
-        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1.5rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { color: #60a5fa; font-size: 1.75rem; font-weight: 700; }
+        .header p { color: #94a3b8; font-size: 0.9rem; }
+        .stats { display: flex; gap: 1.5rem; }
+        .stat { text-align: center; }
+        .stat-num { color: #f59e0b; font-size: 1.5rem; font-weight: 700; }
+        .stat-label { color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
+        .dashboard { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-btn { padding: 0.5rem 1rem; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
+        .filter-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .content-list { display: flex; flex-direction: column; gap: 1rem; }
+        .content-item { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s; }
+        .content-item:hover { border-color: #475569; }
+        .content-item.status-approved { border-left: 4px solid #059669; }
+        .content-item.status-posted { border-left: 4px solid #2563eb; opacity: 0.7; }
+        .content-item.status-review { border-left: 4px solid #f59e0b; }
+        .item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; }
+        .content-title { color: #e2e8f0; font-weight: 600; font-size: 1.1rem; flex: 1; }
+        .badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .badge-review { background: #f59e0b20; color: #f59e0b; }
+        .badge-approved { background: #05966920; color: #059669; }
+        .badge-posted { background: #2563eb20; color: #60a5fa; }
+        .content-preview { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; white-space: pre-wrap; max-height: 120px; overflow: hidden; transition: max-height 0.3s; }
+        .content-preview.expanded { max-height: none; }
+        .expand-btn { color: #60a5fa; background: none; border: none; cursor: pointer; font-size: 0.85rem; margin-bottom: 1rem; }
+        .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-approve { background: #059669; color: white; }
+        .btn-post { background: #2563eb; color: white; }
+        .btn-delete { background: #dc262620; color: #ef4444; border: 1px solid #dc262640; }
+        .btn-expand { background: #334155; color: #94a3b8; }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: #059669; color: white; padding: 1rem 1.5rem; border-radius: 8px; font-weight: 600; display: none; z-index: 100; animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .empty { text-align: center; color: #64748b; padding: 3rem; }
+        .meta { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🚀 Alex's Tactical Content Dashboard</h1>
-        <p>Super Tactical Content - Ready for @FedotOff90</p>
+        <div>
+            <h1>🚀 Tactical Content Dashboard</h1>
+            <p>Super tactical content for @FedotOff90</p>
+        </div>
+        <div class="stats">
+            <div class="stat"><div class="stat-num" id="stat-review">0</div><div class="stat-label">Review</div></div>
+            <div class="stat"><div class="stat-num" id="stat-approved">0</div><div class="stat-label">Approved</div></div>
+            <div class="stat"><div class="stat-num" id="stat-posted">0</div><div class="stat-label">Posted</div></div>
+        </div>
     </div>
+
     <div class="dashboard">
-        <div class="content-item">
-            <div class="content-title">
-                🎯 3-Problem Rollup Ad Format - Tactical Breakdown
-                <span class="tactical-badge">SUPER TACTICAL</span>
-            </div>
-            <div class="content-preview">
-                This ad format is printing $50K+/day for supplement brands right now. 
-                Exact breakdown with implementation details, testing frameworks, and creative specs.
-            </div>
-            <button class="btn btn-success">✅ Approve</button>
-            <button class="btn btn-primary">🚀 Post to Twitter</button>
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="review">📝 Review</button>
+            <button class="filter-btn" data-filter="approved">✅ Approved</button>
+            <button class="filter-btn" data-filter="posted">🚀 Posted</button>
         </div>
-        
-        <div class="content-item">
-            <div class="content-title">
-                💰 Cascade Budget Testing - $30K+ Media Buyers
-                <span class="tactical-badge">SUPER TACTICAL</span>
-            </div>
-            <div class="content-preview">
-                Budget allocation method with specific graduation metrics and exact implementation timeline.
-                Finds winners 3x faster than traditional equal splits.
-            </div>
-            <button class="btn btn-success">✅ Approve</button>
-            <button class="btn btn-primary">🚀 Post to Twitter</button>
-        </div>
-        
-        <p style="text-align: center; color: #94a3b8; margin-top: 2rem;">
-            🚀 Dashboard deployed successfully! Backend integration in progress...
-        </p>
+        <div class="content-list" id="content-list"></div>
     </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let content = [];
+        let filter = 'all';
+
+        async function loadContent() {
+            const res = await fetch('/api/content');
+            content = await res.json();
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('content-list');
+            const filtered = filter === 'all' ? content : content.filter(c => c.status === filter);
+            
+            document.getElementById('stat-review').textContent = content.filter(c => c.status === 'review').length;
+            document.getElementById('stat-approved').textContent = content.filter(c => c.status === 'approved').length;
+            document.getElementById('stat-posted').textContent = content.filter(c => c.status === 'posted').length;
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty">No content in this category</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(item => `
+                <div class="content-item status-${item.status}" id="item-${item.id}">
+                    <div class="item-header">
+                        <div class="content-title">${item.title}</div>
+                        <span class="badge badge-${item.status}">${item.status}</span>
+                    </div>
+                    <div class="content-preview" id="preview-${item.id}">${escapeHtml(item.content)}</div>
+                    <button class="expand-btn" onclick="toggleExpand('${item.id}')">Show full content ▼</button>
+                    <div class="actions">
+                        ${item.status === 'review' ? `<button class="btn btn-approve" onclick="approve('${item.id}')">✅ Approve</button>` : ''}
+                        ${item.status === 'approved' ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post to Twitter</button>` : ''}
+                        ${item.status === 'posted' ? `<span class="meta">Posted ${item.postedAt ? new Date(item.postedAt).toLocaleString() : ''}</span>` : ''}
+                        <button class="btn btn-delete" onclick="deletePost('${item.id}')">🗑</button>
+                    </div>
+                    <div class="meta">Target: ${item.target || 'Solo founders'} · Created: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Unknown'}</div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function toggleExpand(id) {
+            const el = document.getElementById('preview-' + id);
+            el.classList.toggle('expanded');
+            const btn = el.nextElementSibling;
+            btn.textContent = el.classList.contains('expanded') ? 'Show less ▲' : 'Show full content ▼';
+        }
+
+        function showToast(msg, color = '#059669') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = color;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function approve(id) {
+            await fetch(`/api/content/${id}/approve`, { method: 'POST' });
+            showToast('✅ Content approved!');
+            loadContent();
+        }
+
+        async function postToTwitter(id) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Posting...';
+            try {
+                const res = await fetch(`/api/content/${id}/post`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('🚀 Posted to Twitter!');
+                } else {
+                    showToast('❌ ' + (data.error || 'Post failed'), '#dc2626');
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, '#dc2626');
+            }
+            loadContent();
+        }
+
+        async function deletePost(id) {
+            if (!confirm('Delete this content?')) return;
+            await fetch(`/api/content/${id}`, { method: 'DELETE' });
+            showToast('🗑 Deleted');
+            loadContent();
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filter = btn.dataset.filter;
+                render();
+            });
+        });
+
+        loadContent();
+    </script>
 </body>
 </html>
