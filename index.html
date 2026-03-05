@@ -56,7 +56,9 @@
         .scheduled-post { background: #059669; color: white; border-radius: 4px; padding: 0.3rem; margin-bottom: 0.3rem; font-size: 0.7rem; cursor: pointer; }
         .scheduled-post:hover { opacity: 0.8; }
         .schedule-controls { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
-        .datetime-input { background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.5rem; color: #e2e8f0; font-size: 0.85rem; }
+        .datetime-input { background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.5rem; color: #e2e8f0; font-size: 0.85rem; cursor: pointer; min-width: 200px; }
+        .datetime-input:focus { outline: none; border-color: #60a5fa; background: #475569; }
+        .datetime-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         .btn-schedule { background: #7c3aed; color: white; }
         .scheduled-info { background: #7c3aed20; border: 1px solid #7c3aed40; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
         .countdown { font-weight: 600; color: #7c3aed; }
@@ -225,7 +227,7 @@
                         ${item.status === 'review' ? `
                             <button class="btn btn-approve" onclick="approve('${item.id}')">✅ Approve</button>
                             <div class="schedule-controls">
-                                <input type="datetime-local" class="datetime-input" id="schedule-${item.id}" min="${new Date().toISOString().slice(0, 16)}">
+                                <input type="datetime-local" class="datetime-input" id="schedule-${item.id}" placeholder="Select date and time">
                                 <button class="btn btn-schedule" onclick="approveAndSchedule('${item.id}')">📅 Approve & Schedule</button>
                             </div>
                         ` : ''}
@@ -255,6 +257,24 @@
                     <div class="meta">Target: ${item.target || 'Solo founders'} · Created: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Unknown'}</div>
                 </div>
             `).join('');
+            
+            // Initialize datetime inputs with default values
+            initializeDateTimeInputs();
+        }
+        
+        function initializeDateTimeInputs() {
+            // Set default time to 4 PM EST (best posting time) tomorrow
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 1); // Tomorrow
+            defaultDate.setHours(16, 0, 0, 0); // 4 PM
+            
+            const defaultDateTime = defaultDate.toISOString().slice(0, 16);
+            
+            document.querySelectorAll('.datetime-input').forEach(input => {
+                if (!input.value) {
+                    input.value = defaultDateTime;
+                }
+            });
         }
 
         function escapeHtml(text) {
@@ -288,16 +308,28 @@
             const dateInput = document.getElementById(`schedule-${id}`);
             const scheduledAt = dateInput.value;
             
+            console.log('Schedule input value:', scheduledAt); // Debug log
+            
             if (!scheduledAt) {
                 showToast('❌ Please select a date and time', '#dc2626');
+                dateInput.focus();
                 return;
             }
             
             const scheduledDate = new Date(scheduledAt);
             const now = new Date();
             
-            if (scheduledDate <= now) {
-                showToast('❌ Please select a future date and time', '#dc2626');
+            // Add 5 minutes buffer to avoid "past date" issues
+            const minTime = new Date(now.getTime() + (5 * 60 * 1000));
+            
+            if (scheduledDate <= minTime) {
+                showToast('❌ Please select a time at least 5 minutes in the future', '#dc2626');
+                return;
+            }
+            
+            // Show confirmation with the scheduled time
+            const formattedDate = scheduledDate.toLocaleString();
+            if (!confirm(`Schedule this post for ${formattedDate}?`)) {
                 return;
             }
             
@@ -309,14 +341,15 @@
                 });
                 
                 if (res.ok) {
-                    showToast('📅 Content approved and scheduled!');
+                    showToast(`📅 Content approved and scheduled for ${formattedDate}!`);
                     loadContent();
                 } else {
                     const error = await res.json();
                     showToast('❌ ' + error.error, '#dc2626');
                 }
             } catch (e) {
-                showToast('❌ Error scheduling content', '#dc2626');
+                console.error('Schedule error:', e);
+                showToast('❌ Error scheduling content: ' + e.message, '#dc2626');
             }
         }
 
