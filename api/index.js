@@ -11,10 +11,10 @@ app.use('/media', express.static(path.join(__dirname, '..', 'media')));
 
 // Twitter client
 const twitterClient = new TwitterApi({
-    appKey: process.env.TWITTER_API_KEY || 'YXFGhtTBSbipbkuDI2Lt7vemt',
-    appSecret: process.env.TWITTER_API_SECRET || 'rfIzIamcswhW1pGmuxAokivSnkCQUgu1U4Gv79Nc3fM2fDGjNL',
-    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-InwEEOM5NITevI55zn4EBwnYXKsW6P',
-    accessSecret: process.env.TWITTER_ACCESS_SECRET || 'p2yBey5EeDVdswZPBulnM3soaLKusRDsXj1AjsLP9XGIB'
+    appKey: process.env.TWITTER_API_KEY || 'GE8tk2RiScm2Lgz2w7VrzVmWS',
+    appSecret: process.env.TWITTER_API_SECRET || 'sOKyYl47bqpQrf8PVqKsr6jw1wkFOUui2MDnqKWpkIADA17E9N',
+    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-YKK7ctQKOkBRIIVxOnO0vdQD8MH1zy',
+    accessSecret: process.env.TWITTER_ACCESS_SECRET || 'iznbruGURnAgfrH1R0z7RIMxqYZGBbOpvHbfhGpa4tpV6'
 });
 
 // In-memory content DB
