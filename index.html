@@ -47,6 +47,22 @@
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .empty { text-align: center; color: #64748b; padding: 3rem; }
         .meta { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+        .schedule-section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+        .schedule-section h2 { color: #60a5fa; margin-bottom: 1rem; font-size: 1.2rem; }
+        .calendar-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+        .day-column { background: #334155; border-radius: 8px; padding: 0.75rem 0.5rem; text-align: center; min-height: 120px; }
+        .day-header { font-weight: 600; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .scheduled-post { background: #059669; color: white; border-radius: 4px; padding: 0.3rem; margin-bottom: 0.3rem; font-size: 0.7rem; cursor: pointer; }
+        .scheduled-post:hover { opacity: 0.8; }
+        .schedule-controls { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+        .datetime-input { background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.5rem; color: #e2e8f0; font-size: 0.85rem; }
+        .btn-schedule { background: #7c3aed; color: white; }
+        .scheduled-info { background: #7c3aed20; border: 1px solid #7c3aed40; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
+        .countdown { font-weight: 600; color: #7c3aed; }
+        .countdown.past { color: #ef4444; }
+        .empty-schedule { text-align: center; color: #64748b; padding: 2rem; font-style: italic; }
+        .day-column.today { background: #1e40af; }
+        .day-column.today .day-header { color: #93c5fd; }
     </style>
 </head>
 <body>
@@ -69,6 +85,12 @@
             <button class="filter-btn" data-filter="approved">✅ Approved</button>
             <button class="filter-btn" data-filter="posted">🚀 Posted</button>
         </div>
+        
+        <div class="schedule-section">
+            <h2>📅 This Week's Scheduled Posts</h2>
+            <div class="calendar-week" id="calendar-week"></div>
+        </div>
+        
         <div class="content-list" id="content-list"></div>
     </div>
 
@@ -77,11 +99,82 @@
     <script>
         let content = [];
         let filter = 'all';
+        let weeklySchedule = null;
 
         async function loadContent() {
             const res = await fetch('/api/content');
             content = await res.json();
+            await loadWeeklySchedule();
             render();
+        }
+
+        async function loadWeeklySchedule() {
+            const res = await fetch('/api/content/scheduled/week');
+            weeklySchedule = await res.json();
+            renderWeeklyCalendar();
+        }
+
+        function renderWeeklyCalendar() {
+            const calendar = document.getElementById('calendar-week');
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const weekStart = new Date(weeklySchedule.weekStart);
+            
+            calendar.innerHTML = days.map((dayName, index) => {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + index);
+                
+                const dayPosts = weeklySchedule.scheduled.filter(post => {
+                    if (!post.scheduledAt) return false;
+                    const postDate = new Date(post.scheduledAt);
+                    return postDate.toDateString() === date.toDateString();
+                }).sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+                
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                return `
+                    <div class="day-column ${isToday ? 'today' : ''}">
+                        <div class="day-header">${dayName}<br>${date.getDate()}/${date.getMonth() + 1}</div>
+                        ${dayPosts.length === 0 
+                            ? '<div class="empty-schedule">No posts scheduled</div>' 
+                            : dayPosts.map(post => {
+                                const time = new Date(post.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                return `<div class="scheduled-post" title="${post.title}" onclick="scrollToPost('${post.id}')">${time}<br>${post.title.substring(0, 20)}...</div>`;
+                              }).join('')
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function scrollToPost(postId) {
+            const element = document.getElementById(`item-${postId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                element.style.background = '#2563eb20';
+                setTimeout(() => element.style.background = '', 2000);
+            }
+        }
+
+        function formatCountdown(scheduledAt) {
+            const now = new Date();
+            const scheduled = new Date(scheduledAt);
+            const diff = scheduled - now;
+            
+            if (diff <= 0) {
+                return '<span class="countdown past">⚠️ Past due</span>';
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) {
+                return `<span class="countdown">📅 ${days}d ${hours}h until posting</span>`;
+            } else if (hours > 0) {
+                return `<span class="countdown">⏰ ${hours}h ${minutes}m until posting</span>`;
+            } else {
+                return `<span class="countdown">⏰ ${minutes}m until posting</span>`;
+            }
         }
 
         function render() {
@@ -101,14 +194,29 @@
                 <div class="content-item status-${item.status}" id="item-${item.id}">
                     <div class="item-header">
                         <div class="content-title">${item.title}</div>
-                        <span class="badge badge-${item.status}">${item.status}</span>
+                        <span class="badge badge-${item.status}">${item.status}${item.scheduledStatus ? ` (${item.scheduledStatus})` : ''}</span>
                     </div>
                     ${item.mediaUrl ? `<img class="content-media" src="${item.mediaUrl}" alt="${escapeHtml(item.title)}" onclick="window.open('${item.mediaUrl}','_blank')"/>` : ''}
                     <div class="content-preview" id="preview-${item.id}">${escapeHtml(item.content)}</div>
                     <button class="expand-btn" onclick="toggleExpand('${item.id}')">Show full content ▼</button>
+                    
+                    ${item.scheduledAt ? `
+                        <div class="scheduled-info">
+                            📅 Scheduled for ${new Date(item.scheduledAt).toLocaleString()}<br>
+                            ${formatCountdown(item.scheduledAt)}
+                        </div>
+                    ` : ''}
+                    
                     <div class="actions">
-                        ${item.status === 'review' ? `<button class="btn btn-approve" onclick="approve('${item.id}')">✅ Approve</button>` : ''}
-                        ${item.status === 'approved' ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post to Twitter</button>` : ''}
+                        ${item.status === 'review' ? `
+                            <button class="btn btn-approve" onclick="approve('${item.id}')">✅ Approve</button>
+                            <div class="schedule-controls">
+                                <input type="datetime-local" class="datetime-input" id="schedule-${item.id}" min="${new Date().toISOString().slice(0, 16)}">
+                                <button class="btn btn-schedule" onclick="approveAndSchedule('${item.id}')">📅 Approve & Schedule</button>
+                            </div>
+                        ` : ''}
+                        ${item.status === 'approved' && !item.scheduledAt ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post to Twitter</button>` : ''}
+                        ${item.status === 'approved' && item.scheduledAt && item.scheduledStatus === 'scheduled' ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now (Skip Schedule)</button>` : ''}
                         ${item.status === 'posted' ? `<span class="meta">Posted ${item.postedAt ? new Date(item.postedAt).toLocaleString() : ''}</span>` : ''}
                         <button class="btn btn-delete" onclick="deletePost('${item.id}')">🗑</button>
                     </div>
@@ -142,6 +250,42 @@
             await fetch(`/api/content/${id}/approve`, { method: 'POST' });
             showToast('✅ Content approved!');
             loadContent();
+        }
+
+        async function approveAndSchedule(id) {
+            const dateInput = document.getElementById(`schedule-${id}`);
+            const scheduledAt = dateInput.value;
+            
+            if (!scheduledAt) {
+                showToast('❌ Please select a date and time', '#dc2626');
+                return;
+            }
+            
+            const scheduledDate = new Date(scheduledAt);
+            const now = new Date();
+            
+            if (scheduledDate <= now) {
+                showToast('❌ Please select a future date and time', '#dc2626');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/content/${id}/schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scheduledAt: scheduledDate.toISOString() })
+                });
+                
+                if (res.ok) {
+                    showToast('📅 Content approved and scheduled!');
+                    loadContent();
+                } else {
+                    const error = await res.json();
+                    showToast('❌ ' + error.error, '#dc2626');
+                }
+            } catch (e) {
+                showToast('❌ Error scheduling content', '#dc2626');
+            }
         }
 
         async function postToTwitter(id) {
@@ -180,6 +324,20 @@
         });
 
         loadContent();
+        
+        // Auto-refresh countdowns every minute
+        setInterval(() => {
+            const countdowns = document.querySelectorAll('.countdown');
+            countdowns.forEach(countdown => {
+                const item = content.find(c => countdown.closest('.content-item').id === `item-${c.id}`);
+                if (item && item.scheduledAt) {
+                    countdown.outerHTML = formatCountdown(item.scheduledAt);
+                }
+            });
+        }, 60000);
+        
+        // Auto-refresh the weekly schedule every 5 minutes
+        setInterval(loadWeeklySchedule, 300000);
     </script>
 </body>
 </html>

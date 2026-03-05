@@ -39,7 +39,9 @@ Cortisol is the new gut health. Every supplement brand should be testing this an
 NOW GO PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        scheduledAt: null,
+        scheduledStatus: null
     },
     "post-2": {
         id: "post-2",
@@ -265,6 +267,74 @@ NOW GO PRINT 🔥`,
     }
 };
 
+// Add scheduling fields to existing content
+Object.values(contentDatabase).forEach(item => {
+    if (!item.hasOwnProperty('scheduledAt')) item.scheduledAt = null;
+    if (!item.hasOwnProperty('scheduledStatus')) item.scheduledStatus = null;
+});
+
+// Scheduler - check every minute for content that should be posted
+async function scheduleChecker() {
+    console.log('⏰ Checking for scheduled content...');
+    const now = new Date();
+    
+    Object.values(contentDatabase).forEach(async (item) => {
+        if (item.scheduledStatus === 'scheduled' && 
+            item.scheduledAt && 
+            item.status === 'approved' &&
+            new Date(item.scheduledAt) <= now) {
+            
+            console.log(`📅 Auto-posting scheduled content: ${item.title}`);
+            item.scheduledStatus = 'posting';
+            
+            try {
+                // Post the content to Twitter (same logic as manual post)
+                const text = item.content;
+                if (text.length <= 280) {
+                    const tweet = await twitterClient.v2.tweet(text);
+                    item.status = 'posted';
+                    item.scheduledStatus = 'posted';
+                    item.tweetId = tweet.data.id;
+                    item.postedAt = new Date().toISOString();
+                    console.log(`✅ Successfully posted: ${item.title}`);
+                } else {
+                    // Post as thread — split on numbered sections
+                    const parts = text.split(/\n\n(?=\d+\/)/).filter(Boolean);
+                    const hook = parts.shift(); // First part is the hook
+                    
+                    let lastTweetId = null;
+                    const tweetIds = [];
+                    
+                    // Post hook
+                    const first = await twitterClient.v2.tweet(hook.substring(0, 280));
+                    lastTweetId = first.data.id;
+                    tweetIds.push(lastTweetId);
+                    
+                    // Post thread replies
+                    for (const part of parts) {
+                        const chunk = part.substring(0, 280);
+                        const reply = await twitterClient.v2.reply(chunk, lastTweetId);
+                        lastTweetId = reply.data.id;
+                        tweetIds.push(lastTweetId);
+                    }
+                    
+                    item.status = 'posted';
+                    item.scheduledStatus = 'posted';
+                    item.tweetIds = tweetIds;
+                    item.postedAt = new Date().toISOString();
+                    console.log(`✅ Successfully posted thread: ${item.title}`);
+                }
+            } catch (err) {
+                console.error(`❌ Failed to post scheduled content ${item.title}:`, err);
+                item.scheduledStatus = 'failed';
+            }
+        }
+    });
+}
+
+// Start the scheduler
+setInterval(scheduleChecker, 60000); // Every minute
+
 // API Routes
 app.get('/api/content', (req, res) => {
     res.json(Object.values(contentDatabase));
@@ -282,6 +352,45 @@ app.post('/api/content/:id/approve', (req, res) => {
     item.status = 'approved';
     item.approvedAt = new Date().toISOString();
     res.json(item);
+});
+
+app.post('/api/content/:id/schedule', (req, res) => {
+    const item = contentDatabase[req.params.id];
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    
+    const { scheduledAt } = req.body;
+    if (!scheduledAt) return res.status(400).json({ error: 'scheduledAt is required' });
+    
+    item.status = 'approved';
+    item.approvedAt = new Date().toISOString();
+    item.scheduledAt = scheduledAt;
+    item.scheduledStatus = 'scheduled';
+    
+    res.json(item);
+});
+
+app.get('/api/content/scheduled/week', (req, res) => {
+    // Get current week (Monday-Sunday)
+    const now = new Date();
+    const mondayOfWeek = new Date(now);
+    mondayOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    mondayOfWeek.setHours(0, 0, 0, 0);
+    
+    const sundayOfWeek = new Date(mondayOfWeek);
+    sundayOfWeek.setDate(mondayOfWeek.getDate() + 6);
+    sundayOfWeek.setHours(23, 59, 59, 999);
+    
+    const scheduledThisWeek = Object.values(contentDatabase).filter(item => {
+        if (!item.scheduledAt) return false;
+        const scheduledDate = new Date(item.scheduledAt);
+        return scheduledDate >= mondayOfWeek && scheduledDate <= sundayOfWeek;
+    });
+    
+    res.json({
+        weekStart: mondayOfWeek.toISOString(),
+        weekEnd: sundayOfWeek.toISOString(),
+        scheduled: scheduledThisWeek
+    });
 });
 
 app.post('/api/content/:id/post', async (req, res) => {
