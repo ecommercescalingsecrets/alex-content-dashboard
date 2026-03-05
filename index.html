@@ -30,6 +30,8 @@
         .badge-review { background: #f59e0b20; color: #f59e0b; }
         .badge-approved { background: #05966920; color: #059669; }
         .badge-posted { background: #2563eb20; color: #60a5fa; }
+        .content-media { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; margin-bottom: 1rem; background: #0f172a; cursor: pointer; }
+        .content-media:hover { opacity: 0.9; }
         .content-preview { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; white-space: pre-wrap; max-height: 120px; overflow: hidden; transition: max-height 0.3s; }
         .content-preview.expanded { max-height: none; }
         .expand-btn { color: #60a5fa; background: none; border: none; cursor: pointer; font-size: 0.85rem; margin-bottom: 1rem; }
@@ -101,6 +103,7 @@
                         <div class="content-title">${item.title}</div>
                         <span class="badge badge-${item.status}">${item.status}</span>
                     </div>
+                    ${item.mediaUrl ? `<img class="content-media" src="${item.mediaUrl}" alt="${escapeHtml(item.title)}" onclick="window.open('${item.mediaUrl}','_blank')"/>` : ''}
                     <div class="content-preview" id="preview-${item.id}">${escapeHtml(item.content)}</div>
                     <button class="expand-btn" onclick="toggleExpand('${item.id}')">Show full content ▼</button>
                     <div class="actions">
