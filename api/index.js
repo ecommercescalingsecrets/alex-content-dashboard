@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { TwitterApi } = require('twitter-api-v2');
 
 const app = express();
@@ -292,27 +293,54 @@ async function scheduleChecker() {
             try {
                 // Post the content to Twitter (same logic as manual post)
                 const text = item.content;
+                let mediaId = null;
+                
+                // Upload media if it exists
+                if (item.mediaUrl) {
+                    try {
+                        const mediaPath = path.join(__dirname, '..', item.mediaUrl);
+                        if (fs.existsSync(mediaPath)) {
+                            console.log(`Uploading scheduled media: ${mediaPath}`);
+                            const mediaUpload = await twitterClient.v1.uploadMedia(mediaPath);
+                            mediaId = mediaUpload.media_id_string;
+                            console.log(`Scheduled media uploaded: ${mediaId}`);
+                        }
+                    } catch (mediaError) {
+                        console.error('Scheduled media upload failed:', mediaError);
+                    }
+                }
+                
                 if (text.length <= 280) {
-                    const tweet = await twitterClient.v2.tweet(text);
+                    const tweetOptions = { text };
+                    if (mediaId) {
+                        tweetOptions.media = { media_ids: [mediaId] };
+                    }
+                    
+                    const tweet = await twitterClient.v2.tweet(tweetOptions);
                     item.status = 'posted';
                     item.scheduledStatus = 'posted';
                     item.tweetId = tweet.data.id;
                     item.postedAt = new Date().toISOString();
-                    console.log(`✅ Successfully posted: ${item.title}`);
+                    console.log(`✅ Successfully posted scheduled: ${item.title}`);
                 } else {
-                    // Post as thread — split on numbered sections
+                    // Post as thread — attach media to first tweet only
                     const parts = text.split(/\n\n(?=\d+\/)/).filter(Boolean);
                     const hook = parts.shift(); // First part is the hook
                     
                     let lastTweetId = null;
                     const tweetIds = [];
                     
-                    // Post hook
-                    const first = await twitterClient.v2.tweet(hook.substring(0, 280));
+                    // Post hook with media
+                    const firstTweetOptions = { text: hook.substring(0, 280) };
+                    if (mediaId) {
+                        firstTweetOptions.media = { media_ids: [mediaId] };
+                    }
+                    
+                    const first = await twitterClient.v2.tweet(firstTweetOptions);
                     lastTweetId = first.data.id;
                     tweetIds.push(lastTweetId);
                     
-                    // Post thread replies
+                    // Post thread replies (no media)
                     for (const part of parts) {
                         const chunk = part.substring(0, 280);
                         const reply = await twitterClient.v2.reply(chunk, lastTweetId);
@@ -324,7 +352,7 @@ async function scheduleChecker() {
                     item.scheduledStatus = 'posted';
                     item.tweetIds = tweetIds;
                     item.postedAt = new Date().toISOString();
-                    console.log(`✅ Successfully posted thread: ${item.title}`);
+                    console.log(`✅ Successfully posted scheduled thread: ${item.title}`);
                 }
             } catch (err) {
                 console.error(`❌ Failed to post scheduled content ${item.title}:`, err);
@@ -418,28 +446,60 @@ app.post('/api/content/:id/post', async (req, res) => {
     if (!item) return res.status(404).json({ error: 'Not found' });
     
     try {
-        // Split into thread if content is long
         const text = item.content;
+        let mediaId = null;
+        
+        // Step 1: Upload media if it exists
+        if (item.mediaUrl) {
+            try {
+                const mediaPath = path.join(__dirname, '..', item.mediaUrl);
+                if (fs.existsSync(mediaPath)) {
+                    console.log(`Uploading media: ${mediaPath}`);
+                    
+                    // Use v1.1 API for media upload
+                    const mediaUpload = await twitterClient.v1.uploadMedia(mediaPath);
+                    mediaId = mediaUpload.media_id_string;
+                    console.log(`Media uploaded successfully: ${mediaId}`);
+                } else {
+                    console.warn(`Media file not found: ${mediaPath}`);
+                }
+            } catch (mediaError) {
+                console.error('Media upload failed:', mediaError);
+                // Continue without media rather than failing completely
+            }
+        }
+        
+        // Step 2: Post tweet with media
         if (text.length <= 280) {
-            const tweet = await twitterClient.v2.tweet(text);
+            const tweetOptions = { text };
+            if (mediaId) {
+                tweetOptions.media = { media_ids: [mediaId] };
+            }
+            
+            const tweet = await twitterClient.v2.tweet(tweetOptions);
             item.status = 'posted';
             item.tweetId = tweet.data.id;
             item.postedAt = new Date().toISOString();
-            res.json({ success: true, tweetId: tweet.data.id, item });
+            res.json({ success: true, tweetId: tweet.data.id, item, hasMedia: !!mediaId });
         } else {
-            // Post as thread — split on numbered sections
+            // Post as thread — attach media to first tweet only
             const parts = text.split(/\n\n(?=\d+\/)/).filter(Boolean);
             const hook = parts.shift(); // First part is the hook
             
             let lastTweetId = null;
             const tweetIds = [];
             
-            // Post hook
-            const first = await twitterClient.v2.tweet(hook.substring(0, 280));
+            // Post hook with media
+            const firstTweetOptions = { text: hook.substring(0, 280) };
+            if (mediaId) {
+                firstTweetOptions.media = { media_ids: [mediaId] };
+            }
+            
+            const first = await twitterClient.v2.tweet(firstTweetOptions);
             lastTweetId = first.data.id;
             tweetIds.push(lastTweetId);
             
-            // Post thread replies
+            // Post thread replies (no media)
             for (const part of parts) {
                 const chunk = part.substring(0, 280);
                 const reply = await twitterClient.v2.reply(chunk, lastTweetId);
@@ -450,7 +510,7 @@ app.post('/api/content/:id/post', async (req, res) => {
             item.status = 'posted';
             item.tweetIds = tweetIds;
             item.postedAt = new Date().toISOString();
-            res.json({ success: true, tweetIds, item });
+            res.json({ success: true, tweetIds, item, hasMedia: !!mediaId });
         }
     } catch (err) {
         console.error('Twitter post error:', err);

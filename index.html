@@ -394,7 +394,8 @@
                 const res = await fetch(`/api/content/${id}/post`, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    showToast('🚀 Posted to Twitter!');
+                    const mediaText = data.hasMedia ? ' with media' : '';
+                    showToast(`🚀 Posted to Twitter${mediaText}!`);
                 } else {
                     showToast('❌ ' + (data.error || 'Post failed'), '#dc2626');
                 }
