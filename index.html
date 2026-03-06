@@ -132,14 +132,33 @@
         let weeklySchedule = null;
 
         async function loadContent() {
-            const res = await fetch('/api/content');
+            const timestamp = new Date().getTime();
+            const res = await fetch(`/api/content?t=${timestamp}`, {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
             content = await res.json();
+            
+            // Debug logging
+            const post3 = content.find(c => c.id === 'post-3');
+            if (post3) {
+                console.log('O Positiv content loaded:', post3.content.substring(0, 100));
+            }
+            
             await loadWeeklySchedule();
             render();
         }
 
         async function loadWeeklySchedule() {
-            const res = await fetch('/api/content/scheduled/week');
+            const timestamp = new Date().getTime();
+            const res = await fetch(`/api/content/scheduled/week?t=${timestamp}`, {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
             weeklySchedule = await res.json();
             renderWeeklyCalendar();
         }
