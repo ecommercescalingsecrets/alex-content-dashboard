@@ -37,7 +37,7 @@ They niched down HARD. Stressed women 40+ who've tried everything. That specific
 
 Cortisol is the new gut health. Test this angle yesterday.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString(),
@@ -61,7 +61,7 @@ Menopause market is fucking massive. Most brands talk about ingredients.
 
 This brand talks about transformation.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -83,7 +83,7 @@ UGC selfie. Woman holding the product. Bright pink bottle. Looks like a friend r
 
 Women's health is wide open for brands willing to talk like real people. If your ad copy reads like a doctor's note, you've already lost.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -108,7 +108,7 @@ Parasite cleanse market is blowing up. People are convinced they have parasites.
 
 Smart brands are riding that wave.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -132,7 +132,7 @@ After that hook the ad doesn't even need to be good. You're already thinking "wa
 
 Selling a joint supplement without doctor authority content? One hand tied behind your back.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -155,7 +155,7 @@ Patches as delivery? Genius. Not another cream or serum. A patch feels medical. 
 
 Anti-aging is a $60B market and crowded as hell. But find a novel mechanism people haven't seen 10,000 times and you carve out space fast.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -178,7 +178,7 @@ The doctor figure removes the shame. Makes it medical, not personal. The person 
 
 Taboo health niches are goldmines. Less competition. Desperate buyers. High LTV because they NEED the product.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -202,7 +202,7 @@ Perfect DTC product. Consumable. Repeat purchase. Before/after content makes its
 
 Nobody's scrolling past "gummies that make you tan." Too weird NOT to click.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -226,7 +226,7 @@ This isn't even Emunah's page running the ad. It's the specialist's page. Brand 
 
 Not running a "specialist reviews top 5" format? Test it this week. Works across every health niche.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -251,7 +251,7 @@ That's how you get organic reviews and repeat orders.
 
 Trend-jack ingredients while they're hot. Don't invent anything. Combine what's already working.
 
-NOW GO PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
