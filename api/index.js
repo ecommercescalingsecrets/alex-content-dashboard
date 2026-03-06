@@ -266,6 +266,277 @@ NOW GO FUCKING PRINT 🔥`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
+    },
+    "post-11": {
+        id: "post-11",
+        title: "Better Performance — Organ Supplements",
+        mediaUrl: "/media/better_performance_organs.jpg",
+        mediaType: "image",
+        content: `"Your body is missing what modern diets removed."
+
+This brand is printing.
+
+Better Performance. Beef liver. Heart. Marrow. Pancreas. In a capsule.
+
+No fancy ingredients. No proprietary blend bullshit. Just freeze-dried organs your great-grandfather ate every week.
+
+The angle is ancestral. "Modern diets broke you. This fixes it." That framing turns a $15 bottle of organ pills into a $50 identity purchase.
+
+100,000+ men buying. Retargeting with "Still Thinking?" at 50% off. They know their audience takes 3-4 touches.
+
+Men's supplement market is shifting hard toward ancestral health. Seed oils are the villain. Organ meats are the hero.
+
+If you're not in this space yet, someone else is taking your customers.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-12": {
+        id: "post-12",
+        title: "ARMRA — Colostrum Revolution",
+        mediaUrl: "/media/armra_colostrum.mp4",
+        videoUrl: "/media/armra_colostrum.mp4",
+        mediaType: "video",
+        content: `"400+ bioactive nutrients that work like a blueprint for your body."
+
+This brand is printing.
+
+ARMRA Colostrum. 20,000+ five-star reviews. Millions of customers. And they're still spending heavy on Facebook.
+
+Colostrum was a niche biohacker thing 2 years ago. ARMRA turned it mainstream.
+
+How? They don't sell colostrum. They sell "tapping into your extraordinary." The transformation. Not the ingredient.
+
+They stacked every trust signal: research publications, elite athletes, "insiders everywhere." You feel like you're late to the party.
+
+This is what happens when a supplement brand acts like a luxury brand. Premium positioning. Premium price. Premium retention.
+
+Colostrum is the new collagen. First movers are printing.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-13": {
+        id: "post-13",
+        title: "Touchstone Essentials — Super Green Juice",
+        mediaUrl: "/media/touchstone_greens.jpg",
+        mediaType: "image",
+        content: `"Stop letting expensive veggies rot in the fridge."
+
+This brand is printing.
+
+Touchstone Essentials. 44 organic superfoods. One scoop. 30 seconds.
+
+That opening line is doing all the work. Every person reading it has a bag of wilted spinach in their crisper right now. Instant guilt. Instant relatability.
+
+They're not selling greens powder. They're selling the version of you that actually eats healthy without the effort.
+
+50,000+ customers. And the genius? Subscription model on a consumable powder. You use it every morning. You never cancel.
+
+Greens powder is a $3B market growing 8% annually. The winners aren't the ones with the most superfoods. They're the ones with the best hook.
+
+"Your veggies are rotting" beats "44 superfoods" every single time.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-14": {
+        id: "post-14",
+        title: "Mars Men — Testosterone Gummies",
+        mediaUrl: "/media/mars_men_testosterone.mp4",
+        videoUrl: "/media/mars_men_testosterone.mp4",
+        mediaType: "video",
+        content: `"Fuel testosterone. Flatten belly. Feel invincible."
+
+This brand is printing.
+
+Mars Men. Three promises in one sentence. That's the entire ad.
+
+Most testosterone brands write a novel about ashwagandha studies and free testosterone levels. Nobody cares. Men want to feel like men again.
+
+"Flatten belly" is sneaky brilliant. It's not a testosterone benefit. It's a weight loss benefit hiding inside a testosterone ad. Two audiences, one product.
+
+50% off plus free gifts. Aggressive offer. They're buying customers at a loss knowing the subscription math works out by month 3.
+
+Men's health supplements are a bloodbath right now. The brands winning aren't the most scientific. They're the most direct.
+
+Three words that hit three pain points. That's the formula.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-15": {
+        id: "post-15",
+        title: "Amy Harris / TheSpa Dr — Brain Fog Perimenopause",
+        mediaUrl: "/media/amy_harris_brainfog.mp4",
+        videoUrl: "/media/amy_harris_brainfog.mp4",
+        mediaType: "video",
+        content: `"Stress doesn't make you forget words mid-sentence."
+
+This brand is printing.
+
+Amy Harris selling Hormone Balance Blend for perimenopause brain fog.
+
+Read that hook again. Every woman over 40 who's blanked on a word in a meeting just felt her stomach drop.
+
+She doesn't open with the product. She opens with the fear. "Am I losing it? Is this early dementia?" That's what women are actually googling at 2am.
+
+Then the reframe: "It's not you. It's your hormones swinging." Relief. Now you're ready to buy.
+
+Subscription model. "That's why I chose the subscription." Social proof baked into the CTA.
+
+Perimenopause is a $600B market that most brands are too scared to talk about directly. The ones who do? Printing.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-16": {
+        id: "post-16",
+        title: "Redmond Re-Lyte — Electrolyte Immunity",
+        mediaUrl: "/media/redmond_relyte.jpg",
+        mediaType: "image",
+        content: `"Everyday wellness starts with better ingredients."
+
+This brand is printing.
+
+Redmond Re-Lyte. Electrolytes meets immunity. Two categories in one product.
+
+Most electrolyte brands fight over the fitness crowd. Re-Lyte said fuck that and went after the wellness crowd instead.
+
+Same product format. Completely different positioning. "Boost your body's natural immune response" hits different than "recover faster after your workout."
+
+They're running 23 days straight on this creative. In supplement advertising, that's a winner.
+
+The real play here: category bridging. Take a commodity product (electrolytes) and attach it to a growing category (immunity). Suddenly your $25 tub competes with $45 immune supplements instead of $15 electrolyte packets.
+
+Positioning is the moat. Not ingredients.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-17": {
+        id: "post-17",
+        title: "MaryRuth's via Glimja — Liquid Hair Vitamin",
+        mediaUrl: "/media/glimja_maryruth.jpg",
+        mediaType: "image",
+        content: `"Losing hair? Don't lose hope."
+
+This brand is printing.
+
+MaryRuth's Hair Growth Multivitamin. Liquid form. Tastes like berries.
+
+Three words that reframe the entire purchase: "Don't lose hope." Suddenly it's not a vitamin. It's emotional support in a bottle.
+
+Liquid format is the unlock. Everyone's tired of swallowing horse pills. "Liquid for optimal absorption" gives a scientific reason. "Tastes like berries" removes the last objection.
+
+Running 23 days on Facebook. Gummies and liquids are eating the capsule market alive in hair vitamins.
+
+The hair supplement space is dominated by biotin pills that taste like chalk. Any brand that makes the experience enjoyable wins on retention.
+
+Format innovation beats ingredient innovation. Every time.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-18": {
+        id: "post-18",
+        title: "Forge Skin — Beef Tallow Men's Skincare",
+        mediaUrl: "/media/forge_skin_tallow.mp4",
+        videoUrl: "/media/forge_skin_tallow.mp4",
+        mediaType: "video",
+        content: `"12 out of 16 essential nutrients your skin needs. From beef tallow."
+
+This brand is printing.
+
+Forge Skin. Beef tallow balm. For men.
+
+Read that again. They're selling cow fat as premium skincare. And men are buying it.
+
+The ancestral health movement created a new buying psychology: natural = masculine. Chemical = weak. Beef tallow fits perfectly into that worldview.
+
+"Very few men know this..." — exclusivity hook. Makes you feel like you're discovering a secret.
+
+They don't compete with CeraVe or Jack Black. They compete with the idea that men shouldn't use "products." This IS different. It's meat-based. It's primal.
+
+Men's skincare is a $30B market where 90% of brands look identical. Forge carved out a niche by making skincare feel like something a caveman would approve of.
+
+Weird positioning wins when the market is boring.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-19": {
+        id: "post-19",
+        title: "Better Performance — Ancestral Stack Retargeting",
+        mediaUrl: "/media/better_performance_organs.jpg",
+        mediaType: "image",
+        content: `"Still thinking? Up to 50% off."
+
+This brand is printing.
+
+Better Performance again. But this time it's the retargeting ad that caught my eye.
+
+Four words. "Still thinking?" Then 50% off. That's the entire top of the ad.
+
+They already sold you on organ supplements with the first touch. Now they just need to close. No re-education. No features. Just the nudge.
+
+Most brands waste their retargeting budget repeating the same pitch. Better Performance strips it down to pure urgency.
+
+"Stock is limited." Scarcity. "Lock in your discount now." Urgency. Two psychological triggers, zero fluff.
+
+Your retargeting creative should be the opposite of your prospecting creative. First touch = education. Second touch = conversion.
+
+If your retargeting looks like your TOF, you're burning money.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
+    },
+    "post-20": {
+        id: "post-20",
+        title: "ARMRA — Premium Positioning Playbook",
+        mediaUrl: "/media/armra_colostrum.mp4",
+        videoUrl: "/media/armra_colostrum.mp4",
+        mediaType: "video",
+        content: `"The secret harnessed by elite athletes and insiders everywhere."
+
+This brand is printing.
+
+ARMRA again. But zoom into the copy structure this time.
+
+"Elite athletes." "Insiders everywhere." "Tap into your extraordinary." This isn't supplement copy. This is luxury copy.
+
+They list 7 benefit categories with scientific names: regenerative peptides, adaptogenic nutrients, mitochondrial regenerators. Nobody knows what those mean. That's the point.
+
+Complexity signals efficacy. If it sounds like science, it must work. If it sounds simple, it's probably just another vitamin.
+
+20,000+ reviews. Millions of customers. And they STILL lead with aspiration, not social proof.
+
+Most brands at this scale get lazy and just run "bestseller" ads. ARMRA keeps selling the dream.
+
+That's the difference between a supplement company and a supplement brand.
+
+NOW GO FUCKING PRINT 🔥`,
+        status: "review",
+        target: "Solo ecommerce founders doing $2-10M/year",
+        createdAt: new Date().toISOString()
     }
 };
 
