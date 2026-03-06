@@ -51,17 +51,15 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-Happy Mammoth. "Hormone Harmony." Targeting women 40+ in menopause.
+Happy Mammoth just hit me with "At 52, I got my figure back."
 
-"At 52, I got my figure back." That's not an ad. That's a testimonial that hits you in the chest.
+Not some bullshit before/after. A real woman saying she feels like herself again.
 
-Product shot with REAL stats. Not "clinically proven" bullshit. Actual numbers. They let the results sell it.
+That line does more work than 99% of supplement ads. It's not selling hormones or botanicals. It's selling getting your life back.
 
-Pink branding. Clean. Feminine. Looks like something your girlfriend would recommend — not a supplement company. That's intentional.
+Menopause market is fucking massive. Most brands talk about ingredients.
 
-"Hormone Harmony" as a product name? Two words that tell you exactly what it does. Zero confusion.
-
-Menopause market is massive. Most brands run garbage creative. Lead with the transformation, not the ingredients.
+This brand talks about transformation.
 
 NOW GO PRINT 🔥`,
         status: "review",
