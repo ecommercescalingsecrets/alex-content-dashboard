@@ -94,15 +94,16 @@
         .progress-fill { background: linear-gradient(90deg, #60a5fa, #059669); height: 100%; transition: width 0.3s ease; border-radius: 8px; }
         #progress-modal { display: none; }
         
-        /* Approved Scheduling Styles */
+        /* Auto-Optimal Scheduling Styles */
         .approved-scheduling { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
-        .optimal-time-suggestion { background: #059669; background: linear-gradient(135deg, #05966920, #05966910); border: 1px solid #059669; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
-        .optimal-time-suggestion strong { color: #10b981; }
-        .engagement-data { color: #94a3b8; font-size: 0.8rem; }
-        .btn-schedule-optimal { background: #059669; color: white; margin-left: 1rem; }
-        .custom-scheduling { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
-        .approved-datetime { flex: 1; }
-        .btn-schedule-custom { background: #7c3aed; color: white; }
+        .auto-optimal-scheduling { }
+        .selected-time-display { background: linear-gradient(135deg, #05966920, #05966910); border: 1px solid #059669; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
+        .selected-time-display strong { color: #10b981; }
+        .engagement-data { color: #94a3b8; font-size: 0.85rem; margin-left: 0.5rem; }
+        .schedule-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .btn-schedule-auto { background: #059669; color: white; font-weight: 600; padding: 0.6rem 1.5rem; }
+        .inline-datetime { flex: 1; max-width: 200px; }
+        .btn-post { margin-left: auto; }
     </style>
 </head>
 <body>
@@ -276,15 +277,17 @@
                         ` : ''}
                         ${item.status === 'approved' && !item.scheduledAt ? `
                             <div class="approved-scheduling">
-                                <div class="optimal-time-suggestion" id="optimal-suggestion-${item.id}">
-                                    📈 <strong>Optimal:</strong> Loading... <span class="engagement-data">(8.5K avg impressions)</span>
-                                    <button class="btn btn-schedule-optimal" onclick="scheduleOptimal('${item.id}')">📅 Schedule Optimal</button>
+                                <div class="auto-optimal-scheduling" id="auto-schedule-${item.id}">
+                                    <div class="selected-time-display">
+                                        📅 <strong>Auto-Selected:</strong> <span id="selected-time-${item.id}">Loading...</span> 
+                                        <span class="engagement-data" id="engagement-${item.id}">(8.5K avg impressions)</span>
+                                    </div>
+                                    <div class="schedule-actions">
+                                        <button class="btn btn-schedule-auto" onclick="scheduleAuto('${item.id}')">📅 Schedule</button>
+                                        <input type="datetime-local" class="datetime-input inline-datetime" id="adjust-schedule-${item.id}">
+                                        <button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now</button>
+                                    </div>
                                 </div>
-                                <div class="custom-scheduling">
-                                    <input type="datetime-local" class="datetime-input approved-datetime" id="approved-schedule-${item.id}" placeholder="Custom time">
-                                    <button class="btn btn-schedule-custom" onclick="scheduleCustom('${item.id}')">📅 Custom Schedule</button>
-                                </div>
-                                <button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now</button>
                             </div>
                         ` : ''}
                         ${item.status === 'approved' && item.scheduledAt && item.scheduledStatus === 'scheduled' ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now (Skip Schedule)</button>` : ''}
@@ -324,20 +327,25 @@
             const approvedPosts = content.filter(c => c.status === 'approved' && !c.scheduledAt);
             
             approvedPosts.forEach((post, index) => {
-                const suggestion = document.getElementById(`optimal-suggestion-${post.id}`);
-                if (suggestion) {
-                    // Get different optimal time for each post (spaced apart)
+                const selectedTimeElement = document.getElementById(`selected-time-${post.id}`);
+                const engagementElement = document.getElementById(`engagement-${post.id}`);
+                const datetimeInput = document.getElementById(`adjust-schedule-${post.id}`);
+                
+                if (selectedTimeElement && engagementElement && datetimeInput) {
+                    // Auto-calculate optimal time for this post (spaced intelligently)
                     const optimalTime = getSpacedPostingTime(index);
                     const formattedTime = formatOptimalTime(optimalTime);
                     const engagementData = getEngagementData(optimalTime);
                     
-                    suggestion.innerHTML = `
-                        📈 <strong>Optimal:</strong> ${formattedTime} <span class="engagement-data">(${engagementData})</span>
-                        <button class="btn btn-schedule-optimal" onclick="scheduleOptimal('${post.id}')">📅 Schedule Optimal</button>
-                    `;
+                    // Update display
+                    selectedTimeElement.textContent = formattedTime;
+                    engagementElement.textContent = `(${engagementData})`;
                     
-                    // Store the optimal time for this post
-                    suggestion.setAttribute('data-optimal-time', optimalTime.toISOString());
+                    // Pre-populate the datetime input with optimal time
+                    datetimeInput.value = optimalTime.toISOString().slice(0, 16);
+                    
+                    // Store the optimal time for easy access
+                    datetimeInput.setAttribute('data-optimal-time', optimalTime.toISOString());
                 }
             });
         }
@@ -674,57 +682,28 @@
             return `${dayText} ${time} EST`;
         }
 
-        async function scheduleOptimal(id) {
-            const suggestion = document.getElementById(`optimal-suggestion-${id}`);
-            const optimalTimeISO = suggestion.getAttribute('data-optimal-time');
-            const optimalTime = new Date(optimalTimeISO);
-            const formattedTime = formatOptimalTime(optimalTime);
-            
-            if (!confirm(`Schedule this post for optimal time: ${formattedTime}?`)) {
-                return;
-            }
-            
-            try {
-                const res = await fetch(`/api/content/${id}/schedule`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scheduledAt: optimalTime.toISOString() })
-                });
-                
-                if (res.ok) {
-                    showToast(`📅 Scheduled for optimal time: ${formattedTime}!`);
-                    loadContent();
-                } else {
-                    const error = await res.json();
-                    showToast('❌ ' + error.error, '#dc2626');
-                }
-            } catch (e) {
-                showToast('❌ Error scheduling: ' + e.message, '#dc2626');
-            }
-        }
-
-        async function scheduleCustom(id) {
-            const dateInput = document.getElementById(`approved-schedule-${id}`);
-            const scheduledAt = dateInput.value;
+        async function scheduleAuto(id) {
+            const datetimeInput = document.getElementById(`adjust-schedule-${id}`);
+            const scheduledAt = datetimeInput.value;
             
             if (!scheduledAt) {
-                showToast('❌ Please select a custom date and time', '#dc2626');
-                dateInput.focus();
+                showToast('❌ No time selected for scheduling', '#dc2626');
                 return;
             }
             
             const scheduledDate = new Date(scheduledAt);
             const now = new Date();
             
+            // Validate future time (5 minute buffer)
             if (scheduledDate <= new Date(now.getTime() + (5 * 60 * 1000))) {
                 showToast('❌ Please select a time at least 5 minutes in the future', '#dc2626');
                 return;
             }
             
+            const optimalTimeISO = datetimeInput.getAttribute('data-optimal-time');
+            const isOptimalTime = scheduledAt === optimalTimeISO?.slice(0, 16);
+            const timeType = isOptimalTime ? 'optimal time' : 'selected time';
             const formattedDate = scheduledDate.toLocaleString();
-            if (!confirm(`Schedule this post for ${formattedDate}?`)) {
-                return;
-            }
             
             try {
                 const res = await fetch(`/api/content/${id}/schedule`, {
@@ -734,8 +713,7 @@
                 });
                 
                 if (res.ok) {
-                    showToast(`📅 Custom schedule set: ${formattedDate}!`);
-                    dateInput.value = ''; // Clear input
+                    showToast(`📅 Scheduled for ${timeType}: ${formattedDate}!`);
                     loadContent();
                 } else {
                     const error = await res.json();
