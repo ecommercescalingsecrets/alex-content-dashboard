@@ -399,6 +399,17 @@ app.post('/api/content/:id/schedule', (req, res) => {
     res.json(item);
 });
 
+app.post('/api/content/:id/unschedule', (req, res) => {
+    const item = contentDatabase[req.params.id];
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    
+    // Remove scheduling, return to approved status
+    item.scheduledAt = null;
+    item.scheduledStatus = null;
+    
+    res.json(item);
+});
+
 app.post('/api/content/:id/feedback', (req, res) => {
     const item = contentDatabase[req.params.id];
     if (!item) return res.status(404).json({ error: 'Not found' });

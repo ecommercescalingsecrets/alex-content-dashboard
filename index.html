@@ -29,6 +29,7 @@
         .badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
         .badge-review { background: #f59e0b20; color: #f59e0b; }
         .badge-approved { background: #05966920; color: #059669; }
+        .badge-scheduled { background: #7c3aed20; color: #a855f7; }
         .badge-posted { background: #2563eb20; color: #60a5fa; }
         .content-media { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; margin-bottom: 1rem; background: #0f172a; cursor: pointer; }
         .content-media:hover { opacity: 0.9; }
@@ -104,6 +105,13 @@
         .btn-schedule-auto { background: #059669; color: white; font-weight: 600; padding: 0.6rem 1.5rem; }
         .inline-datetime { flex: 1; max-width: 200px; }
         .btn-post { margin-left: auto; }
+        
+        /* Scheduled Posts Styles */
+        .scheduled-info { background: #1e293b; border: 1px solid #7c3aed; border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
+        .scheduled-details { margin-bottom: 0.75rem; }
+        .scheduled-details strong { color: #a855f7; }
+        .scheduled-actions { display: flex; gap: 0.75rem; }
+        .btn-cancel-schedule { background: #dc2626; color: white; }
     </style>
 </head>
 <body>
@@ -115,6 +123,7 @@
         <div class="stats">
             <div class="stat"><div class="stat-num" id="stat-review">0</div><div class="stat-label">Review</div></div>
             <div class="stat"><div class="stat-num" id="stat-approved">0</div><div class="stat-label">Approved</div></div>
+            <div class="stat"><div class="stat-num" id="stat-scheduled">0</div><div class="stat-label">Scheduled</div></div>
             <div class="stat"><div class="stat-num" id="stat-posted">0</div><div class="stat-label">Posted</div></div>
         </div>
     </div>
@@ -124,6 +133,7 @@
             <button class="filter-btn active" data-filter="all">All</button>
             <button class="filter-btn" data-filter="review">📝 Review</button>
             <button class="filter-btn" data-filter="approved">✅ Approved</button>
+            <button class="filter-btn" data-filter="scheduled">📅 Scheduled</button>
             <button class="filter-btn" data-filter="posted">🚀 Posted</button>
         </div>
         
@@ -239,10 +249,21 @@
 
         function render() {
             const list = document.getElementById('content-list');
-            const filtered = filter === 'all' ? content : content.filter(c => c.status === filter);
             
+            // Handle scheduled filter - posts that are approved and have scheduledAt
+            let filtered;
+            if (filter === 'all') {
+                filtered = content;
+            } else if (filter === 'scheduled') {
+                filtered = content.filter(c => c.status === 'approved' && c.scheduledAt && c.status !== 'posted');
+            } else {
+                filtered = content.filter(c => c.status === filter);
+            }
+            
+            // Update stats
             document.getElementById('stat-review').textContent = content.filter(c => c.status === 'review').length;
-            document.getElementById('stat-approved').textContent = content.filter(c => c.status === 'approved').length;
+            document.getElementById('stat-approved').textContent = content.filter(c => c.status === 'approved' && !c.scheduledAt).length;
+            document.getElementById('stat-scheduled').textContent = content.filter(c => c.status === 'approved' && c.scheduledAt && c.status !== 'posted').length;
             document.getElementById('stat-posted').textContent = content.filter(c => c.status === 'posted').length;
 
             if (filtered.length === 0) {
@@ -254,7 +275,7 @@
                 <div class="content-item status-${item.status}" id="item-${item.id}">
                     <div class="item-header">
                         <div class="content-title">${item.title}</div>
-                        <span class="badge badge-${item.status}">${item.status}${item.scheduledStatus ? ` (${item.scheduledStatus})` : ''}</span>
+                        <span class="badge badge-${item.scheduledAt && item.status === 'approved' ? 'scheduled' : item.status}">${item.scheduledAt && item.status === 'approved' ? 'scheduled' : item.status}${item.scheduledStatus ? ` (${item.scheduledStatus})` : ''}</span>
                     </div>
                     ${item.mediaType === 'video' && item.mediaUrl ? `<video class="content-media" controls preload="metadata" ${item.thumbUrl ? 'poster="'+item.thumbUrl+'"' : ''}><source src="${item.mediaUrl}" type="video/mp4">Your browser does not support video.</video>` : item.mediaUrl ? `<img class="content-media" src="${item.mediaUrl}" alt="${escapeHtml(item.title)}" onclick="window.open('${item.mediaUrl}','_blank')"/>` : ''}
                     <div class="content-preview" id="preview-${item.id}">${escapeHtml(item.content)}</div>
@@ -262,8 +283,14 @@
                     
                     ${item.scheduledAt ? `
                         <div class="scheduled-info">
-                            📅 Scheduled for ${new Date(item.scheduledAt).toLocaleString()}<br>
-                            ${formatCountdown(item.scheduledAt)}
+                            <div class="scheduled-details">
+                                📅 <strong>Scheduled for:</strong> ${new Date(item.scheduledAt).toLocaleString()}<br>
+                                ${formatCountdown(item.scheduledAt)}
+                            </div>
+                            <div class="scheduled-actions">
+                                <button class="btn btn-cancel-schedule" onclick="cancelSchedule('${item.id}')">❌ Cancel Schedule</button>
+                                <button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now</button>
+                            </div>
                         </div>
                     ` : ''}
                     
@@ -762,6 +789,29 @@
                 }
             } catch (e) {
                 showToast('❌ Error scheduling: ' + e.message, '#dc2626');
+            }
+        }
+
+        async function cancelSchedule(id) {
+            if (!confirm('Cancel the scheduled posting for this content?')) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/content/${id}/unschedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (res.ok) {
+                    showToast('❌ Schedule cancelled - moved back to Approved');
+                    loadContent();
+                } else {
+                    const error = await res.json();
+                    showToast('❌ ' + error.error, '#dc2626');
+                }
+            } catch (e) {
+                showToast('❌ Error cancelling schedule: ' + e.message, '#dc2626');
             }
         }
 
