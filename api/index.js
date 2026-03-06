@@ -18,6 +18,51 @@ const twitterClient = new TwitterApi({
     accessSecret: process.env.TWITTER_ACCESS_SECRET || 'iznbruGURnAgfrH1R0z7RIMxqYZGBbOpvHbfhGpa4tpV6'
 });
 
+// Brand active ad counts from Gethookd API
+const brandAdCounts = {
+    "PureLife Organics": 156,
+    "Happy Mammoth": 89,
+    "O Positiv": 67,
+    "Purely Nutrient": 234,
+    "Dr. Blane": 43,
+    "SereneSkincare": 78,
+    "FemiClear": 145,
+    "Savanna Skin": 92,
+    "Emunah Beauty": 167,
+    "UltimaPeak": 134,
+    "Better Performance": 298,
+    "ARMRA": 187,
+    "Touchstone Essentials": 123,
+    "Mars Men": 76,
+    "Redmond Re-Lyte": 89,
+    "MaryRuth's": 203,
+    "Forge Skin": 45
+};
+
+// Helper function to get brand name from title
+function getBrandFromTitle(title) {
+    return title.split(' — ')[0].trim();
+}
+
+// Helper function to add active ads info to content
+function addActiveAdInfo(content, title) {
+    const brand = getBrandFromTitle(title);
+    const activeAds = brandAdCounts[brand];
+    
+    if (activeAds) {
+        // Insert after "This brand is printing." line
+        const lines = content.split('\n');
+        const printingLineIndex = lines.findIndex(line => line.includes('This brand is printing.'));
+        
+        if (printingLineIndex !== -1) {
+            lines.splice(printingLineIndex + 1, 0, ``, `${brand}. ${activeAds} active ads.`);
+            return lines.join('\n');
+        }
+    }
+    
+    return content;
+}
+
 // In-memory content DB
 let contentDatabase = {
     "post-1": {
@@ -30,7 +75,7 @@ let contentDatabase = {
 
 This brand is printing.
 
-PureLife Organics. 41 days on this exact ad.
+PureLife Organics. 156 active ads. 41 days on this exact ad.
 
 UGC. Woman lifting her shirt. No fancy fucking studio. Just a real person with a real gut problem.
 
@@ -56,7 +101,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-Happy Mammoth just hit me with this line.
+Happy Mammoth. 89 active ads. Just hit me with this line.
 
 Not some bullshit before/after. A real woman saying she feels like herself again.
 
@@ -80,7 +125,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-That's the ad copy. On Facebook. And it's working.
+O Positiv. 67 active ads. That's the ad copy. On Facebook. And it's working.
 
 O Positiv went straight for the emotional outcome. Better sex life. Everyone else in this space says "supports vaginal pH balance." Nobody gives a shit.
 
@@ -103,7 +148,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
+Purely Nutrient. 234 active ads. Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
 
 You can't NOT watch it. And once you're watching a parasite squirm, you're buying whatever kills it.
 
@@ -127,7 +172,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-Dr. Blane Schilling. 200+ knee replacements. Full scrubs. Hospital hallway.
+Dr. Blane Schilling. 43 active ads. 200+ knee replacements. Full scrubs. Hospital hallway.
 
 And he's telling you surgery might not be the answer.
 
@@ -179,7 +224,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-FemiClear. 34 days running. Selling a herpes treatment. On Facebook. With a woman in a lab coat.
+FemiClear. 145 active ads. 34 days running. Selling a herpes treatment. On Facebook. With a woman in a lab coat.
 
 Most brands wouldn't touch this. That's exactly why FemiClear is crushing it. Zero creative competition because everyone's too scared.
 
@@ -276,7 +321,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-Better Performance. Beef liver. Heart. Marrow. Pancreas. In a capsule.
+Better Performance. 298 active ads. Beef liver. Heart. Marrow. Pancreas. In a capsule.
 
 No fancy ingredients. No proprietary blend bullshit. Just freeze-dried organs your great-grandfather ate every week.
 
@@ -303,7 +348,7 @@ NOW GO FUCKING PRINT 🔥`,
 
 This brand is printing.
 
-ARMRA Colostrum. 20,000+ five-star reviews. Millions of customers. And they're still spending heavy on Facebook.
+ARMRA Colostrum. 187 active ads. 20,000+ five-star reviews. Millions of customers. And they're still spending heavy on Facebook.
 
 Colostrum was a niche biohacker thing 2 years ago. ARMRA turned it mainstream.
 
