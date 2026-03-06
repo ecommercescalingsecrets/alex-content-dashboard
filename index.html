@@ -326,28 +326,51 @@
         function updateOptimalTimeSuggestions() {
             const approvedPosts = content.filter(c => c.status === 'approved' && !c.scheduledAt);
             
-            approvedPosts.forEach((post, index) => {
+            // Calculate global posting schedule to avoid conflicts
+            const scheduledPosts = content.filter(c => c.scheduledAt);
+            const existingTimes = scheduledPosts.map(p => new Date(p.scheduledAt).getTime());
+            
+            approvedPosts.forEach((post) => {
                 const selectedTimeElement = document.getElementById(`selected-time-${post.id}`);
                 const engagementElement = document.getElementById(`engagement-${post.id}`);
                 const datetimeInput = document.getElementById(`adjust-schedule-${post.id}`);
                 
                 if (selectedTimeElement && engagementElement && datetimeInput) {
-                    // Auto-calculate optimal time for this post (spaced intelligently)
-                    const optimalTime = getSpacedPostingTime(index);
-                    const formattedTime = formatOptimalTime(optimalTime);
-                    const engagementData = getEngagementData(optimalTime);
+                    // Use post ID number to determine unique time slot
+                    const postNumber = parseInt(post.id.replace('post-', '')) - 1; // 0-based index
+                    const optimalTime = getSpacedPostingTime(postNumber);
+                    
+                    // Ensure this time doesn't conflict with already scheduled posts
+                    let finalTime = findNextAvailableSlot(optimalTime, existingTimes);
+                    
+                    const formattedTime = formatOptimalTime(finalTime);
+                    const engagementData = getEngagementData(finalTime);
                     
                     // Update display
                     selectedTimeElement.textContent = formattedTime;
                     engagementElement.textContent = `(${engagementData})`;
                     
                     // Pre-populate the datetime input with optimal time
-                    datetimeInput.value = optimalTime.toISOString().slice(0, 16);
+                    datetimeInput.value = finalTime.toISOString().slice(0, 16);
                     
                     // Store the optimal time for easy access
-                    datetimeInput.setAttribute('data-optimal-time', optimalTime.toISOString());
+                    datetimeInput.setAttribute('data-optimal-time', finalTime.toISOString());
+                    
+                    console.log(`Post ${post.id}: ${formattedTime}`); // Debug log
                 }
             });
+        }
+        
+        function findNextAvailableSlot(preferredTime, existingTimes) {
+            let testTime = new Date(preferredTime);
+            const oneHour = 60 * 60 * 1000;
+            
+            // Keep checking until we find a slot that's at least 1 hour away from existing posts
+            while (existingTimes.some(existing => Math.abs(testTime.getTime() - existing) < oneHour)) {
+                testTime = new Date(testTime.getTime() + (3 * oneHour)); // Move 3 hours forward
+            }
+            
+            return testTime;
         }
         
         function getEngagementData(date) {
@@ -386,24 +409,42 @@
         
         function getSpacedPostingTime(postIndex) {
             const now = new Date();
-            const baseTime = new Date();
             
-            // Start with optimal time (4 PM EST today, or tomorrow if past)
-            baseTime.setHours(16, 0, 0, 0);
-            if (now >= baseTime) {
-                baseTime.setDate(baseTime.getDate() + 1); // Tomorrow
+            // Define optimal posting schedule with clear day transitions
+            const postingSchedule = [
+                { day: 0, hour: 16 }, // Post 1: Today 4PM (or tomorrow if past)
+                { day: 0, hour: 19 }, // Post 2: Today 7PM (or tomorrow if past)  
+                { day: 1, hour: 10 }, // Post 3: Next day 10AM
+                { day: 1, hour: 13 }, // Post 4: Next day 1PM
+                { day: 1, hour: 16 }, // Post 5: Next day 4PM
+                { day: 1, hour: 19 }, // Post 6: Next day 7PM
+                { day: 2, hour: 10 }, // Post 7: Day after 10AM
+                { day: 2, hour: 13 }, // Post 8: Day after 1PM
+            ];
+            
+            // Extend schedule if needed (repeat pattern)
+            let scheduleIndex = postIndex;
+            if (postIndex >= postingSchedule.length) {
+                const cycleIndex = postIndex % postingSchedule.length;
+                const extraDays = Math.floor(postIndex / postingSchedule.length) * 3; // Add 3 days per cycle
+                scheduleIndex = cycleIndex;
+                postingSchedule[cycleIndex].day += extraDays;
             }
             
-            // Space posts 3 hours apart: 4PM, 7PM, next day 10AM, 1PM, 4PM, etc.
-            const optimalHours = [16, 19, 10, 13, 16, 19]; // 4PM, 7PM, 10AM, 1PM, 4PM, 7PM
-            const daysToAdd = Math.floor(postIndex / 6); // New day every 6 posts
-            const hourIndex = postIndex % 6;
+            const schedule = postingSchedule[scheduleIndex];
             
-            const scheduledTime = new Date(baseTime);
-            scheduledTime.setDate(scheduledTime.getDate() + daysToAdd);
-            scheduledTime.setHours(optimalHours[hourIndex], 0, 0, 0);
+            // Calculate the target date and time
+            const targetTime = new Date();
+            targetTime.setHours(schedule.hour, 0, 0, 0);
             
-            return scheduledTime;
+            // If today's slot has passed, start from tomorrow
+            if (schedule.day === 0 && now >= targetTime) {
+                schedule.day = 1;
+            }
+            
+            targetTime.setDate(now.getDate() + schedule.day);
+            
+            return targetTime;
         }
 
         function escapeHtml(text) {
