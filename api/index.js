@@ -25,13 +25,15 @@ let contentDatabase = {
         mediaUrl: "/media/purelife_cortisol.mp4",
         videoUrl: "/media/purelife_cortisol.mp4",
         mediaType: "video",
-        content: `This brand is printing.
+        content: `"Doing This Deflated My Cortisol Belly."
+
+This brand is printing.
 
 PureLife Organics. 41 days on this exact ad.
 
 UGC. Woman lifting her shirt. No fancy fucking studio. Just a real person with a real gut problem.
 
-The hook — "Doing This Deflated My Cortisol Belly" — is smart. Nobody knows what cortisol is but it sounds scientific enough to stop the scroll. And "deflated" hits different than "lose weight." It's visual. You can feel it.
+Nobody knows what cortisol is but it sounds scientific enough to stop the scroll. "Deflated" hits different than "lose weight." It's visual. You can feel it.
 
 They niched down HARD. Stressed women 40+ who've tried everything. That specificity is why their CPMs are stupid low.
 
@@ -49,9 +51,11 @@ NOW GO FUCKING PRINT 🔥`,
         title: "Happy Mammoth — Hormone Harmony",
         mediaUrl: "/media/happy_mammoth.jpg",
         mediaType: "image",
-        content: `This brand is printing.
+        content: `"At 52, I got my figure back."
 
-Happy Mammoth just hit me with "At 52, I got my figure back."
+This brand is printing.
+
+Happy Mammoth just hit me with this line.
 
 Not some bullshit before/after. A real woman saying she feels like herself again.
 
@@ -71,13 +75,13 @@ NOW GO FUCKING PRINT 🔥`,
         title: "O Positiv / URO — Vaginal Health Vitamin",
         mediaUrl: "/media/opositiv_vitamin.jpg",
         mediaType: "image",
-        content: `This brand is printing.
+        content: `"I used to avoid sex. Now I want him all the time."
 
-O Positiv. URO. A vaginal health vitamin.
+This brand is printing.
 
-"I used to avoid sex. Now I want him all the time." That's the ad copy. On Facebook. And it's working.
+That's the ad copy. On Facebook. And it's working.
 
-Everyone else in this space says "supports vaginal pH balance." Nobody gives a shit. O Positiv went straight for the emotional outcome. Better sex life.
+O Positiv went straight for the emotional outcome. Better sex life. Everyone else in this space says "supports vaginal pH balance." Nobody gives a shit.
 
 UGC selfie. Woman holding the product. Bright pink bottle. Looks like a friend recommending it, not a brand selling you something.
 
@@ -94,9 +98,9 @@ NOW GO FUCKING PRINT 🔥`,
         mediaUrl: "/media/purely_nutrient_blackseed.mp4",
         videoUrl: "/media/purely_nutrient_blackseed.mp4",
         mediaType: "video",
-        content: `This brand is printing.
+        content: `"Watch what happens when you put a parasite in contact with Oregano Oil."
 
-"Watch what happens when you put a parasite in contact with Oregano Oil."
+This brand is printing.
 
 Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
 
@@ -118,13 +122,15 @@ NOW GO FUCKING PRINT 🔥`,
         title: "Dr. Blane Schilling — Surgeon Contrarian Authority",
         mediaUrl: "/media/dr_blane_joint.jpg",
         mediaType: "image",
-        content: `This brand is printing.
+        content: `"For years, I believed it was the right thing to do..."
+
+This brand is printing.
 
 Dr. Blane Schilling. 200+ knee replacements. Full scrubs. Hospital hallway.
 
 And he's telling you surgery might not be the answer.
 
-"For years, I believed it was the right thing to do..." A surgeon saying NOT to get surgery. Your brain short-circuits. Goes against everything you'd expect.
+A surgeon saying NOT to get surgery. Your brain short-circuits. Goes against everything you'd expect.
 
 Authority marketing at its peak. Real doctor. Real setting. Contrarian angle. Impossible to ignore.
 
@@ -143,11 +149,13 @@ NOW GO FUCKING PRINT 🔥`,
         mediaUrl: "/media/serene_skincare.mp4",
         videoUrl: "/media/serene_skincare.mp4",
         mediaType: "video",
-        content: `This brand is printing.
+        content: `"I'm 42 and people think I'm in my early 30s."
+
+This brand is printing.
 
 SereneSkincare. PDRN patches.
 
-"I'm 42 and people think I'm in my early 30s." Testimonial lead. Simple.
+Testimonial lead. Simple.
 
 PDRN. Most people have never heard of it. It's not retinol. It's not collagen. It's NEW. And "new" in skincare is crack for women scrolling Facebook at 10pm.
 
@@ -166,13 +174,15 @@ NOW GO FUCKING PRINT 🔥`,
         mediaUrl: "/media/femiclear.mp4",
         videoUrl: "/media/femiclear.mp4",
         mediaType: "video",
-        content: `This brand is printing.
+        content: `"Before you panic... watch this."
+
+This brand is printing.
 
 FemiClear. 34 days running. Selling a herpes treatment. On Facebook. With a woman in a lab coat.
 
 Most brands wouldn't touch this. That's exactly why FemiClear is crushing it. Zero creative competition because everyone's too scared.
 
-"Before you panic... watch this." That hook is doing therapy and selling product at the same time.
+That hook is doing therapy and selling product at the same time.
 
 The doctor figure removes the shame. Makes it medical, not personal. The person seeing this ad has been too embarrassed to go to the pharmacy. And here's a solution in their feed that looks legitimate.
 
@@ -212,11 +222,11 @@ NOW GO FUCKING PRINT 🔥`,
         title: "Emunah Beauty — Hair Vitamins Specialist Listicle",
         mediaUrl: "/media/emunah_hair.jpg",
         mediaType: "image",
-        content: `This brand is printing.
+        content: `"I've tested hundreds of hair vitamins. Here are the top 5 that actually work."
+
+This brand is printing.
 
 Emunah Beauty. Hair vitamins. But the ad isn't from the brand — it's from a "Certified Trichologist & Scalp Specialist."
-
-"I've tested hundreds of hair vitamins. Here are the top 5 that actually work."
 
 Doesn't feel like an ad. Feels like expert advice. You trust it immediately.
 
