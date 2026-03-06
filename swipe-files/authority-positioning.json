@@ -1,0 +1,80 @@
+{
+  "collection": "authority-positioning",
+  "description": "Doctor/expert authority plays",
+  "criteria": "Contains authority markers (Dr., expert, etc.)",
+  "count": 2,
+  "generated": "2026-03-06T18:45:16.598Z",
+  "ads": [
+    {
+      "id": "80115168",
+      "brand": "Newman Restoration & Cleaning",
+      "title": "Newman Restoration & Cleaning",
+      "body": "Emergency disaster restoration specialists. 100% customer satisfaction guarantee, call 672-2819 for a free estimate.",
+      "cta": "SIGN_UP",
+      "performance_score": 91,
+      "days_active": 393,
+      "used_count": 1,
+      "landing_page": "",
+      "media": [
+        {
+          "type": "image",
+          "url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-9a68019221ea.jpg",
+          "resized_url": null,
+          "thumbnail_url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-8ad04d95e8d1_resized.jpg",
+          "video_length": 0
+        },
+        {
+          "type": "image",
+          "url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-9a68019221ea.jpg",
+          "resized_url": null,
+          "thumbnail_url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-8ad04d95e8d1_resized.jpg",
+          "video_length": 0
+        },
+        {
+          "type": "image",
+          "url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-2918a58d4334.jpg",
+          "resized_url": null,
+          "thumbnail_url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-a1386146e981_resized.jpg",
+          "video_length": 0
+        },
+        {
+          "type": "image",
+          "url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-2918a58d4334.jpg",
+          "resized_url": null,
+          "thumbnail_url": "https://static-gp.gethookd.ai/media/ads_media/80115168/media-a1386146e981_resized.jpg",
+          "video_length": 0
+        }
+      ],
+      "analysis": {
+        "hook_type": "direct",
+        "has_transformation": false,
+        "has_authority": true,
+        "is_ugc_style": false,
+        "word_count": 14,
+        "has_social_proof": true,
+        "performance_tier": "elite"
+      },
+      "created_date": "2025-01-28",
+      "last_seen_date": "2026-02-24"
+    },
+    {
+      "id": "80118220",
+      "brand": "Da Vinci Medical Clinic",
+      "title": "✨Dr. Crystal Elevates Skin Lifting with Ultherapy®️ Prime",
+      "body": "✨Dr. Crystal Elevates Skin Lifting with Ultherapy®️ Prime",
+      "performance_score": 0,
+      "days_active": 0,
+      "used_count": 0,
+      "media": [],
+      "analysis": {
+        "hook_type": "direct",
+        "has_transformation": false,
+        "has_authority": true,
+        "is_ugc_style": false,
+        "word_count": 8,
+        "has_social_proof": false,
+        "performance_tier": "weak"
+      }
+    }
+  ]
+}

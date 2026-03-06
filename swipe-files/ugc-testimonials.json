@@ -1,0 +1,28 @@
+{
+  "collection": "ugc-testimonials",
+  "description": "User-generated content style ads",
+  "criteria": "Personal voice, first-person style",
+  "count": 1,
+  "generated": "2026-03-06T18:45:16.598Z",
+  "ads": [
+    {
+      "id": "78343818",
+      "brand": "Bonlint",
+      "title": "",
+      "body": "🔥🎁I mitt syliv trenger jeg dette ......",
+      "performance_score": 0,
+      "days_active": 0,
+      "used_count": 0,
+      "media": [],
+      "analysis": {
+        "hook_type": "direct",
+        "has_transformation": false,
+        "has_authority": false,
+        "is_ugc_style": true,
+        "word_count": 7,
+        "has_social_proof": false,
+        "performance_tier": "weak"
+      }
+    }
+  ]
+}

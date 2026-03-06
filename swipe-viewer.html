@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gethookd Swipe Files</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #888;
+        }
+        
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .collection-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .collection-card:hover {
+            transform: translateY(-2px);
+            border-color: #ff6b35;
+        }
+        
+        .collection-title {
+            font-size: 1.3rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+            text-transform: capitalize;
+        }
+        
+        .collection-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .collection-description {
+            color: #ccc;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .download-btn {
+            background: #ff6b35;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: #e55a2b;
+        }
+        
+        .summary {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .summary h3 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Gethookd Swipe Files</h1>
+            <p>Curated collections of high-performing ads</p>
+        </div>
+        
+        <div id="loading" class="loading">
+            <p>Loading swipe files...</p>
+        </div>
+        
+        <div id="collections" class="collections-grid" style="display: none;"></div>
+        
+        <div id="summary" class="summary" style="display: none;"></div>
+    </div>
+
+    <script>
+        const collections = {
+            'elite-performers': {
+                title: 'Elite Performers',
+                description: 'Top 80+ performance score ads - the cream of the crop',
+                count: 12
+            },
+            'authority-positioning': {
+                title: 'Authority Positioning',
+                description: 'Doctor/expert authority plays that build instant credibility',
+                count: 2
+            },
+            'ugc-testimonials': {
+                title: 'UGC Testimonials',
+                description: 'User-generated content style ads that feel authentic',
+                count: 1
+            },
+            'supplement-winners': {
+                title: 'Supplement Winners',
+                description: 'High-performing supplement ads (60+ score)',
+                count: 12
+            },
+            'long-runners': {
+                title: 'Long Runners',
+                description: 'Ads running 30+ days (proven profitable)',
+                count: 100
+            }
+        };
+        
+        function loadCollections() {
+            const collectionsContainer = document.getElementById('collections');
+            const summaryContainer = document.getElementById('summary');
+            const loading = document.getElementById('loading');
+            
+            // Hide loading
+            loading.style.display = 'none';
+            
+            // Show collections
+            collectionsContainer.style.display = 'grid';
+            summaryContainer.style.display = 'block';
+            
+            // Render collection cards
+            let totalAds = 0;
+            Object.entries(collections).forEach(([key, collection]) => {
+                totalAds += collection.count;
+                
+                const card = document.createElement('div');
+                card.className = 'collection-card';
+                card.innerHTML = `
+                    <div class="collection-title">${collection.title}</div>
+                    <div class="collection-count">${collection.count} ads</div>
+                    <div class="collection-description">${collection.description}</div>
+                    <a href="/swipe-files/${key}.json" download="${key}.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                `;
+                collectionsContainer.appendChild(card);
+            });
+            
+            // Render summary
+            summaryContainer.innerHTML = `
+                <h3>📊 Collection Summary</h3>
+                <p><strong>${totalAds} total ads</strong> across ${Object.keys(collections).length} curated collections</p>
+                <p>Generated from 4,981 ads in the Gethookd database</p>
+                <br>
+                <a href="/swipe-files/summary.json" download="summary.json" class="download-btn">
+                    📋 Download Summary
+                </a>
+            `;
+        }
+        
+        // Load collections on page load
+        document.addEventListener('DOMContentLoaded', loadCollections);
+    </script>
+</body>
+</html>

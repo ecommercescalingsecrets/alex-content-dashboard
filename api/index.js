@@ -9,6 +9,7 @@ const port = process.env.PORT || 3333;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 app.use('/media', express.static(path.join(__dirname, '..', 'media')));
+app.use('/swipe-files', express.static(path.join(__dirname, '..', 'swipe-files')));
 
 // Twitter client
 const twitterClient = new TwitterApi({
@@ -1458,6 +1459,11 @@ async function updateSkillsFromFeedback(feedback) {
 app.delete('/api/content/:id', (req, res) => {
     delete contentDatabase[req.params.id];
     res.json({ success: true });
+});
+
+// Swipe Files viewer
+app.get('/swipe-files', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'swipe-viewer.html'));
 });
 
 app.listen(port, () => {

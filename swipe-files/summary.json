@@ -1,0 +1,30 @@
+{
+  "generated": "2026-03-06T18:45:16.595Z",
+  "total_ads_analyzed": 589,
+  "collections": {
+    "elite-performers": {
+      "count": 12,
+      "description": "Top 80+ performance score ads"
+    },
+    "transformation-hooks": {
+      "count": 0,
+      "description": "Ads focused on transformation stories"
+    },
+    "authority-positioning": {
+      "count": 2,
+      "description": "Doctor/expert authority plays"
+    },
+    "ugc-testimonials": {
+      "count": 1,
+      "description": "User-generated content style ads"
+    },
+    "supplement-winners": {
+      "count": 12,
+      "description": "High-performing supplement ads"
+    },
+    "long-runners": {
+      "count": 100,
+      "description": "Ads running 30+ days (proven profitable)"
+    }
+  }
+}
