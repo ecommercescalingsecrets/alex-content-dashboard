@@ -323,10 +323,11 @@
         function updateOptimalTimeSuggestions() {
             const approvedPosts = content.filter(c => c.status === 'approved' && !c.scheduledAt);
             
-            approvedPosts.forEach(post => {
+            approvedPosts.forEach((post, index) => {
                 const suggestion = document.getElementById(`optimal-suggestion-${post.id}`);
                 if (suggestion) {
-                    const optimalTime = getOptimalTime();
+                    // Get different optimal time for each post (spaced apart)
+                    const optimalTime = getSpacedPostingTime(index);
                     const formattedTime = formatOptimalTime(optimalTime);
                     const engagementData = getEngagementData(optimalTime);
                     
@@ -334,6 +335,9 @@
                         📈 <strong>Optimal:</strong> ${formattedTime} <span class="engagement-data">(${engagementData})</span>
                         <button class="btn btn-schedule-optimal" onclick="scheduleOptimal('${post.id}')">📅 Schedule Optimal</button>
                     `;
+                    
+                    // Store the optimal time for this post
+                    suggestion.setAttribute('data-optimal-time', optimalTime.toISOString());
                 }
             });
         }
@@ -359,18 +363,39 @@
         }
         
         function initializeDateTimeInputs() {
-            // Set default time to 4 PM EST (best posting time) tomorrow
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + 1); // Tomorrow
-            defaultDate.setHours(16, 0, 0, 0); // 4 PM
+            const reviewPosts = document.querySelectorAll('.datetime-input');
+            let postIndex = 0;
             
-            const defaultDateTime = defaultDate.toISOString().slice(0, 16);
-            
-            document.querySelectorAll('.datetime-input').forEach(input => {
+            reviewPosts.forEach(input => {
                 if (!input.value) {
-                    input.value = defaultDateTime;
+                    // Space posts 3 hours apart, starting from optimal time
+                    const scheduledTime = getSpacedPostingTime(postIndex);
+                    input.value = scheduledTime.toISOString().slice(0, 16);
+                    postIndex++;
                 }
             });
+        }
+        
+        function getSpacedPostingTime(postIndex) {
+            const now = new Date();
+            const baseTime = new Date();
+            
+            // Start with optimal time (4 PM EST today, or tomorrow if past)
+            baseTime.setHours(16, 0, 0, 0);
+            if (now >= baseTime) {
+                baseTime.setDate(baseTime.getDate() + 1); // Tomorrow
+            }
+            
+            // Space posts 3 hours apart: 4PM, 7PM, next day 10AM, 1PM, 4PM, etc.
+            const optimalHours = [16, 19, 10, 13, 16, 19]; // 4PM, 7PM, 10AM, 1PM, 4PM, 7PM
+            const daysToAdd = Math.floor(postIndex / 6); // New day every 6 posts
+            const hourIndex = postIndex % 6;
+            
+            const scheduledTime = new Date(baseTime);
+            scheduledTime.setDate(scheduledTime.getDate() + daysToAdd);
+            scheduledTime.setHours(optimalHours[hourIndex], 0, 0, 0);
+            
+            return scheduledTime;
         }
 
         function escapeHtml(text) {
@@ -650,7 +675,9 @@
         }
 
         async function scheduleOptimal(id) {
-            const optimalTime = getOptimalTime();
+            const suggestion = document.getElementById(`optimal-suggestion-${id}`);
+            const optimalTimeISO = suggestion.getAttribute('data-optimal-time');
+            const optimalTime = new Date(optimalTimeISO);
             const formattedTime = formatOptimalTime(optimalTime);
             
             if (!confirm(`Schedule this post for optimal time: ${formattedTime}?`)) {
