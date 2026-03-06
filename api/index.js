@@ -357,7 +357,19 @@ Men's supplement market is shifting hard toward ancestral health. Seed oils are 
 
 If you're not in this space yet, someone else is taking your customers.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -384,7 +396,19 @@ This is what happens when a supplement brand acts like a luxury brand. Premium p
 
 Colostrum is the new collagen. First movers are printing.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -410,7 +434,19 @@ Greens powder is a $3B market growing 8% annually. The winners aren't the ones w
 
 "Your veggies are rotting" beats "44 superfoods" every single time.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -437,7 +473,19 @@ Men's health supplements are a bloodbath right now. The brands winning aren't th
 
 Three words that hit three pain points. That's the formula.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -464,7 +512,19 @@ Subscription model. "That's why I chose the subscription." Social proof baked in
 
 Perimenopause is a $600B market that most brands are too scared to talk about directly. The ones who do? Printing.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -490,7 +550,19 @@ The real play here: category bridging. Take a commodity product (electrolytes) a
 
 Positioning is the moat. Not ingredients.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -516,7 +588,19 @@ The hair supplement space is dominated by biotin pills that taste like chalk. An
 
 Format innovation beats ingredient innovation. Every time.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -545,7 +629,19 @@ Men's skincare is a $30B market where 90% of brands look identical. Forge carved
 
 Weird positioning wins when the market is boring.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
@@ -573,7 +669,19 @@ Your retargeting creative should be the opposite of your prospecting creative. F
 
 If your retargeting looks like your TOF, you're burning money.
 
-NOW GO FUCKING PRINT 🔥`,
+NOW GO FUCKING PRINT 🔥
+
+2/2
+
+Want to find ads like this instantly? 
+
+I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.
+
+→ See what's converting in your niche
+→ Swipe proven hooks & angles  
+→ Skip months of trial & error
+
+Try it free: gethookd.ai`,
         status: "review",
         target: "Solo ecommerce founders doing $2-10M/year",
         createdAt: new Date().toISOString()
