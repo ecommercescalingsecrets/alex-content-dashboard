@@ -1461,9 +1461,14 @@ app.delete('/api/content/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// Swipe Files viewer
+// Swipe Files viewer (public)
 app.get('/swipe-files', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'swipe-viewer.html'));
+    res.sendFile(path.join(__dirname, '..', 'public-swipe-files.html'));
+});
+
+// Direct swipe files access
+app.get('/swipe', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public-swipe-files.html'));
 });
 
 app.listen(port, () => {

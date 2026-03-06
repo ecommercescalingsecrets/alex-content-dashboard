@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex's Gethookd Swipe Files - Public Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 0;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            color: #ff6b35;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.3rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .stats {
+            background: linear-gradient(135deg, #ff6b35, #e55a2b);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .stats h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        
+        .collection-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .collection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b35, #e55a2b);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .collection-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .collection-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff6b35;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
+        }
+        
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .collection-title {
+            font-size: 1.4rem;
+            color: #ff6b35;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .collection-count {
+            background: #ff6b35;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .collection-description {
+            color: #ccc;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .collection-criteria {
+            background: #333;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #bbb;
+            margin-bottom: 20px;
+            border-left: 3px solid #ff6b35;
+        }
+        
+        .download-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #ff6b35, #e55a2b);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .preview-btn {
+            background: transparent;
+            border: 1px solid #ff6b35;
+            color: #ff6b35;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .preview-btn:hover {
+            background: #ff6b35;
+            color: white;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid #333;
+            margin-top: 50px;
+        }
+        
+        .footer a {
+            color: #ff6b35;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #ff6b35, #e55a2b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .collections-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .download-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Alex's Gethookd Swipe Files</h1>
+            <p>Curated collections of <span class="highlight">high-performing ads</span></p>
+            <div class="subtitle">Analyzed from 4,981 ads in the Gethookd database</div>
+        </div>
+        
+        <div class="stats">
+            <h2>📊 589 Total Ads • 6 Curated Collections • Ready for Download</h2>
+            <p>Each collection includes performance scores, hook analysis, and strategic insights</p>
+        </div>
+        
+        <div class="collections-grid">
+            <!-- Long Runners Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">🏃‍♂️ Long Runners</div>
+                    <div class="collection-count">100 ads</div>
+                </div>
+                <div class="collection-description">
+                    Ads running 30+ days - these are <strong>proven profitable</strong>. If an ad runs this long, it's making money.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Criteria:</strong> 30+ days active (likely profitable)
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/long-runners.json" download="long-runners.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                    <button onclick="previewCollection('long-runners')" class="preview-btn">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Elite Performers Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">⭐ Elite Performers</div>
+                    <div class="collection-count">12 ads</div>
+                </div>
+                <div class="collection-description">
+                    Top 80+ performance score ads - the <strong>cream of the crop</strong>. These are the highest-performing ads in the database.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Criteria:</strong> Performance score ≥ 80
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/elite-performers.json" download="elite-performers.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                    <button onclick="previewCollection('elite-performers')" class="preview-btn">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Supplement Winners Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">💊 Supplement Winners</div>
+                    <div class="collection-count">12 ads</div>
+                </div>
+                <div class="collection-description">
+                    High-performing supplement ads (60+ score). Perfect for studying supplement marketing strategies.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Criteria:</strong> Supplement niche + 60+ performance score
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/supplement-winners.json" download="supplement-winners.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                    <button onclick="previewCollection('supplement-winners')" class="preview-btn">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Authority Positioning Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">👨‍⚕️ Authority Positioning</div>
+                    <div class="collection-count">2 ads</div>
+                </div>
+                <div class="collection-description">
+                    Doctor/expert authority plays that build <strong>instant credibility</strong>. Study how top brands use expert positioning.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Criteria:</strong> Contains authority markers (Dr., expert, etc.)
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/authority-positioning.json" download="authority-positioning.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                    <button onclick="previewCollection('authority-positioning')" class="preview-btn">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- UGC Testimonials Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">📱 UGC Testimonials</div>
+                    <div class="collection-count">1 ad</div>
+                </div>
+                <div class="collection-description">
+                    User-generated content style ads that feel <strong>authentic</strong>. Perfect for understanding UGC that converts.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Criteria:</strong> Personal voice, first-person style
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/ugc-testimonials.json" download="ugc-testimonials.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                    <button onclick="previewCollection('ugc-testimonials')" class="preview-btn">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Collection -->
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-title">📋 Complete Summary</div>
+                    <div class="collection-count">All</div>
+                </div>
+                <div class="collection-description">
+                    Overview of all collections with <strong>generation stats</strong> and metadata. Perfect for understanding the full dataset.
+                </div>
+                <div class="collection-criteria">
+                    <strong>Contains:</strong> Collection stats, criteria, and generation info
+                </div>
+                <div class="download-section">
+                    <a href="/swipe-files/summary.json" download="summary.json" class="download-btn">
+                        📥 Download JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated from <strong>4,981 ads</strong> in the Gethookd database</p>
+            <p>Created by <a href="https://gethookd.ai" target="_blank">Gethookd AI</a> • 
+               Curated by <a href="https://twitter.com/FedotOff90" target="_blank">@FedotOff90</a></p>
+            <p style="margin-top: 15px; color: #666;">
+                Each JSON file includes: brand name, ad copy, performance score, hook type, days active, media URLs, landing pages, and strategic analysis
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function previewCollection(collectionName) {
+            // For preview, we'll just show a simple modal with collection info
+            // In a full implementation, this could load and display sample ads
+            alert(`Preview feature coming soon for ${collectionName} collection!`);
+        }
+        
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading states to download buttons
+            const downloadButtons = document.querySelectorAll('.download-btn');
+            downloadButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '⏳ Downloading...';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
