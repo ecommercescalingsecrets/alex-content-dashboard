@@ -96,17 +96,17 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-Purely Nutrient. Black seed oil.
+"Watch what happens when you put a parasite in contact with Oregano Oil."
 
-"Watch what happens when you put a parasite in contact with Oregano Oil." Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
+Microscope footage of a parasite dying. On your feed. While you're eating breakfast.
 
 You can't NOT watch it. And once you're watching a parasite squirm, you're buying whatever kills it.
 
-The real play — they're not even selling oregano oil. They're selling black seed oil. The parasite video is just the hook. Bait and switch but make it educational.
+Purely Nutrient isn't even selling oregano oil. They're selling black seed oil. The parasite video is just the hook. Bait and switch but make it educational.
 
-Parasite cleanse market is blowing up. People are convinced they have parasites (thanks TikTok). Smart brands are riding that wave.
+Parasite cleanse market is blowing up. People are convinced they have parasites.
 
-Test a "what's living inside you" angle. You're sleeping on it.
+Smart brands are riding that wave.
 
 NOW GO PRINT 🔥`,
         status: "review",
@@ -190,15 +190,15 @@ NOW GO PRINT 🔥`,
         mediaType: "image",
         content: `This brand is printing.
 
-Savanna Skin. Tanning gummies. Get a tan without the sun.
+Woman laying in bed, tanned, cheeky text on her back.
 
-Woman laying in bed, tanned, cheeky text on her back. Doesn't feel like an ad. Feels like a meme your friend sent you.
+Doesn't feel like an ad. Feels like a meme your friend sent you.
 
-In a feed full of "CLINICAL STUDIES SHOW" bullshit, this looks like entertainment. Entertainment gets engagement.
+Savanna Skin cracked the code. In a feed full of "CLINICAL STUDIES SHOW" bullshit, this looks like entertainment.
 
-Perfect DTC product. Consumable. Repeat purchase. Massive TAM. Low COGS. Before/after content makes itself.
+Entertainment gets engagement. Engagement gets sales.
 
-Brown pouch. Minimal design. Instagram-worthy. She'll post it on her story. Free marketing.
+Perfect DTC product. Consumable. Repeat purchase. Before/after content makes itself.
 
 Nobody's scrolling past "gummies that make you tan." Too weird NOT to click.
 
@@ -239,15 +239,15 @@ NOW GO PRINT 🔥`,
         mediaType: "video",
         content: `This brand is printing.
 
-UltimaPeak. Shilajit + Ashwagandha + Sea Moss. One gummy.
+POV hook looking down at your feet in the bathroom. You have no idea what's coming.
 
-Three most hyped men's health ingredients on TikTok combined into a single product. That's not innovation — that's reading the room.
+That's the point.
 
-POV hook looking down at your feet in the bathroom. You have no idea what's coming. That's the point.
+UltimaPeak found the three most hyped men's health ingredients on TikTok and put them in one gummy. That's not innovation — that's reading the room.
 
-"See results in 6-8 weeks." Under-promise. Guys feel something in 2 weeks, think it's a miracle. That's how you get organic reviews and repeat orders.
+"See results in 6-8 weeks." Under-promise. Guys feel something in 2 weeks, think it's a miracle.
 
-Shilajit went from unknown to everywhere in 6 months. Sea moss same.
+That's how you get organic reviews and repeat orders.
 
 Trend-jack ingredients while they're hot. Don't invent anything. Combine what's already working.
 
