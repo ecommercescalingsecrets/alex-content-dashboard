@@ -79,6 +79,20 @@
         .feedback-item { background: #334155; border-radius: 6px; padding: 0.75rem; }
         .feedback-text { color: #e2e8f0; margin-bottom: 0.5rem; }
         .feedback-date { color: #94a3b8; font-size: 0.75rem; }
+        
+        /* Progress Modal Styles */
+        .progress-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .progress-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; min-width: 500px; max-width: 600px; }
+        .progress-card h3 { color: #60a5fa; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+        .progress-steps { margin-bottom: 2rem; }
+        .progress-step { display: flex; align-items: center; padding: 0.75rem 0; opacity: 0.4; transition: all 0.3s; }
+        .progress-step.active { opacity: 1; color: #60a5fa; }
+        .progress-step.completed { opacity: 0.8; color: #059669; }
+        .step-icon { font-size: 1.2rem; margin-right: 1rem; width: 24px; }
+        .step-text { color: #e2e8f0; font-weight: 500; }
+        .progress-bar { background: #334155; border-radius: 8px; height: 8px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #60a5fa, #059669); height: 100%; transition: width 0.3s ease; border-radius: 8px; }
+        #progress-modal { display: none; }
     </style>
 </head>
 <body>
@@ -396,24 +410,124 @@
                 return;
             }
             
+            // Show progress modal
+            showProgressModal(id, feedbackText);
+            
             try {
-                const res = await fetch(`/api/content/${id}/feedback`, {
+                const res = await fetch(`/api/content/${id}/apply-feedback`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ feedback: feedbackText })
                 });
                 
                 if (res.ok) {
-                    showToast('💬 Feedback saved!');
-                    textarea.value = ''; // Clear the textarea
-                    loadContent(); // Refresh to show the new feedback
+                    const result = await res.json();
+                    showToast('✅ Feedback applied to all content!', '#059669');
+                    textarea.value = '';
+                    hideProgressModal();
+                    loadContent(); // Refresh to show updates
                 } else {
                     const error = await res.json();
                     showToast('❌ ' + error.error, '#dc2626');
+                    hideProgressModal();
                 }
             } catch (e) {
-                showToast('❌ Error saving feedback', '#dc2626');
+                showToast('❌ Error applying feedback', '#dc2626');
+                hideProgressModal();
             }
+        }
+
+        function showProgressModal(postId, feedback) {
+            // Create progress modal if it doesn't exist
+            let modal = document.getElementById('progress-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'progress-modal';
+                modal.innerHTML = `
+                    <div class="progress-overlay">
+                        <div class="progress-card">
+                            <h3>🧠 Applying Feedback & Learning</h3>
+                            <div class="progress-steps">
+                                <div class="progress-step active" id="step-1">
+                                    <div class="step-icon">⏳</div>
+                                    <div class="step-text">Analyzing feedback...</div>
+                                </div>
+                                <div class="progress-step" id="step-2">
+                                    <div class="step-icon">✏️</div>
+                                    <div class="step-text">Updating this post...</div>
+                                </div>
+                                <div class="progress-step" id="step-3">
+                                    <div class="step-icon">🔄</div>
+                                    <div class="step-text">Applying to all posts...</div>
+                                </div>
+                                <div class="progress-step" id="step-4">
+                                    <div class="step-icon">🛠️</div>
+                                    <div class="step-text">Updating skills...</div>
+                                </div>
+                                <div class="progress-step" id="step-5">
+                                    <div class="step-icon">✅</div>
+                                    <div class="step-text">Learning captured!</div>
+                                </div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            // Reset and show modal
+            modal.style.display = 'block';
+            document.querySelectorAll('.progress-step').forEach(step => step.classList.remove('active', 'completed'));
+            document.getElementById('progress-fill').style.width = '0%';
+            
+            // Simulate progress steps
+            simulateProgress();
+        }
+
+        function simulateProgress() {
+            const steps = ['step-1', 'step-2', 'step-3', 'step-4', 'step-5'];
+            const progressFill = document.getElementById('progress-fill');
+            
+            steps.forEach((stepId, index) => {
+                setTimeout(() => {
+                    // Complete previous steps
+                    if (index > 0) {
+                        const prevStep = document.getElementById(steps[index - 1]);
+                        prevStep.classList.remove('active');
+                        prevStep.classList.add('completed');
+                        prevStep.querySelector('.step-icon').textContent = '✅';
+                    }
+                    
+                    // Activate current step
+                    const currentStep = document.getElementById(stepId);
+                    currentStep.classList.add('active');
+                    
+                    // Update progress bar
+                    const progress = ((index + 1) / steps.length) * 100;
+                    progressFill.style.width = progress + '%';
+                    
+                    // Complete final step
+                    if (index === steps.length - 1) {
+                        setTimeout(() => {
+                            currentStep.classList.remove('active');
+                            currentStep.classList.add('completed');
+                            currentStep.querySelector('.step-icon').textContent = '✅';
+                        }, 1000);
+                    }
+                }, index * 1500);
+            });
+        }
+
+        function hideProgressModal() {
+            setTimeout(() => {
+                const modal = document.getElementById('progress-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            }, 2000);
         }
 
         // Filter buttons

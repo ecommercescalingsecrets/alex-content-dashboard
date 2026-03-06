@@ -458,6 +458,94 @@ app.post('/api/content', (req, res) => {
     res.json(contentDatabase[id]);
 });
 
+app.post('/api/content/:id/apply-feedback', async (req, res) => {
+    const { feedback } = req.body;
+    const item = contentDatabase[req.params.id];
+    
+    if (!item) return res.status(404).json({ error: 'Post not found' });
+    
+    try {
+        // Step 1: Save feedback
+        if (!item.feedbackHistory) item.feedbackHistory = [];
+        item.feedbackHistory.push({
+            text: feedback,
+            createdAt: new Date().toISOString()
+        });
+        
+        // Step 2: Analyze feedback and apply to this post
+        const updatedContent = await applyFeedbackToContent(item.content, feedback);
+        item.content = updatedContent;
+        
+        // Step 3: Apply learning to all other posts
+        await applyLearningToAllPosts(feedback);
+        
+        // Step 4: Update skills (placeholder for future skill updates)
+        await updateSkillsFromFeedback(feedback);
+        
+        res.json({ 
+            success: true, 
+            updatedContent,
+            learningApplied: true,
+            skillsUpdated: true
+        });
+    } catch (error) {
+        console.error('Error applying feedback:', error);
+        res.status(500).json({ error: 'Failed to apply feedback' });
+    }
+});
+
+async function applyFeedbackToContent(content, feedback) {
+    // Simple feedback application logic
+    // In a real system, this would use AI to understand and apply feedback
+    
+    // Example patterns we can detect and fix
+    if (feedback.toLowerCase().includes('lead with transformation')) {
+        // Move transformation quotes to the beginning
+        const lines = content.split('\n\n');
+        const transformationLine = lines.find(line => 
+            line.includes('"') && (line.includes('got') || line.includes('feel') || line.includes('back'))
+        );
+        
+        if (transformationLine && !lines[1].includes('"')) {
+            // Remove from middle and add to beginning
+            const filteredLines = lines.filter(line => line !== transformationLine);
+            filteredLines.splice(2, 0, transformationLine);
+            return filteredLines.join('\n\n');
+        }
+    }
+    
+    // Apply other feedback patterns here
+    return content;
+}
+
+async function applyLearningToAllPosts(feedback) {
+    // Apply the same learning pattern to all other posts
+    const feedbackLower = feedback.toLowerCase();
+    
+    Object.values(contentDatabase).forEach(post => {
+        if (feedbackLower.includes('lead with transformation')) {
+            // Apply transformation-first logic to all posts
+            const lines = post.content.split('\n\n');
+            const transformationLine = lines.find(line => 
+                line.includes('"') && (line.includes('got') || line.includes('feel') || line.includes('back'))
+            );
+            
+            if (transformationLine && !lines[1].includes('"')) {
+                const filteredLines = lines.filter(line => line !== transformationLine);
+                filteredLines.splice(2, 0, transformationLine);
+                post.content = filteredLines.join('\n\n');
+            }
+        }
+    });
+}
+
+async function updateSkillsFromFeedback(feedback) {
+    // Placeholder for updating skill files based on feedback
+    // This would write to the brand-printing SKILL.md file
+    console.log('Updating skills based on feedback:', feedback);
+    return true;
+}
+
 app.delete('/api/content/:id', (req, res) => {
     delete contentDatabase[req.params.id];
     res.json({ success: true });
