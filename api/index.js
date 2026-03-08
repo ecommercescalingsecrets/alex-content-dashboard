@@ -327,6 +327,31 @@ app.post('/api/migrate/update-cta', (req, res) => {
     res.json({ updated, total: allContent.length });
 });
 
+// Migration endpoint - add missing Gethookd CTAs
+app.post('/api/migrate/add-missing-ctas', (req, res) => {
+    const allContent = getAllContent();
+    const ctaSection = `\n\n2/2\n\nWant to find ads like this instantly? \n\nI use @GetHookdAI to spy on 70M+ winning ads. They scrape 110,000+ brands daily on Facebook.\n\n→ See what's converting in your niche\n→ Swipe proven hooks & angles  \n→ Skip months of trial & error\n\nTry it free: gethookd.ai`;
+    
+    let fixed = 0;
+    const fixedPosts = [];
+    
+    for (const post of allContent) {
+        if (post.content && !post.content.includes('I use @GetHookdAI')) {
+            post.content = post.content + ctaSection;
+            upsertContent(post);
+            fixed++;
+            fixedPosts.push({ id: post.id, title: post.title });
+        }
+    }
+    
+    res.json({ 
+        fixed, 
+        total: allContent.length, 
+        fixedPosts,
+        message: `Added Gethookd CTA to ${fixed} posts` 
+    });
+});
+
 // Debug endpoint - test media upload to Twitter
 app.get('/api/debug/upload-test', async (req, res) => {
     try {
