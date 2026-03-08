@@ -62,37 +62,27 @@ async function scheduleChecker() {
                     }
                 }
 
-                if (text.length <= 280) {
-                    const tweetOptions = { text };
-                    if (mediaId) tweetOptions.media = { media_ids: [mediaId] };
-                    const tweet = await twitterClient.v2.tweet(tweetOptions);
-                    item.status = 'posted';
-                    item.scheduledStatus = 'posted';
-                    item.tweetId = tweet.data.id;
-                    item.postedAt = new Date().toISOString();
-                } else {
-                    const parts = text.split(/\n\n(?=\d+\/)/).filter(Boolean);
-                    const hook = parts.shift();
-                    let lastTweetId = null;
-                    const tweetIds = [];
+                const tweets = splitIntoTweets(text);
+                let lastTweetId = null;
+                const tweetIds = [];
 
-                    const firstTweetOptions = { text: hook.substring(0, 280) };
-                    if (mediaId) firstTweetOptions.media = { media_ids: [mediaId] };
-                    const first = await twitterClient.v2.tweet(firstTweetOptions);
-                    lastTweetId = first.data.id;
-                    tweetIds.push(lastTweetId);
-
-                    for (const part of parts) {
-                        const reply = await twitterClient.v2.reply(part.substring(0, 280), lastTweetId);
-                        lastTweetId = reply.data.id;
-                        tweetIds.push(lastTweetId);
+                for (let i = 0; i < tweets.length; i++) {
+                    if (i === 0) {
+                        const opts = { text: tweets[i] };
+                        if (mediaId) opts.media = { media_ids: [mediaId] };
+                        const result = await twitterClient.v2.tweet(opts);
+                        lastTweetId = result.data.id;
+                    } else {
+                        const result = await twitterClient.v2.reply(tweets[i], lastTweetId);
+                        lastTweetId = result.data.id;
                     }
-
-                    item.status = 'posted';
-                    item.scheduledStatus = 'posted';
-                    item.tweetIds = tweetIds;
-                    item.postedAt = new Date().toISOString();
+                    tweetIds.push(lastTweetId);
                 }
+
+                item.status = 'posted';
+                item.scheduledStatus = 'posted';
+                item.tweetIds = tweetIds;
+                item.postedAt = new Date().toISOString();
                 upsertContent(item);
                 console.log(`✅ Successfully posted scheduled: ${item.title}`);
             } catch (err) {
@@ -179,6 +169,46 @@ app.post('/api/content/:id/feedback', (req, res) => {
 
 // /api/content/scheduled/week route moved above :id param route to avoid conflicts
 
+// Split long text into tweet-sized chunks at paragraph boundaries
+function splitIntoTweets(text, maxLen = 270) {
+    // First split on the "2/2" or "X/X" thread marker
+    const sections = text.split(/\n\n(?=\d+\/\d+)/).filter(Boolean);
+    const tweets = [];
+
+    for (const section of sections) {
+        if (section.length <= maxLen) {
+            tweets.push(section.trim());
+            continue;
+        }
+        // Split by paragraphs (double newline)
+        const paragraphs = section.split('\n\n').filter(Boolean);
+        let current = '';
+        for (const para of paragraphs) {
+            const candidate = current ? current + '\n\n' + para : para;
+            if (candidate.length <= maxLen) {
+                current = candidate;
+            } else {
+                if (current) tweets.push(current.trim());
+                // If single paragraph exceeds limit, hard split at sentence
+                if (para.length > maxLen) {
+                    const sentences = para.match(/[^.!?]+[.!?]+/g) || [para];
+                    let chunk = '';
+                    for (const s of sentences) {
+                        const next = chunk ? chunk + ' ' + s.trim() : s.trim();
+                        if (next.length <= maxLen) { chunk = next; }
+                        else { if (chunk) tweets.push(chunk.trim()); chunk = s.trim(); }
+                    }
+                    current = chunk;
+                } else {
+                    current = para;
+                }
+            }
+        }
+        if (current) tweets.push(current.trim());
+    }
+    return tweets;
+}
+
 app.post('/api/content/:id/post', async (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
@@ -191,47 +221,45 @@ app.post('/api/content/:id/post', async (req, res) => {
             try {
                 const mediaPath = path.join(__dirname, '..', item.mediaUrl);
                 if (fs.existsSync(mediaPath)) {
+                    console.log(`Uploading media: ${mediaPath} (${fs.statSync(mediaPath).size} bytes)`);
                     const mediaUpload = await twitterClient.v1.uploadMedia(mediaPath);
-                    mediaId = mediaUpload.media_id_string;
+                    mediaId = mediaUpload;
+                    console.log(`Media uploaded: ${mediaId}`);
                 }
             } catch (mediaError) {
-                console.error('Media upload failed:', mediaError);
+                console.error('Media upload failed:', mediaError.message || mediaError);
             }
         }
 
-        if (text.length <= 280) {
-            const tweetOptions = { text };
-            if (mediaId) tweetOptions.media = { media_ids: [mediaId] };
-            const tweet = await twitterClient.v2.tweet(tweetOptions);
-            item.status = 'posted';
-            item.tweetId = tweet.data.id;
-            item.postedAt = new Date().toISOString();
-            upsertContent(item);
-            res.json({ success: true, tweetId: tweet.data.id, item, hasMedia: !!mediaId });
-        } else {
-            const parts = text.split(/\n\n(?=\d+\/)/).filter(Boolean);
-            const hook = parts.shift();
-            let lastTweetId = null;
-            const tweetIds = [];
+        const tweets = splitIntoTweets(text);
+        console.log(`Posting ${tweets.length} tweet(s), media: ${!!mediaId}`);
 
-            const firstTweetOptions = { text: hook.substring(0, 280) };
-            if (mediaId) firstTweetOptions.media = { media_ids: [mediaId] };
-            const first = await twitterClient.v2.tweet(firstTweetOptions);
-            lastTweetId = first.data.id;
+        let lastTweetId = null;
+        const tweetIds = [];
+
+        for (let i = 0; i < tweets.length; i++) {
+            const tweetText = tweets[i];
+            const opts = {};
+
+            if (i === 0) {
+                // First tweet gets the media
+                opts.text = tweetText;
+                if (mediaId) opts.media = { media_ids: [mediaId] };
+                const result = await twitterClient.v2.tweet(opts);
+                lastTweetId = result.data.id;
+            } else {
+                // Reply to previous tweet
+                const result = await twitterClient.v2.reply(tweetText, lastTweetId);
+                lastTweetId = result.data.id;
+            }
             tweetIds.push(lastTweetId);
-
-            for (const part of parts) {
-                const reply = await twitterClient.v2.reply(part.substring(0, 280), lastTweetId);
-                lastTweetId = reply.data.id;
-                tweetIds.push(lastTweetId);
-            }
-
-            item.status = 'posted';
-            item.tweetIds = tweetIds;
-            item.postedAt = new Date().toISOString();
-            upsertContent(item);
-            res.json({ success: true, tweetIds, item, hasMedia: !!mediaId });
         }
+
+        item.status = 'posted';
+        item.tweetIds = tweetIds;
+        item.postedAt = new Date().toISOString();
+        upsertContent(item);
+        res.json({ success: true, tweetIds, item, hasMedia: !!mediaId });
     } catch (err) {
         console.error('Twitter post error:', err);
         res.status(500).json({ error: err.message });
