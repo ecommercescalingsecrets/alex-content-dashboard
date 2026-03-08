@@ -292,6 +292,18 @@ app.post('/api/content/:id/apply-feedback', async (req, res) => {
     }
 });
 
+app.put('/api/content/:id', (req, res) => {
+    const item = getContent(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    
+    const { content, title } = req.body;
+    if (content !== undefined) item.content = content;
+    if (title !== undefined) item.title = title;
+    
+    upsertContent(item);
+    res.json(item);
+});
+
 app.delete('/api/content/:id', (req, res) => {
     deleteContent(req.params.id);
     res.json({ success: true });
