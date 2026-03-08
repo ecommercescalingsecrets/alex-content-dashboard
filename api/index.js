@@ -296,9 +296,10 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const { content, title } = req.body;
-    if (content !== undefined) item.content = content;
-    if (title !== undefined) item.title = title;
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target'];
+    for (const f of fields) {
+        if (req.body[f] !== undefined) item[f] = req.body[f];
+    }
     
     upsertContent(item);
     res.json(item);
