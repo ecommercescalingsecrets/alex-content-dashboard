@@ -311,6 +311,22 @@ app.listen(port, () => {
     console.log(`📦 Database has ${getCount()} posts`);
 });
 
+// Migration endpoint - update CTA text in all posts
+app.post('/api/migrate/update-cta', (req, res) => {
+    const allContent = getAllContent();
+    let updated = 0;
+    const oldCTA = 'I use @GetHookdAI to spy on 21M+ winning ads across Facebook, TikTok & Google.';
+    const newCTA = 'I use @GetHookdAI to spy on 70M+ winning ads. They scrape 110,000+ brands daily on Facebook.';
+    for (const post of allContent) {
+        if (post.content && post.content.includes(oldCTA)) {
+            post.content = post.content.replace(oldCTA, newCTA);
+            upsertContent(post);
+            updated++;
+        }
+    }
+    res.json({ updated, total: allContent.length });
+});
+
 // Debug endpoint - test media upload to Twitter
 app.get('/api/debug/upload-test', async (req, res) => {
     try {
