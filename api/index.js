@@ -24,10 +24,10 @@ app.use('/swipe-files', express.static(path.join(__dirname, '..', 'swipe-files')
 
 // Twitter client
 const twitterClient = new TwitterApi({
-    appKey: process.env.TWITTER_API_KEY || 'GE8tk2RiScm2Lgz2w7VrzVmWS',
-    appSecret: process.env.TWITTER_API_SECRET || '0qkd32x0zrFCMwz82jQ1rEiIMz4bZcjsn5VMQ2dJotcBF',
-    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-N87IPBArKrnFK3RgkzKMjEHgTLSiGi',
-    accessSecret: process.env.TWITTER_ACCESS_SECRET || 'GP71kjepc0z20uc8j3f9ZURpNwe_CKmFEasOCoG_MXCwMCQjwF'
+    appKey: process.env.TWITTER_API_KEY || '2U2KZG8ljE1wLXCySzhBswCyO',
+    appSecret: process.env.TWITTER_API_SECRET || 'nAAEWk2x6ofyhdMpe1pCmJOm141w6s7rW2Vmdt83lSxvoIPDoU',
+    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-zen0WfNRJeARDWAGV9iRgSKU5vTb91',
+    accessSecret: process.env.TWITTER_ACCESS_SECRET || 'KtseVJNS72KTf7xwVrElWTmyb9LOgPkmwCkIu5IiFuIfP'
 });
 
 // Scheduler - check every minute for content that should be posted
