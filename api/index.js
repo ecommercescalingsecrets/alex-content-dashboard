@@ -311,3 +311,11 @@ app.listen(port, () => {
     console.log(`Dashboard running on port ${port}`);
     console.log(`📦 Database has ${getCount()} posts`);
 });
+
+// Debug endpoint - check media files
+app.get('/api/debug/media', (req, res) => {
+    const mediaDir = path.join(__dirname, '..', 'media');
+    const exists = fs.existsSync(mediaDir);
+    const files = exists ? fs.readdirSync(mediaDir) : [];
+    res.json({ __dirname, mediaDir, exists, fileCount: files.length, files: files.slice(0, 10) });
+});
