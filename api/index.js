@@ -4,6 +4,16 @@ const fs = require('fs');
 const { TwitterApi } = require('twitter-api-v2');
 const { getAllContent, getContent, upsertContent, deleteContent, getCount } = require('./db');
 
+// Auto-seed on first boot if DB is empty
+if (getCount() === 0) {
+    try {
+        const { seedIfEmpty } = require('./seed');
+        seedIfEmpty();
+    } catch (e) {
+        console.log('No seed data available or seed already applied.');
+    }
+}
+
 const app = express();
 const port = process.env.PORT || 3333;
 
