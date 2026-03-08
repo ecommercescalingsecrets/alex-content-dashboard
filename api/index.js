@@ -111,6 +111,25 @@ app.get('/api/content', (req, res) => {
     res.json(getAllContent());
 });
 
+// Must come BEFORE /api/content/:id to avoid matching :id = "scheduled"
+app.get('/api/content/scheduled/week', (req, res) => {
+    const now = new Date();
+    const mondayOfWeek = new Date(now);
+    mondayOfWeek.setDate(now.getDate() - now.getDay() + 1);
+    mondayOfWeek.setHours(0, 0, 0, 0);
+    const sundayOfWeek = new Date(mondayOfWeek);
+    sundayOfWeek.setDate(mondayOfWeek.getDate() + 6);
+    sundayOfWeek.setHours(23, 59, 59, 999);
+
+    const scheduledThisWeek = getAllContent().filter(item => {
+        if (!item.scheduledAt) return false;
+        const d = new Date(item.scheduledAt);
+        return d >= mondayOfWeek && d <= sundayOfWeek;
+    });
+
+    res.json({ weekStart: mondayOfWeek.toISOString(), weekEnd: sundayOfWeek.toISOString(), scheduled: scheduledThisWeek });
+});
+
 app.get('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
@@ -158,23 +177,7 @@ app.post('/api/content/:id/feedback', (req, res) => {
     res.json(item);
 });
 
-app.get('/api/content/scheduled/week', (req, res) => {
-    const now = new Date();
-    const mondayOfWeek = new Date(now);
-    mondayOfWeek.setDate(now.getDate() - now.getDay() + 1);
-    mondayOfWeek.setHours(0, 0, 0, 0);
-    const sundayOfWeek = new Date(mondayOfWeek);
-    sundayOfWeek.setDate(mondayOfWeek.getDate() + 6);
-    sundayOfWeek.setHours(23, 59, 59, 999);
-
-    const scheduledThisWeek = getAllContent().filter(item => {
-        if (!item.scheduledAt) return false;
-        const d = new Date(item.scheduledAt);
-        return d >= mondayOfWeek && d <= sundayOfWeek;
-    });
-
-    res.json({ weekStart: mondayOfWeek.toISOString(), weekEnd: sundayOfWeek.toISOString(), scheduled: scheduledThisWeek });
-});
+// /api/content/scheduled/week route moved above :id param route to avoid conflicts
 
 app.post('/api/content/:id/post', async (req, res) => {
     const item = getContent(req.params.id);
