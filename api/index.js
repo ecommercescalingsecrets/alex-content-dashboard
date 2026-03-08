@@ -364,6 +364,27 @@ app.post('/api/migrate/add-missing-ctas', (req, res) => {
     });
 });
 
+// Upload media files directly
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'media')),
+    filename: (req, file, cb) => cb(null, req.query.name || file.originalname)
+});
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+
+app.post('/api/media/upload', upload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    res.json({ success: true, filename: req.file.filename, size: req.file.size, path: `/media/${req.file.filename}` });
+});
+
+app.get('/api/media/list', (req, res) => {
+    const mediaDir = path.join(__dirname, '..', 'media');
+    const files = fs.existsSync(mediaDir) ? fs.readdirSync(mediaDir).map(f => ({
+        name: f, size: fs.statSync(path.join(mediaDir, f)).size
+    })) : [];
+    res.json({ count: files.length, files });
+});
+
 // Debug endpoint - test media upload to Twitter
 app.get('/api/debug/upload-test', async (req, res) => {
     try {
