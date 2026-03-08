@@ -312,6 +312,21 @@ app.listen(port, () => {
     console.log(`📦 Database has ${getCount()} posts`);
 });
 
+// Debug endpoint - test media upload to Twitter
+app.get('/api/debug/upload-test', async (req, res) => {
+    try {
+        const testFile = path.join(__dirname, '..', 'media', 'happy_mammoth.jpg');
+        const exists = fs.existsSync(testFile);
+        const size = exists ? fs.statSync(testFile).size : 0;
+        if (!exists) return res.json({ error: 'File not found', testFile });
+        
+        const mediaId = await twitterClient.v1.uploadMedia(testFile);
+        res.json({ success: true, mediaId, fileSize: size });
+    } catch (e) {
+        res.json({ error: e.message, code: e.code, data: e.data });
+    }
+});
+
 // Debug endpoint - check media files
 app.get('/api/debug/media', (req, res) => {
     const mediaDir = path.join(__dirname, '..', 'media');
