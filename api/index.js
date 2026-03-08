@@ -54,8 +54,7 @@ async function scheduleChecker() {
                     try {
                         const mediaPath = path.join(__dirname, '..', item.mediaUrl);
                         if (fs.existsSync(mediaPath)) {
-                            const mediaUpload = await twitterClient.v1.uploadMedia(mediaPath);
-                            mediaId = mediaUpload.media_id_string;
+                            mediaId = await twitterClient.v1.uploadMedia(mediaPath);
                         }
                     } catch (mediaError) {
                         console.error('Scheduled media upload failed:', mediaError);
