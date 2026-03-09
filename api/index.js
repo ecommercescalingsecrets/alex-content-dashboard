@@ -32,15 +32,23 @@ const twitterClient = new TwitterApi({
 
 // Scheduler - check every minute for content that should be posted
 async function scheduleChecker() {
-    console.log('⏰ Checking for scheduled content...');
-    const now = new Date();
-    const allContent = getAllContent();
-
-    for (const item of allContent) {
-        if (item.scheduledStatus === 'scheduled' &&
+    try {
+        const now = new Date();
+        const allContent = getAllContent();
+        
+        // Find items that need to be posted
+        const itemsToPost = allContent.filter(item => 
+            item.scheduledStatus === 'scheduled' &&
             item.scheduledAt &&
             item.status === 'approved' &&
-            new Date(item.scheduledAt) <= now) {
+            new Date(item.scheduledAt) <= now
+        );
+
+        if (itemsToPost.length > 0) {
+            console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toLocaleTimeString()}`);
+        }
+
+        for (const item of itemsToPost) {
 
             console.log(`📅 Auto-posting scheduled content: ${item.title}`);
             item.scheduledStatus = 'posting';
@@ -90,6 +98,8 @@ async function scheduleChecker() {
                 upsertContent(item);
             }
         }
+    } catch (error) {
+        console.error('❌ Schedule checker error:', error);
     }
 }
 
@@ -208,57 +218,73 @@ function splitIntoTweets(text, maxLen = 270) {
     return tweets;
 }
 
+async function postItemToTwitter(item) {
+    const text = item.content;
+    let mediaId = null;
+
+    if (item.mediaUrl) {
+        try {
+            const mediaPath = path.join(__dirname, '..', item.mediaUrl);
+            if (fs.existsSync(mediaPath)) {
+                console.log(`Uploading media: ${mediaPath} (${fs.statSync(mediaPath).size} bytes)`);
+                mediaId = await twitterClient.v1.uploadMedia(mediaPath);
+                console.log(`Media uploaded: ${mediaId}`);
+            }
+        } catch (mediaError) {
+            console.error('Media upload failed:', mediaError.message || mediaError);
+        }
+    }
+
+    const tweets = splitIntoTweets(text);
+    console.log(`Posting ${tweets.length} tweet(s), media: ${!!mediaId}`);
+
+    let lastTweetId = null;
+    const tweetIds = [];
+
+    for (let i = 0; i < tweets.length; i++) {
+        if (i === 0) {
+            const opts = { text: tweets[i] };
+            if (mediaId) opts.media = { media_ids: [mediaId] };
+            const result = await twitterClient.v2.tweet(opts);
+            lastTweetId = result.data.id;
+        } else {
+            const result = await twitterClient.v2.reply(tweets[i], lastTweetId);
+            lastTweetId = result.data.id;
+        }
+        tweetIds.push(lastTweetId);
+    }
+
+    return { tweetIds, hasMedia: !!mediaId };
+}
+
+app.post('/api/content/:id/post-now', async (req, res) => {
+    const item = getContent(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+
+    try {
+        const { tweetIds, hasMedia } = await postItemToTwitter(item);
+        item.status = 'posted';
+        item.tweetIds = tweetIds;
+        item.postedAt = new Date().toISOString();
+        upsertContent(item);
+        res.json({ success: true, tweetIds, item, hasMedia });
+    } catch (err) {
+        console.error('Twitter post-now error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/content/:id/post', async (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
 
     try {
-        const text = item.content;
-        let mediaId = null;
-
-        if (item.mediaUrl) {
-            try {
-                const mediaPath = path.join(__dirname, '..', item.mediaUrl);
-                if (fs.existsSync(mediaPath)) {
-                    console.log(`Uploading media: ${mediaPath} (${fs.statSync(mediaPath).size} bytes)`);
-                    const mediaUpload = await twitterClient.v1.uploadMedia(mediaPath);
-                    mediaId = mediaUpload;
-                    console.log(`Media uploaded: ${mediaId}`);
-                }
-            } catch (mediaError) {
-                console.error('Media upload failed:', mediaError.message || mediaError);
-            }
-        }
-
-        const tweets = splitIntoTweets(text);
-        console.log(`Posting ${tweets.length} tweet(s), media: ${!!mediaId}`);
-
-        let lastTweetId = null;
-        const tweetIds = [];
-
-        for (let i = 0; i < tweets.length; i++) {
-            const tweetText = tweets[i];
-            const opts = {};
-
-            if (i === 0) {
-                // First tweet gets the media
-                opts.text = tweetText;
-                if (mediaId) opts.media = { media_ids: [mediaId] };
-                const result = await twitterClient.v2.tweet(opts);
-                lastTweetId = result.data.id;
-            } else {
-                // Reply to previous tweet
-                const result = await twitterClient.v2.reply(tweetText, lastTweetId);
-                lastTweetId = result.data.id;
-            }
-            tweetIds.push(lastTweetId);
-        }
-
+        const { tweetIds, hasMedia } = await postItemToTwitter(item);
         item.status = 'posted';
         item.tweetIds = tweetIds;
         item.postedAt = new Date().toISOString();
         upsertContent(item);
-        res.json({ success: true, tweetIds, item, hasMedia: !!mediaId });
+        res.json({ success: true, tweetIds, item, hasMedia });
     } catch (err) {
         console.error('Twitter post error:', err);
         res.status(500).json({ error: err.message });

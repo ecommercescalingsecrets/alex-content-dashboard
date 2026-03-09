@@ -3,843 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex's Tactical Content Dashboard v2.1</title>
+    <title>Gethookd Content Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
-        .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 1.5rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #0f172a; color: #e2e8f0; line-height: 1.6; 
+            min-height: 100vh;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
+            padding: 1.5rem 2rem; border-bottom: 1px solid #334155; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
         .header h1 { color: #60a5fa; font-size: 1.75rem; font-weight: 700; }
-        .header p { color: #94a3b8; font-size: 0.9rem; }
+        
         .stats { display: flex; gap: 1.5rem; }
         .stat { text-align: center; }
         .stat-num { color: #f59e0b; font-size: 1.5rem; font-weight: 700; }
         .stat-label { color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
-        .dashboard { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .filter-btn { padding: 0.5rem 1rem; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
+        
+        .container { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        
+        /* CENTERED FILTERS */
+        .filters { 
+            display: flex; gap: 0.5rem; margin-bottom: 1.5rem; 
+            justify-content: center; /* CENTER THE MENU */
+            flex-wrap: wrap;
+        }
+        .filter-btn { 
+            padding: 0.75rem 1.5rem; border: 1px solid #334155; border-radius: 8px; 
+            background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.9rem; 
+            font-weight: 500; transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #475569; }
         .filter-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
-        .content-list { display: flex; flex-direction: column; gap: 1rem; }
-        .content-item { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s; }
-        .content-item:hover { border-color: #475569; }
-        .content-item.status-approved { border-left: 4px solid #059669; }
-        .content-item.status-posted { border-left: 4px solid #2563eb; opacity: 0.7; }
-        .content-item.status-review { border-left: 4px solid #f59e0b; }
-        .item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; }
-        .content-title { color: #e2e8f0; font-weight: 600; font-size: 1.1rem; flex: 1; }
-        .badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-        .badge-review { background: #f59e0b20; color: #f59e0b; }
-        .badge-approved { background: #05966920; color: #059669; }
-        .badge-scheduled { background: #7c3aed20; color: #a855f7; }
-        .badge-posted { background: #2563eb20; color: #60a5fa; }
-        .content-media { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; margin-bottom: 1rem; background: #0f172a; cursor: pointer; }
-        .content-media:hover { opacity: 0.9; }
-        .content-video { width: 100%; max-height: 400px; border-radius: 8px; margin-bottom: 1rem; background: #000; }
-        .content-preview { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; white-space: pre-wrap; max-height: 120px; overflow: hidden; transition: max-height 0.3s; }
-        .content-preview.expanded { max-height: none; }
-        .expand-btn { color: #60a5fa; background: none; border: none; cursor: pointer; font-size: 0.85rem; margin-bottom: 1rem; }
+        
+        .post { 
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px; 
+            padding: 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s;
+        }
+        .post:hover { border-color: #475569; }
+        .post.review { border-left: 4px solid #f59e0b; }
+        .post.approved { border-left: 4px solid #059669; }
+        .post.scheduled { border-left: 4px solid #a855f7; }
+        .post.posted { border-left: 4px solid #60a5fa; opacity: 0.8; }
+        
+        .post-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+        .post-title { color: #e2e8f0; font-weight: 600; font-size: 1.1rem; flex: 1; }
+        .badge { 
+            padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; 
+            font-weight: 600; text-transform: uppercase; 
+        }
+        .badge.review { background: #f59e0b20; color: #f59e0b; }
+        .badge.approved { background: #05966920; color: #059669; }
+        .badge.scheduled { background: #a855f720; color: #a855f7; }
+        .badge.posted { background: #60a5fa20; color: #60a5fa; }
+        
+        /* MULTIPLE MEDIA SUPPORT */
+        .media-container { margin-bottom: 1rem; }
+        .media-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 1rem; 
+        }
+        .media-item { 
+            width: 100%; max-height: 300px; object-fit: contain; 
+            border-radius: 8px; background: #0f172a; 
+        }
+        
+        .post-content { 
+            color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; 
+            white-space: pre-wrap; max-height: 150px; overflow: hidden; 
+        }
+        
         .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.85; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn { 
+            padding: 0.6rem 1.2rem; border: none; border-radius: 8px; 
+            font-weight: 600; cursor: pointer; font-size: 0.85rem; 
+            transition: all 0.2s;
+        }
         .btn-approve { background: #059669; color: white; }
-        .btn-post { background: #2563eb; color: white; }
-        .btn-delete { background: #dc262620; color: #ef4444; border: 1px solid #dc262640; }
-        .btn-expand { background: #334155; color: #94a3b8; }
-        .toast { position: fixed; bottom: 2rem; right: 2rem; background: #059669; color: white; padding: 1rem 1.5rem; border-radius: 8px; font-weight: 600; display: none; z-index: 100; animation: slideIn 0.3s; }
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .empty { text-align: center; color: #64748b; padding: 3rem; }
-        .meta { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
-        .schedule-section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-        .schedule-section h2 { color: #60a5fa; margin-bottom: 1rem; font-size: 1.2rem; }
-        .calendar-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
-        .day-column { background: #334155; border-radius: 8px; padding: 0.75rem 0.5rem; text-align: center; min-height: 120px; }
-        .day-header { font-weight: 600; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem; }
-        .scheduled-post { background: #059669; color: white; border-radius: 4px; padding: 0.3rem; margin-bottom: 0.3rem; font-size: 0.7rem; cursor: pointer; }
-        .scheduled-post:hover { opacity: 0.8; }
-        .schedule-controls { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
-        .datetime-input { background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.5rem; color: #e2e8f0; font-size: 0.85rem; cursor: pointer; min-width: 200px; }
-        .datetime-input:focus { outline: none; border-color: #60a5fa; background: #475569; }
-        .datetime-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-        .btn-schedule { background: #7c3aed; color: white; }
-        .scheduled-info { background: #7c3aed20; border: 1px solid #7c3aed40; border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
-        .countdown { font-weight: 600; color: #7c3aed; }
-        .countdown.past { color: #ef4444; }
-        .empty-schedule { text-align: center; color: #64748b; padding: 2rem; font-style: italic; }
-        .day-column.today { background: #1e40af; }
-        .day-column.today .day-header { color: #93c5fd; }
-        .feedback-section { margin-top: 1rem; }
-        .btn-feedback { background: #334155; color: #94a3b8; }
-        .btn-feedback:hover { background: #475569; }
-        .feedback-area { margin-top: 0.75rem; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; }
-        .feedback-form { margin-bottom: 1rem; }
-        .feedback-textarea { width: 100%; background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 0.75rem; color: #e2e8f0; font-family: inherit; font-size: 0.9rem; resize: vertical; margin-bottom: 0.5rem; }
-        .feedback-textarea::placeholder { color: #94a3b8; }
-        .feedback-textarea:focus { outline: none; border-color: #60a5fa; }
-        .btn-save-feedback { background: #2563eb; color: white; }
-        .feedback-list { display: flex; flex-direction: column; gap: 0.75rem; }
-        .feedback-item { background: #334155; border-radius: 6px; padding: 0.75rem; }
-        .feedback-text { color: #e2e8f0; margin-bottom: 0.5rem; }
-        .feedback-date { color: #94a3b8; font-size: 0.75rem; }
+        .btn-approve:hover { background: #047857; }
+        .btn-post-now { background: #2563eb; color: white; }
+        .btn-post-now:hover { background: #1d4ed8; }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-delete:hover { background: #b91c1c; }
+
+        .type-badge {
+            padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.72rem;
+            font-weight: 600; background: #0f172a; color: #94a3b8;
+            border: 1px solid #334155; margin-right: 0.5rem;
+        }
         
-        /* Progress Modal Styles */
-        .progress-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .progress-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; min-width: 500px; max-width: 600px; }
-        .progress-card h3 { color: #60a5fa; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
-        .progress-steps { margin-bottom: 2rem; }
-        .progress-step { display: flex; align-items: center; padding: 0.75rem 0; opacity: 0.4; transition: all 0.3s; }
-        .progress-step.active { opacity: 1; color: #60a5fa; }
-        .progress-step.completed { opacity: 0.8; color: #059669; }
-        .step-icon { font-size: 1.2rem; margin-right: 1rem; width: 24px; }
-        .step-text { color: #e2e8f0; font-weight: 500; }
-        .progress-bar { background: #334155; border-radius: 8px; height: 8px; overflow: hidden; }
-        .progress-fill { background: linear-gradient(90deg, #60a5fa, #059669); height: 100%; transition: width 0.3s ease; border-radius: 8px; }
-        #progress-modal { display: none; }
+        .loading { text-align: center; color: #60a5fa; padding: 3rem; font-size: 1.1rem; }
+        .error { text-align: center; color: #ef4444; padding: 2rem; background: #dc262620; border-radius: 8px; }
+        .empty { text-align: center; color: #64748b; padding: 3rem; font-size: 1.1rem; }
         
-        /* Auto-Optimal Scheduling Styles */
-        .approved-scheduling { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
-        .auto-optimal-scheduling { }
-        .selected-time-display { background: linear-gradient(135deg, #05966920, #05966910); border: 1px solid #059669; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
-        .selected-time-display strong { color: #10b981; }
-        .engagement-data { color: #94a3b8; font-size: 0.85rem; margin-left: 0.5rem; }
-        .schedule-actions { display: flex; gap: 0.75rem; align-items: center; }
-        .btn-schedule-auto { background: #059669; color: white; font-weight: 600; padding: 0.6rem 1.5rem; }
-        .inline-datetime { flex: 1; max-width: 200px; }
-        .btn-post { margin-left: auto; }
+        .debug { 
+            background: #1e293b; border: 1px solid #f59e0b; padding: 1rem; 
+            margin-bottom: 1rem; border-radius: 8px; font-family: monospace; 
+            font-size: 0.8rem; max-height: 200px; overflow-y: auto;
+        }
+        .debug-title { color: #f59e0b; font-weight: bold; margin-bottom: 0.5rem; }
+        .debug-entry { color: #94a3b8; margin: 0.2rem 0; }
         
-        /* Scheduled Posts Styles */
-        .scheduled-info { background: #1e293b; border: 1px solid #7c3aed; border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
-        .scheduled-details { margin-bottom: 0.75rem; }
-        .scheduled-details strong { color: #a855f7; }
-        .scheduled-actions { display: flex; gap: 0.75rem; }
-        .btn-cancel-schedule { background: #dc2626; color: white; }
+        .scheduled-info { 
+            background: #1e293b; border: 1px solid #a855f7; border-radius: 8px; 
+            padding: 1rem; margin-bottom: 1rem; 
+        }
+        .scheduled-info strong { color: #a855f7; }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
-            <h1>🚀 Tactical Content Dashboard</h1>
-            <p>Super tactical content for @FedotOff90</p>
+            <h1>🎯 Content Dashboard</h1>
+            <p>Super tactical content for @gethookdai</p>
         </div>
         <div class="stats">
-            <div class="stat"><div class="stat-num" id="stat-review">0</div><div class="stat-label">Review</div></div>
-            <div class="stat"><div class="stat-num" id="stat-approved">0</div><div class="stat-label">Approved</div></div>
-            <div class="stat"><div class="stat-num" id="stat-scheduled">0</div><div class="stat-label">Scheduled</div></div>
-            <div class="stat"><div class="stat-num" id="stat-posted">0</div><div class="stat-label">Posted</div></div>
+            <div class="stat">
+                <div class="stat-num" id="stat-review">-</div>
+                <div class="stat-label">Review</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-approved">-</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-scheduled">-</div>
+                <div class="stat-label">Scheduled</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-posted">-</div>
+                <div class="stat-label">Posted</div>
+            </div>
         </div>
     </div>
 
-    <div class="dashboard">
-        <div class="filter-bar">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="review">📝 Review</button>
+    <div class="container">
+        <div id="debug" class="debug">
+            <div class="debug-title">🔍 Debug Log</div>
+            <div id="debug-log">Starting dashboard...</div>
+        </div>
+        
+        <!-- CENTERED FILTERS -->
+        <div class="filters">
+            <button class="filter-btn" data-filter="all">All</button>
+            <button class="filter-btn active" data-filter="review">📝 Review</button>
             <button class="filter-btn" data-filter="approved">✅ Approved</button>
             <button class="filter-btn" data-filter="scheduled">📅 Scheduled</button>
             <button class="filter-btn" data-filter="posted">🚀 Posted</button>
         </div>
         
-        <div class="schedule-section">
-            <h2>📅 This Week's Scheduled Posts</h2>
-            <div class="calendar-week" id="calendar-week"></div>
+        <div id="content">
+            <div class="loading">⏳ Loading content...</div>
         </div>
-        
-        <div class="content-list" id="content-list"></div>
     </div>
 
-    <div class="toast" id="toast"></div>
-
     <script>
-        let content = [];
-        let filter = 'all';
-        let weeklySchedule = null;
-
-        async function loadContent() {
-            const timestamp = new Date().getTime();
-            const res = await fetch(`/api/content?t=${timestamp}`, {
-                cache: 'no-cache',
-                headers: {
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            content = await res.json();
+        let allPosts = [];
+        let currentFilter = 'review';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log('📊', message);
             
-            // Debug logging
-            const post3 = content.find(c => c.id === 'post-3');
-            if (post3) {
-                console.log('O Positiv content loaded:', post3.content.substring(0, 100));
-            }
-            
-            await loadWeeklySchedule();
-            render();
+            const logEl = document.getElementById('debug-log');
+            logEl.innerHTML += `<div class="debug-entry">${timestamp}: ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
         }
-
-        async function loadWeeklySchedule() {
-            const timestamp = new Date().getTime();
-            const res = await fetch(`/api/content/scheduled/week?t=${timestamp}`, {
-                cache: 'no-cache',
-                headers: {
-                    'Cache-Control': 'no-cache'
-                }
-            });
-            weeklySchedule = await res.json();
-            renderWeeklyCalendar();
-        }
-
-        function renderWeeklyCalendar() {
-            const calendar = document.getElementById('calendar-week');
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const weekStart = new Date(weeklySchedule.weekStart);
+        
+        function setFilter(filter) {
+            log(`Setting filter to: ${filter}`);
+            currentFilter = filter;
             
-            calendar.innerHTML = days.map((dayName, index) => {
-                const date = new Date(weekStart);
-                date.setDate(weekStart.getDate() + index);
-                
-                const dayPosts = weeklySchedule.scheduled.filter(post => {
-                    if (!post.scheduledAt) return false;
-                    const postDate = new Date(post.scheduledAt);
-                    return postDate.toDateString() === date.toDateString();
-                }).sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
-                
-                const isToday = date.toDateString() === new Date().toDateString();
-                
-                return `
-                    <div class="day-column ${isToday ? 'today' : ''}">
-                        <div class="day-header">${dayName}<br>${date.getDate()}/${date.getMonth() + 1}</div>
-                        ${dayPosts.length === 0 
-                            ? '<div class="empty-schedule">No posts scheduled</div>' 
-                            : dayPosts.map(post => {
-                                const time = new Date(post.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                return `<div class="scheduled-post" title="${post.title}" onclick="scrollToPost('${post.id}')">${time}<br>${post.title.substring(0, 20)}...</div>`;
-                              }).join('')
-                        }
-                    </div>
-                `;
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            
+            renderContent();
+        }
+        
+        function updateStats() {
+            if (!allPosts.length) return;
+            
+            const stats = {
+                review: allPosts.filter(p => p.status === 'review').length,
+                approved: allPosts.filter(p => p.status === 'approved' && !p.scheduledAt).length,
+                scheduled: allPosts.filter(p => p.status === 'approved' && p.scheduledAt).length,
+                posted: allPosts.filter(p => p.status === 'posted').length
+            };
+            
+            Object.entries(stats).forEach(([key, value]) => {
+                const el = document.getElementById(`stat-${key}`);
+                if (el) el.textContent = value;
+            });
+            
+            log(`Stats: Review=${stats.review}, Approved=${stats.approved}, Scheduled=${stats.scheduled}, Posted=${stats.posted}`);
+        }
+        
+        function renderMediaFiles(post) {
+            if (!post.mediaUrl) return '';
+            
+            // Support multiple media files (comma-separated)
+            const mediaUrls = post.mediaUrl.split(',').map(url => url.trim()).filter(url => url);
+            
+            if (mediaUrls.length === 0) return '';
+            
+            const mediaHtml = mediaUrls.map(url => {
+                if (post.mediaType && post.mediaType.includes('video')) {
+                    return `<video class="media-item" controls preload="metadata">
+                        <source src="${url}" type="${post.mediaType}">
+                        Your browser does not support video.
+                    </video>`;
+                } else {
+                    return `<img class="media-item" src="${url}" alt="${escapeHtml(post.title)}" 
+                        onerror="this.style.display='none';">`;
+                }
             }).join('');
+            
+            return `<div class="media-container">
+                <div class="media-grid">${mediaHtml}</div>
+            </div>`;
         }
-
-        function scrollToPost(postId) {
-            const element = document.getElementById(`item-${postId}`);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                element.style.background = '#2563eb20';
-                setTimeout(() => element.style.background = '', 2000);
-            }
-        }
-
-        function formatCountdown(scheduledAt) {
-            const now = new Date();
-            const scheduled = new Date(scheduledAt);
-            const diff = scheduled - now;
+        
+        function renderContent() {
+            const container = document.getElementById('content');
             
-            if (diff <= 0) {
-                return '<span class="countdown past">⚠️ Past due</span>';
-            }
-            
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
-            if (days > 0) {
-                return `<span class="countdown">📅 ${days}d ${hours}h until posting</span>`;
-            } else if (hours > 0) {
-                return `<span class="countdown">⏰ ${hours}h ${minutes}m until posting</span>`;
-            } else {
-                return `<span class="countdown">⏰ ${minutes}m until posting</span>`;
-            }
-        }
-
-        function render() {
-            const list = document.getElementById('content-list');
-            
-            // Handle scheduled filter - posts that are approved and have scheduledAt
-            let filtered;
-            if (filter === 'all') {
-                filtered = content;
-            } else if (filter === 'scheduled') {
-                filtered = content.filter(c => c.status === 'approved' && c.scheduledAt && c.status !== 'posted');
-            } else {
-                filtered = content.filter(c => c.status === filter);
-            }
-            
-            // Update stats
-            document.getElementById('stat-review').textContent = content.filter(c => c.status === 'review').length;
-            document.getElementById('stat-approved').textContent = content.filter(c => c.status === 'approved' && !c.scheduledAt).length;
-            document.getElementById('stat-scheduled').textContent = content.filter(c => c.status === 'approved' && c.scheduledAt && c.status !== 'posted').length;
-            document.getElementById('stat-posted').textContent = content.filter(c => c.status === 'posted').length;
-
-            if (filtered.length === 0) {
-                list.innerHTML = '<div class="empty">No content in this category</div>';
+            if (!allPosts.length) {
+                container.innerHTML = '<div class="loading">⏳ Loading content...</div>';
                 return;
             }
-
-            list.innerHTML = filtered.map(item => `
-                <div class="content-item status-${item.status}" id="item-${item.id}">
-                    <div class="item-header">
-                        <div class="content-title">${item.title}</div>
-                        <span class="badge badge-${item.scheduledAt && item.status === 'approved' ? 'scheduled' : item.status}">${item.scheduledAt && item.status === 'approved' ? 'scheduled' : item.status}${item.scheduledStatus ? ` (${item.scheduledStatus})` : ''}</span>
+            
+            let filtered;
+            if (currentFilter === 'all') {
+                filtered = allPosts;
+            } else if (currentFilter === 'scheduled') {
+                filtered = allPosts.filter(post => post.status === 'approved' && post.scheduledAt);
+            } else {
+                filtered = allPosts.filter(post => post.status === currentFilter);
+            }
+            
+            log(`Rendering: ${filtered.length} ${currentFilter} posts (total: ${allPosts.length})`);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty">No ${currentFilter} posts found</div>`;
+                return;
+            }
+            
+            const html = filtered.map(post => `
+                <div class="post ${post.status}">
+                    <div class="post-header">
+                        <div class="post-title">
+                            <span class="type-badge">${getContentType(post)}</span>${escapeHtml(post.title)}
+                        </div>
+                        <span class="badge ${post.status}">${post.status}</span>
                     </div>
-                    ${item.mediaType === 'video' && item.mediaUrl ? `<video class="content-media" controls preload="metadata" ${item.thumbUrl ? 'poster="'+item.thumbUrl+'"' : ''}><source src="${item.mediaUrl}" type="video/mp4">Your browser does not support video.</video>` : item.mediaUrl ? `<img class="content-media" src="${item.mediaUrl}" alt="${escapeHtml(item.title)}" onclick="window.open('${item.mediaUrl}','_blank')"/>` : ''}
-                    <div class="content-preview" id="preview-${item.id}">${escapeHtml(item.content)}</div>
-                    <button class="expand-btn" onclick="toggleExpand('${item.id}')">Show full content ▼</button>
-                    
-                    ${item.scheduledAt ? `
+
+                    ${post.scheduledAt ? `
                         <div class="scheduled-info">
-                            <div class="scheduled-details">
-                                📅 <strong>Scheduled for:</strong> ${new Date(item.scheduledAt).toLocaleString()}<br>
-                                ${formatCountdown(item.scheduledAt)}
-                            </div>
-                            <div class="scheduled-actions">
-                                <button class="btn btn-cancel-schedule" onclick="cancelSchedule('${item.id}')">❌ Cancel Schedule</button>
-                                <button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now</button>
-                            </div>
+                            <strong>📅 Scheduled for:</strong> ${new Date(post.scheduledAt).toLocaleString()}
                         </div>
                     ` : ''}
-                    
+
+                    ${renderMediaFiles(post)}
+
+                    <div class="post-content">${escapeHtml(post.content.substring(0, 300))}${post.content.length > 300 ? '...' : ''}</div>
+
                     <div class="actions">
-                        ${item.status === 'review' ? `
-                            <button class="btn btn-approve" onclick="approve('${item.id}')">✅ Approve</button>
-                            <div class="schedule-controls">
-                                <input type="datetime-local" class="datetime-input" id="schedule-${item.id}" placeholder="Select date and time">
-                                <button class="btn btn-schedule" onclick="approveAndSchedule('${item.id}')">📅 Approve & Schedule</button>
-                            </div>
+                        ${post.status === 'review' ? `
+                            <button class="btn btn-approve" onclick="approvePost('${post.id}')">✅ Approve</button>
                         ` : ''}
-                        ${item.status === 'approved' && !item.scheduledAt ? `
-                            <div class="approved-scheduling">
-                                <div class="auto-optimal-scheduling" id="auto-schedule-${item.id}">
-                                    <div class="selected-time-display">
-                                        📅 <strong>Auto-Selected:</strong> <span id="selected-time-${item.id}">Loading...</span> 
-                                        <span class="engagement-data" id="engagement-${item.id}">(8.5K avg impressions)</span>
-                                    </div>
-                                    <div class="schedule-actions">
-                                        <button class="btn btn-schedule-auto" onclick="scheduleAuto('${item.id}')">📅 Schedule</button>
-                                        <input type="datetime-local" class="datetime-input inline-datetime" id="adjust-schedule-${item.id}">
-                                        <button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now</button>
-                                    </div>
-                                </div>
-                            </div>
+                        ${post.status === 'approved' ? `
+                            <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
                         ` : ''}
-                        ${item.status === 'approved' && item.scheduledAt && item.scheduledStatus === 'scheduled' ? `<button class="btn btn-post" onclick="postToTwitter('${item.id}')">🚀 Post Now (Skip Schedule)</button>` : ''}
-                        ${item.status === 'posted' ? `<span class="meta">Posted ${item.postedAt ? new Date(item.postedAt).toLocaleString() : ''}</span>` : ''}
-                        <button class="btn btn-delete" onclick="deletePost('${item.id}')">🗑</button>
+                        <button class="btn btn-delete" onclick="deletePost('${post.id}')">🗑️ Delete</button>
                     </div>
-                    
-                    <div class="feedback-section">
-                        <button class="btn btn-feedback" onclick="toggleFeedback('${item.id}')">💬 Feedback${item.feedbackHistory && item.feedbackHistory.length > 0 ? ` (${item.feedbackHistory.length})` : ''}</button>
-                        <div class="feedback-area" id="feedback-area-${item.id}" style="display: none;">
-                            <div class="feedback-form">
-                                <textarea id="feedback-text-${item.id}" class="feedback-textarea" rows="3" placeholder="What would you change about this post?"></textarea>
-                                <button class="btn btn-save-feedback" onclick="saveFeedback('${item.id}')">Save Feedback</button>
-                            </div>
-                            <div class="feedback-list" id="feedback-list-${item.id}">
-                                ${item.feedbackHistory && item.feedbackHistory.length > 0 ? item.feedbackHistory.map(fb => `
-                                    <div class="feedback-item">
-                                        <div class="feedback-text">${escapeHtml(fb.text)}</div>
-                                        <div class="feedback-date">${new Date(fb.createdAt).toLocaleString()}</div>
-                                    </div>
-                                `).join('') : ''}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="meta">Target: ${item.target || 'Solo founders'} · Created: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Unknown'}</div>
                 </div>
             `).join('');
             
-            // Initialize datetime inputs with default values
-            initializeDateTimeInputs();
-            
-            // Update optimal time suggestions for approved posts
-            updateOptimalTimeSuggestions();
+            container.innerHTML = html;
+            updateStats();
         }
         
-        function updateOptimalTimeSuggestions() {
-            const approvedPosts = content.filter(c => c.status === 'approved' && !c.scheduledAt);
-            
-            // Calculate global posting schedule to avoid conflicts
-            const scheduledPosts = content.filter(c => c.scheduledAt);
-            const existingTimes = scheduledPosts.map(p => new Date(p.scheduledAt).getTime());
-            
-            approvedPosts.forEach((post) => {
-                const selectedTimeElement = document.getElementById(`selected-time-${post.id}`);
-                const engagementElement = document.getElementById(`engagement-${post.id}`);
-                const datetimeInput = document.getElementById(`adjust-schedule-${post.id}`);
-                
-                if (selectedTimeElement && engagementElement && datetimeInput) {
-                    // Use post ID number to determine unique time slot
-                    const postNumber = parseInt(post.id.replace('post-', '')) - 1; // 0-based index
-                    const optimalTime = getSpacedPostingTime(postNumber);
-                    
-                    // Ensure this time doesn't conflict with already scheduled posts
-                    let finalTime = findNextAvailableSlot(optimalTime, existingTimes);
-                    
-                    const formattedTime = formatOptimalTime(finalTime);
-                    const engagementData = getEngagementData(finalTime);
-                    
-                    // Update display
-                    selectedTimeElement.textContent = formattedTime;
-                    engagementElement.textContent = `(${engagementData})`;
-                    
-                    // Pre-populate the datetime input with optimal time
-                    datetimeInput.value = finalTime.toISOString().slice(0, 16);
-                    
-                    // Store the optimal time for easy access
-                    datetimeInput.setAttribute('data-optimal-time', finalTime.toISOString());
-                    
-                    console.log(`Post ${post.id}: ${formattedTime}`); // Debug log
-                }
-            });
-        }
-        
-        function findNextAvailableSlot(preferredTime, existingTimes) {
-            let testTime = new Date(preferredTime);
-            const oneHour = 60 * 60 * 1000;
-            
-            // Keep checking until we find a slot that's at least 1 hour away from existing posts
-            while (existingTimes.some(existing => Math.abs(testTime.getTime() - existing) < oneHour)) {
-                testTime = new Date(testTime.getTime() + (3 * oneHour)); // Move 3 hours forward
-            }
-            
-            return testTime;
-        }
-        
-        function getEngagementData(date) {
-            const hour = date.getHours();
-            const dayOfWeek = date.getDay();
-            
-            // Based on Alex's real Twitter analytics data (last 28 days)
-            if (hour >= 18 && hour <= 20) { // 6-8 PM EST - Peak engagement
-                return dayOfWeek >= 1 && dayOfWeek <= 5 ? '12.5K avg impressions' : '10.2K avg impressions';
-            } else if (hour >= 16 && hour <= 18) { // 4-6 PM EST - High engagement  
-                return dayOfWeek >= 1 && dayOfWeek <= 5 ? '10.8K avg impressions' : '8.5K avg impressions';
-            } else if (hour >= 12 && hour <= 14) { // 12-2 PM EST - Good engagement
-                return dayOfWeek >= 1 && dayOfWeek <= 5 ? '8.2K avg impressions' : '6.8K avg impressions';
-            } else if (hour >= 8 && hour <= 10) { // 8-10 AM EST - Morning engagement
-                return dayOfWeek >= 1 && dayOfWeek <= 5 ? '7.5K avg impressions' : '5.5K avg impressions';
-            } else if (hour >= 20 && hour <= 22) { // 8-10 PM EST - Evening  
-                return dayOfWeek >= 1 && dayOfWeek <= 5 ? '9.1K avg impressions' : '7.2K avg impressions';
-            } else {
-                return '4.5K avg impressions'; // Off-peak times
-            }
-        }
-        
-        function initializeDateTimeInputs() {
-            const reviewPosts = document.querySelectorAll('.datetime-input');
-            let postIndex = 0;
-            
-            reviewPosts.forEach(input => {
-                if (!input.value) {
-                    // Space posts 3 hours apart, starting from optimal time
-                    const scheduledTime = getSpacedPostingTime(postIndex);
-                    input.value = scheduledTime.toISOString().slice(0, 16);
-                    postIndex++;
-                }
-            });
-        }
-        
-        function getSpacedPostingTime(postIndex) {
-            const now = new Date();
-            
-            // Define optimal posting schedule based on Alex's real Twitter analytics data
-            const postingSchedule = [
-                { day: 0, hour: 18 }, // Post 1: Today 6PM - PEAK engagement
-                { day: 0, hour: 20 }, // Post 2: Today 8PM - High evening engagement  
-                { day: 1, hour: 17 }, // Post 3: Next day 5PM - Peak afternoon
-                { day: 1, hour: 19 }, // Post 4: Next day 7PM - Peak evening
-                { day: 1, hour: 13 }, // Post 5: Next day 1PM - Good afternoon
-                { day: 2, hour: 18 }, // Post 6: Day after 6PM - PEAK
-                { day: 2, hour: 9 },  // Post 7: Day after 9AM - Morning engagement
-                { day: 2, hour: 16 }, // Post 8: Day after 4PM - High afternoon
-            ];
-            
-            // Extend schedule if needed (repeat pattern)
-            let scheduleIndex = postIndex;
-            if (postIndex >= postingSchedule.length) {
-                const cycleIndex = postIndex % postingSchedule.length;
-                const extraDays = Math.floor(postIndex / postingSchedule.length) * 3; // Add 3 days per cycle
-                scheduleIndex = cycleIndex;
-                postingSchedule[cycleIndex].day += extraDays;
-            }
-            
-            const schedule = postingSchedule[scheduleIndex];
-            
-            // Calculate the target date and time
-            const targetTime = new Date();
-            targetTime.setHours(schedule.hour, 0, 0, 0);
-            
-            // If today's slot has passed, start from tomorrow
-            if (schedule.day === 0 && now >= targetTime) {
-                schedule.day = 1;
-            }
-            
-            targetTime.setDate(now.getDate() + schedule.day);
-            
-            return targetTime;
+        function getContentType(post) {
+            const title = post.title || '';
+            if (/Hook\s*Swipe/i.test(title)) return '🪝 Hook Swipe';
+            if (/Autopsy/i.test(title)) return '🔬 Ad Autopsy';
+            if (/Category/i.test(title)) return '📊 Category War';
+            if (/\bvs\b/i.test(title)) return '⚔️ VS Battle';
+            return '🏷️ Brand Printing';
         }
 
         function escapeHtml(text) {
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
-
-        function toggleExpand(id) {
-            const el = document.getElementById('preview-' + id);
-            el.classList.toggle('expanded');
-            const btn = el.nextElementSibling;
-            btn.textContent = el.classList.contains('expanded') ? 'Show less ▲' : 'Show full content ▼';
-        }
-
-        function showToast(msg, color = '#059669') {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.background = color;
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
-
-        async function approve(id) {
-            await fetch(`/api/content/${id}/approve`, { method: 'POST' });
-            showToast('✅ Content approved!');
-            loadContent();
-        }
-
-        async function approveAndSchedule(id) {
-            const dateInput = document.getElementById(`schedule-${id}`);
-            const scheduledAt = dateInput.value;
-            
-            console.log('Schedule input value:', scheduledAt); // Debug log
-            
-            if (!scheduledAt) {
-                showToast('❌ Please select a date and time', '#dc2626');
-                dateInput.focus();
-                return;
-            }
-            
-            const scheduledDate = new Date(scheduledAt);
-            const now = new Date();
-            
-            // Add 5 minutes buffer to avoid "past date" issues
-            const minTime = new Date(now.getTime() + (5 * 60 * 1000));
-            
-            if (scheduledDate <= minTime) {
-                showToast('❌ Please select a time at least 5 minutes in the future', '#dc2626');
-                return;
-            }
-            
-            // Show confirmation with the scheduled time
-            const formattedDate = scheduledDate.toLocaleString();
-            if (!confirm(`Schedule this post for ${formattedDate}?`)) {
-                return;
-            }
-            
+        
+        async function loadContent() {
             try {
-                const res = await fetch(`/api/content/${id}/schedule`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scheduledAt: scheduledDate.toISOString() })
-                });
+                log('🔄 Loading content from API...');
                 
-                if (res.ok) {
-                    showToast(`📅 Content approved and scheduled for ${formattedDate}!`);
-                    loadContent();
-                } else {
-                    const error = await res.json();
-                    showToast('❌ ' + error.error, '#dc2626');
+                const response = await fetch(`/api/content?t=${Date.now()}&cacheBust=${Math.random()}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-            } catch (e) {
-                console.error('Schedule error:', e);
-                showToast('❌ Error scheduling content: ' + e.message, '#dc2626');
+                
+                const data = await response.json();
+                
+                if (!Array.isArray(data)) {
+                    throw new Error('API did not return an array');
+                }
+                
+                allPosts = data;
+                log(`✅ Loaded ${allPosts.length} posts successfully`);
+                
+                // Log status breakdown
+                const statusCounts = {};
+                allPosts.forEach(post => {
+                    statusCounts[post.status] = (statusCounts[post.status] || 0) + 1;
+                });
+                log(`Status breakdown: ${JSON.stringify(statusCounts)}`);
+                
+                renderContent();
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`);
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        ❌ Failed to load content: ${error.message}<br>
+                        <button onclick="loadContent()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔄 Retry
+                        </button>
+                    </div>
+                `;
             }
         }
-
-        async function postToTwitter(id) {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = '⏳ Posting...';
+        
+        async function approvePost(id) {
             try {
-                const res = await fetch(`/api/content/${id}/post`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    const mediaText = data.hasMedia ? ' with media' : '';
-                    showToast(`🚀 Posted to Twitter${mediaText}!`);
+                log(`Approving post ${id}...`);
+                const response = await fetch(`/api/content/${id}/approve`, { method: 'POST' });
+                if (response.ok) {
+                    log(`✅ Post ${id} approved`);
+                    await loadContent();
                 } else {
-                    showToast('❌ ' + (data.error || 'Post failed'), '#dc2626');
+                    throw new Error(`Approve failed: ${response.status}`);
                 }
-            } catch (e) {
-                showToast('❌ Error: ' + e.message, '#dc2626');
+            } catch (error) {
+                log(`❌ Approve error: ${error.message}`);
             }
-            loadContent();
+        }
+        
+        async function postNow(id) {
+            if (!confirm('Post this to Twitter right now?')) return;
+            try {
+                log(`Posting ${id} to Twitter...`);
+                const response = await fetch(`/api/content/${id}/post-now`, { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    log(`✅ Posted! Tweet IDs: ${data.tweetIds ? data.tweetIds.join(', ') : 'n/a'}`);
+                    await loadContent();
+                } else {
+                    throw new Error(data.error || `Post failed: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Post Now error: ${error.message}`);
+                alert(`Failed to post: ${error.message}`);
+            }
         }
 
         async function deletePost(id) {
-            if (!confirm('Delete this content?')) return;
-            await fetch(`/api/content/${id}`, { method: 'DELETE' });
-            showToast('🗑 Deleted');
-            loadContent();
-        }
-
-        function toggleFeedback(id) {
-            const feedbackArea = document.getElementById(`feedback-area-${id}`);
-            if (feedbackArea.style.display === 'none') {
-                feedbackArea.style.display = 'block';
-            } else {
-                feedbackArea.style.display = 'none';
-            }
-        }
-
-        async function saveFeedback(id) {
-            const textarea = document.getElementById(`feedback-text-${id}`);
-            const feedbackText = textarea.value.trim();
-            
-            if (!feedbackText) {
-                showToast('❌ Please enter feedback text', '#dc2626');
-                return;
-            }
-            
-            // Show progress modal
-            showProgressModal(id, feedbackText);
+            if (!confirm('Are you sure you want to delete this post?')) return;
             
             try {
-                const res = await fetch(`/api/content/${id}/apply-feedback`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ feedback: feedbackText })
-                });
-                
-                if (res.ok) {
-                    const result = await res.json();
-                    showToast('✅ Feedback applied to all content!', '#059669');
-                    textarea.value = '';
-                    hideProgressModal();
-                    loadContent(); // Refresh to show updates
+                log(`Deleting post ${id}...`);
+                const response = await fetch(`/api/content/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    log(`✅ Post ${id} deleted`);
+                    await loadContent();
                 } else {
-                    const error = await res.json();
-                    showToast('❌ ' + error.error, '#dc2626');
-                    hideProgressModal();
+                    throw new Error(`Delete failed: ${response.status}`);
                 }
-            } catch (e) {
-                showToast('❌ Error applying feedback', '#dc2626');
-                hideProgressModal();
+            } catch (error) {
+                log(`❌ Delete error: ${error.message}`);
             }
         }
-
-        function showProgressModal(postId, feedback) {
-            // Create progress modal if it doesn't exist
-            let modal = document.getElementById('progress-modal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'progress-modal';
-                modal.innerHTML = `
-                    <div class="progress-overlay">
-                        <div class="progress-card">
-                            <h3>🧠 Applying Feedback & Learning</h3>
-                            <div class="progress-steps">
-                                <div class="progress-step active" id="step-1">
-                                    <div class="step-icon">⏳</div>
-                                    <div class="step-text">Analyzing feedback...</div>
-                                </div>
-                                <div class="progress-step" id="step-2">
-                                    <div class="step-icon">✏️</div>
-                                    <div class="step-text">Updating this post...</div>
-                                </div>
-                                <div class="progress-step" id="step-3">
-                                    <div class="step-icon">🔄</div>
-                                    <div class="step-text">Applying to all posts...</div>
-                                </div>
-                                <div class="progress-step" id="step-4">
-                                    <div class="step-icon">🛠️</div>
-                                    <div class="step-text">Updating skills...</div>
-                                </div>
-                                <div class="progress-step" id="step-5">
-                                    <div class="step-icon">✅</div>
-                                    <div class="step-text">Learning captured!</div>
-                                </div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progress-fill"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-            
-            // Reset and show modal
-            modal.style.display = 'block';
-            document.querySelectorAll('.progress-step').forEach(step => step.classList.remove('active', 'completed'));
-            document.getElementById('progress-fill').style.width = '0%';
-            
-            // Simulate progress steps
-            simulateProgress();
-        }
-
-        function simulateProgress() {
-            const steps = ['step-1', 'step-2', 'step-3', 'step-4', 'step-5'];
-            const progressFill = document.getElementById('progress-fill');
-            
-            steps.forEach((stepId, index) => {
-                setTimeout(() => {
-                    // Complete previous steps
-                    if (index > 0) {
-                        const prevStep = document.getElementById(steps[index - 1]);
-                        prevStep.classList.remove('active');
-                        prevStep.classList.add('completed');
-                        prevStep.querySelector('.step-icon').textContent = '✅';
-                    }
-                    
-                    // Activate current step
-                    const currentStep = document.getElementById(stepId);
-                    currentStep.classList.add('active');
-                    
-                    // Update progress bar
-                    const progress = ((index + 1) / steps.length) * 100;
-                    progressFill.style.width = progress + '%';
-                    
-                    // Complete final step
-                    if (index === steps.length - 1) {
-                        setTimeout(() => {
-                            currentStep.classList.remove('active');
-                            currentStep.classList.add('completed');
-                            currentStep.querySelector('.step-icon').textContent = '✅';
-                        }, 1000);
-                    }
-                }, index * 1500);
-            });
-        }
-
-        function hideProgressModal() {
-            setTimeout(() => {
-                const modal = document.getElementById('progress-modal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            }, 2000);
-        }
-
-        function getOptimalTime() {
-            const now = new Date();
-            const optimal = new Date();
-            
-            // Set to today 4 PM EST (best performing time: 8,565 avg impressions)
-            optimal.setHours(16, 0, 0, 0);
-            
-            // If it's already past 4 PM today, schedule for tomorrow 4 PM
-            if (now >= optimal) {
-                optimal.setDate(optimal.getDate() + 1);
-            }
-            
-            // Weekend optimization: Saturday/Sunday posts perform differently
-            const dayOfWeek = optimal.getDay();
-            if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
-                optimal.setHours(14, 0, 0, 0); // 2 PM on weekends
-            }
-            
-            return optimal;
-        }
-
-        function formatOptimalTime(date) {
-            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const dayName = dayNames[date.getDay()];
-            const time = date.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            
-            const isToday = date.toDateString() === new Date().toDateString();
-            const dayText = isToday ? 'Today' : dayName;
-            
-            return `${dayText} ${time} EST`;
-        }
-
-        async function scheduleAuto(id) {
-            const datetimeInput = document.getElementById(`adjust-schedule-${id}`);
-            const scheduledAt = datetimeInput.value;
-            
-            if (!scheduledAt) {
-                showToast('❌ No time selected for scheduling', '#dc2626');
-                return;
-            }
-            
-            const scheduledDate = new Date(scheduledAt);
-            const now = new Date();
-            
-            // Validate future time (5 minute buffer)
-            if (scheduledDate <= new Date(now.getTime() + (5 * 60 * 1000))) {
-                showToast('❌ Please select a time at least 5 minutes in the future', '#dc2626');
-                return;
-            }
-            
-            const optimalTimeISO = datetimeInput.getAttribute('data-optimal-time');
-            const isOptimalTime = scheduledAt === optimalTimeISO?.slice(0, 16);
-            const timeType = isOptimalTime ? 'optimal time' : 'selected time';
-            const formattedDate = scheduledDate.toLocaleString();
-            
-            try {
-                const res = await fetch(`/api/content/${id}/schedule`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scheduledAt: scheduledDate.toISOString() })
-                });
-                
-                if (res.ok) {
-                    showToast(`📅 Scheduled for ${timeType}: ${formattedDate}!`);
-                    loadContent();
-                } else {
-                    const error = await res.json();
-                    showToast('❌ ' + error.error, '#dc2626');
-                }
-            } catch (e) {
-                showToast('❌ Error scheduling: ' + e.message, '#dc2626');
-            }
-        }
-
-        async function cancelSchedule(id) {
-            if (!confirm('Cancel the scheduled posting for this content?')) {
-                return;
-            }
-            
-            try {
-                const res = await fetch(`/api/content/${id}/unschedule`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (res.ok) {
-                    showToast('❌ Schedule cancelled - moved back to Approved');
-                    loadContent();
-                } else {
-                    const error = await res.json();
-                    showToast('❌ ' + error.error, '#dc2626');
-                }
-            } catch (e) {
-                showToast('❌ Error cancelling schedule: ' + e.message, '#dc2626');
-            }
-        }
-
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                filter = btn.dataset.filter;
-                render();
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => setFilter(btn.dataset.filter));
             });
         });
-
+        
+        // Initialize
+        log('🚀 Dashboard initializing...');
         loadContent();
         
-        // Auto-refresh countdowns every minute
+        // Auto-refresh every 2 minutes
         setInterval(() => {
-            const countdowns = document.querySelectorAll('.countdown');
-            countdowns.forEach(countdown => {
-                const item = content.find(c => countdown.closest('.content-item').id === `item-${c.id}`);
-                if (item && item.scheduledAt) {
-                    countdown.outerHTML = formatCountdown(item.scheduledAt);
-                }
-            });
-        }, 60000);
-        
-        // Auto-refresh the weekly schedule every 5 minutes
-        setInterval(loadWeeklySchedule, 300000);
+            log('🔄 Auto-refresh...');
+            loadContent();
+        }, 120000);
     </script>
 </body>
 </html>
