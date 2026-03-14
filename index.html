@@ -94,6 +94,92 @@
             min-height: 150px;
         }
         
+        /* TWITTER THREAD PREVIEW */
+        .content-preview-toggle {
+            display: flex; gap: 0.5rem; margin-bottom: 1rem;
+            justify-content: flex-end; align-items: center;
+        }
+        .toggle-btn {
+            padding: 0.4rem 0.8rem; border: 1px solid #334155; border-radius: 6px;
+            background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .toggle-btn:hover { border-color: #475569; }
+        .toggle-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        
+        .twitter-thread-preview {
+            display: flex; flex-direction: column; gap: 1rem;
+            background: #0f172a; padding: 1rem; border-radius: 8px;
+            border: 1px solid #334155; margin-bottom: 1rem;
+        }
+        
+        .tweet-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+            padding: 1rem; position: relative;
+        }
+        
+        .tweet-header {
+            display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+        }
+        
+        .tweet-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem; color: white;
+        }
+        
+        .tweet-meta {
+            display: flex; flex-direction: column;
+        }
+        
+        .tweet-username {
+            color: #e2e8f0; font-weight: 600; font-size: 0.9rem;
+        }
+        
+        .tweet-handle {
+            color: #64748b; font-size: 0.8rem;
+        }
+        
+        .tweet-content {
+            color: #e2e8f0; line-height: 1.4; white-space: pre-wrap;
+            font-size: 0.95rem; margin-bottom: 0.5rem;
+        }
+        
+        .tweet-media {
+            margin-top: 0.75rem; border-radius: 8px; overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        .tweet-media .media-item {
+            border-radius: 0; border: none;
+        }
+        
+        .tweet-number {
+            position: absolute; top: 0.5rem; right: 0.5rem;
+            background: #2563eb; color: white; padding: 0.2rem 0.6rem;
+            border-radius: 12px; font-size: 0.7rem; font-weight: 600;
+        }
+        
+        .tweet-stats {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #334155;
+            font-size: 0.7rem; color: #64748b;
+        }
+        
+        .char-count {
+            font-weight: 600;
+        }
+        
+        .char-count.over-limit {
+            color: #ef4444;
+        }
+        
+        .thread-connector {
+            width: 2px; background: #334155; height: 1rem;
+            margin: -0.5rem auto; z-index: 1; position: relative;
+        }
+        
         .post-content { 
             color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; 
             white-space: pre-wrap; max-height: 150px; overflow: hidden; 
@@ -146,9 +232,13 @@
         /* BETTER POST CONTENT DISPLAY */
         .post-content { 
             color: #94a3b8; font-size: 0.95rem; margin-bottom: 1rem; 
-            white-space: pre-wrap; max-height: 200px; overflow-y: auto; 
+            white-space: pre-wrap; max-height: 250px; overflow-y: auto; 
             background: #0f172a; padding: 1rem; border-radius: 8px; 
             border: 1px solid #334155;
+        }
+        
+        .content-container {
+            margin-bottom: 1rem;
         }
         
         /* IMPROVED ACTIONS */
@@ -317,40 +407,53 @@
                 return;
             }
             
-            const html = filtered.map(post => `
-                <div class="post ${post.status}">
-                    <div class="post-meta">
-                        <div class="post-title">
-                            <span class="type-badge">${getContentType(post)}</span>${escapeHtml(post.title)}
+            const html = filtered.map(post => {
+                const tweets = splitIntoTweets(post.content);
+                const isThreaded = tweets.length > 1;
+                
+                return `
+                    <div class="post ${post.status}" data-post-id="${post.id}">
+                        <div class="post-meta">
+                            <div class="post-title">
+                                <span class="type-badge">${getContentType(post)}</span>${escapeHtml(post.title)}
+                                ${isThreaded ? `<span style="color: #64748b; font-size: 0.8rem; margin-left: 0.5rem;">(${tweets.length} tweets)</span>` : ''}
+                            </div>
+                            <span class="badge ${post.status}">${post.status}</span>
                         </div>
-                        <span class="badge ${post.status}">${post.status}</span>
-                    </div>
 
-                    ${post.scheduledAt ? `
-                        <div class="scheduled-info">
-                            <div><strong>📅 Scheduled for:</strong></div>
-                            <div class="schedule-time">${formatScheduleTime(post.scheduledAt)}</div>
+                        ${post.scheduledAt ? `
+                            <div class="scheduled-info">
+                                <div><strong>📅 Scheduled for:</strong></div>
+                                <div class="schedule-time">${formatScheduleTime(post.scheduledAt)}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="content-preview-toggle">
+                            <span style="color: #64748b; font-size: 0.8rem;">Preview:</span>
+                            <button class="toggle-btn active" data-view="full" onclick="toggleContentView('${post.id}', 'full')">📄 Full</button>
+                            <button class="toggle-btn" data-view="twitter" onclick="toggleContentView('${post.id}', 'twitter')">🐦 Twitter</button>
                         </div>
-                    ` : ''}
 
-                    ${renderMediaFiles(post)}
+                        <div class="content-container">
+                            <div class="media-section">${!post.mediaUrl ? '' : renderMediaFiles(post)}</div>
+                            <div class="post-content">${escapeHtml(post.content)}</div>
+                        </div>
 
-                    <div class="post-content">${escapeHtml(post.content)}</div>
-
-                    <div class="actions">
-                        ${post.status === 'review' ? `
-                            <button class="btn btn-approve" onclick="approvePost('${post.id}')">✅ Approve</button>
-                        ` : ''}
-                        ${post.status === 'approved' && !post.scheduledAt ? `
-                            <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
-                        ` : ''}
-                        ${post.status === 'approved' && post.scheduledAt ? `
-                            <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
-                        ` : ''}
-                        <button class="btn btn-delete" onclick="deletePost('${post.id}')">🗑️ Delete</button>
+                        <div class="actions">
+                            ${post.status === 'review' ? `
+                                <button class="btn btn-approve" onclick="approvePost('${post.id}')">✅ Approve</button>
+                            ` : ''}
+                            ${post.status === 'approved' && !post.scheduledAt ? `
+                                <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
+                            ` : ''}
+                            ${post.status === 'approved' && post.scheduledAt ? `
+                                <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
+                            ` : ''}
+                            <button class="btn btn-delete" onclick="deletePost('${post.id}')">🗑️ Delete</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             container.innerHTML = html;
             updateStats();
@@ -397,6 +500,108 @@
                     minute: '2-digit',
                     hour12: true
                 });
+            }
+        }
+        
+        // Split content into Twitter thread preview (copied from backend logic)
+        function splitIntoTweets(text, maxLen = 270) {
+            // First split on the "2/2" or "X/X" thread marker
+            const sections = text.split(/\n\n(?=\d+\/\d+)/).filter(Boolean);
+            const tweets = [];
+
+            for (const section of sections) {
+                if (section.length <= maxLen) {
+                    tweets.push(section.trim());
+                    continue;
+                }
+                // Split by paragraphs (double newline)
+                const paragraphs = section.split('\n\n').filter(Boolean);
+                let current = '';
+                for (const para of paragraphs) {
+                    const candidate = current ? current + '\n\n' + para : para;
+                    if (candidate.length <= maxLen) {
+                        current = candidate;
+                    } else {
+                        if (current) tweets.push(current.trim());
+                        // If single paragraph exceeds limit, hard split at sentence
+                        if (para.length > maxLen) {
+                            const sentences = para.match(/[^.!?]+[.!?]+/g) || [para];
+                            let chunk = '';
+                            for (const s of sentences) {
+                                const next = chunk ? chunk + ' ' + s.trim() : s.trim();
+                                if (next.length <= maxLen) { chunk = next; }
+                                else { if (chunk) tweets.push(chunk.trim()); chunk = s.trim(); }
+                            }
+                            current = chunk;
+                        } else {
+                            current = para;
+                        }
+                    }
+                }
+                if (current) tweets.push(current.trim());
+            }
+            return tweets;
+        }
+        
+        function renderTwitterPreview(post) {
+            const tweets = splitIntoTweets(post.content);
+            
+            const tweetCards = tweets.map((tweet, index) => {
+                const isFirstTweet = index === 0;
+                const tweetNumber = tweets.length > 1 ? `${index + 1}/${tweets.length}` : '';
+                const charCount = tweet.length;
+                const isOverLimit = charCount > 280;
+                
+                return `
+                    <div class="tweet-card">
+                        ${tweetNumber ? `<div class="tweet-number">${tweetNumber}</div>` : ''}
+                        <div class="tweet-header">
+                            <div class="tweet-avatar">G</div>
+                            <div class="tweet-meta">
+                                <div class="tweet-username">GetHookd AI</div>
+                                <div class="tweet-handle">@gethookdai</div>
+                            </div>
+                        </div>
+                        <div class="tweet-content">${escapeHtml(tweet)}</div>
+                        ${isFirstTweet && post.mediaUrl ? `
+                            <div class="tweet-media">
+                                ${renderMediaFiles(post)}
+                            </div>
+                        ` : ''}
+                        <div class="tweet-stats">
+                            <span>Tweet ${index + 1}</span>
+                            <span class="char-count ${isOverLimit ? 'over-limit' : ''}">${charCount}/280 chars</span>
+                        </div>
+                    </div>
+                    ${index < tweets.length - 1 ? '<div class="thread-connector"></div>' : ''}
+                `;
+            }).join('');
+            
+            return `<div class="twitter-thread-preview">${tweetCards}</div>`;
+        }
+        
+        function toggleContentView(postId, viewType) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            
+            const container = document.querySelector(`[data-post-id="${postId}"] .content-container`);
+            if (!container) return;
+            
+            // Update toggle buttons
+            const toggles = document.querySelectorAll(`[data-post-id="${postId}"] .toggle-btn`);
+            toggles.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewType);
+            });
+            
+            // Render content based on view type
+            if (viewType === 'twitter') {
+                container.innerHTML = renderTwitterPreview(post);
+            } else {
+                // Full view - media separate from content
+                container.innerHTML = `
+                    <div class="media-section">${!post.mediaUrl ? '' : renderMediaFiles(post)}</div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                `;
             }
         }
 
