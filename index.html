@@ -102,6 +102,7 @@
         .empty { text-align: center; color: #64748b; padding: 3rem; font-size: 1.1rem; }
         
         .debug { 
+            display: none; /* HIDDEN FOR CLEAN UI */
             background: #1e293b; border: 1px solid #f59e0b; padding: 1rem; 
             margin-bottom: 1rem; border-radius: 8px; font-family: monospace; 
             font-size: 0.8rem; max-height: 200px; overflow-y: auto;
@@ -110,10 +111,37 @@
         .debug-entry { color: #94a3b8; margin: 0.2rem 0; }
         
         .scheduled-info { 
-            background: #1e293b; border: 1px solid #a855f7; border-radius: 8px; 
+            background: linear-gradient(135deg, #a855f720, #a855f710); 
+            border: 1px solid #a855f7; border-radius: 8px; 
             padding: 1rem; margin-bottom: 1rem; 
+            display: flex; justify-content: space-between; align-items: center;
         }
         .scheduled-info strong { color: #a855f7; }
+        .schedule-time { 
+            color: #a855f7; font-weight: 700; font-size: 1.1rem; 
+            background: #a855f720; padding: 0.5rem 1rem; border-radius: 6px;
+        }
+        
+        /* BETTER POST CONTENT DISPLAY */
+        .post-content { 
+            color: #94a3b8; font-size: 0.95rem; margin-bottom: 1rem; 
+            white-space: pre-wrap; max-height: 200px; overflow-y: auto; 
+            background: #0f172a; padding: 1rem; border-radius: 8px; 
+            border: 1px solid #334155;
+        }
+        
+        /* IMPROVED ACTIONS */
+        .actions { 
+            display: flex; gap: 0.75rem; flex-wrap: wrap; 
+            padding-top: 0.5rem; border-top: 1px solid #334155; 
+        }
+        
+        /* CLEAN POST HEADER */
+        .post-meta { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 0.5rem; 
+        }
+        .post-meta .badge { margin-left: auto; }
     </style>
 </head>
 <body>
@@ -167,12 +195,8 @@
         let currentFilter = 'review';
         
         function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
+            // Silent logging for development - only console
             console.log('📊', message);
-            
-            const logEl = document.getElementById('debug-log');
-            logEl.innerHTML += `<div class="debug-entry">${timestamp}: ${message}</div>`;
-            logEl.scrollTop = logEl.scrollHeight;
         }
         
         function setFilter(filter) {
@@ -256,7 +280,7 @@
             
             const html = filtered.map(post => `
                 <div class="post ${post.status}">
-                    <div class="post-header">
+                    <div class="post-meta">
                         <div class="post-title">
                             <span class="type-badge">${getContentType(post)}</span>${escapeHtml(post.title)}
                         </div>
@@ -265,20 +289,24 @@
 
                     ${post.scheduledAt ? `
                         <div class="scheduled-info">
-                            <strong>📅 Scheduled for:</strong> ${new Date(post.scheduledAt).toLocaleString()}
+                            <div><strong>📅 Scheduled for:</strong></div>
+                            <div class="schedule-time">${formatScheduleTime(post.scheduledAt)}</div>
                         </div>
                     ` : ''}
 
                     ${renderMediaFiles(post)}
 
-                    <div class="post-content">${escapeHtml(post.content.substring(0, 300))}${post.content.length > 300 ? '...' : ''}</div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
 
                     <div class="actions">
                         ${post.status === 'review' ? `
                             <button class="btn btn-approve" onclick="approvePost('${post.id}')">✅ Approve</button>
                         ` : ''}
-                        ${post.status === 'approved' ? `
+                        ${post.status === 'approved' && !post.scheduledAt ? `
                             <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
+                        ` : ''}
+                        ${post.status === 'approved' && post.scheduledAt ? `
+                            <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
                         ` : ''}
                         <button class="btn btn-delete" onclick="deletePost('${post.id}')">🗑️ Delete</button>
                     </div>
@@ -291,11 +319,46 @@
         
         function getContentType(post) {
             const title = post.title || '';
+            if (/📂/i.test(title)) return '📂 Swipe File';
             if (/Hook\s*Swipe/i.test(title)) return '🪝 Hook Swipe';
             if (/Autopsy/i.test(title)) return '🔬 Ad Autopsy';
             if (/Category/i.test(title)) return '📊 Category War';
             if (/\bvs\b/i.test(title)) return '⚔️ VS Battle';
             return '🏷️ Brand Printing';
+        }
+        
+        function formatScheduleTime(scheduledAt) {
+            const date = new Date(scheduledAt);
+            const now = new Date();
+            
+            // Check if it's today
+            const isToday = date.toDateString() === now.toDateString();
+            
+            // Check if it's tomorrow  
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const isTomorrow = date.toDateString() === tomorrow.toDateString();
+            
+            const timeString = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            if (isToday) {
+                return `Today at ${timeString}`;
+            } else if (isTomorrow) {
+                return `Tomorrow at ${timeString}`;
+            } else {
+                return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
         }
 
         function escapeHtml(text) {
