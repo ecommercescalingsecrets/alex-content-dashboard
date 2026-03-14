@@ -19,7 +19,34 @@ const port = process.env.PORT || 3333;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
-app.use('/media', express.static(path.join(__dirname, '..', 'media')));
+
+// Enhanced media serving with proper headers for videos
+app.use('/media', (req, res, next) => {
+    const filePath = path.join(__dirname, '..', 'media', req.path);
+    
+    // Set proper MIME types for videos
+    if (req.path.toLowerCase().endsWith('.mp4')) {
+        res.setHeader('Content-Type', 'video/mp4');
+    } else if (req.path.toLowerCase().endsWith('.webm')) {
+        res.setHeader('Content-Type', 'video/webm');
+    } else if (req.path.toLowerCase().endsWith('.mov')) {
+        res.setHeader('Content-Type', 'video/quicktime');
+    }
+    
+    // Enable range requests for video streaming
+    res.setHeader('Accept-Ranges', 'bytes');
+    
+    // CORS headers for cross-origin requests
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    
+    // Cache headers for performance
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+    
+    next();
+}, express.static(path.join(__dirname, '..', 'media')));
+
 app.use('/swipe-files', express.static(path.join(__dirname, '..', 'swipe-files')));
 
 // Twitter client
@@ -433,4 +460,59 @@ app.get('/api/debug/media', (req, res) => {
     const exists = fs.existsSync(mediaDir);
     const files = exists ? fs.readdirSync(mediaDir) : [];
     res.json({ __dirname, mediaDir, exists, fileCount: files.length, files: files.slice(0, 10) });
+});
+
+// Validate all media files referenced in content
+app.get('/api/validate-media', (req, res) => {
+    const allContent = getAllContent();
+    const mediaDir = path.join(__dirname, '..', 'media');
+    const results = {
+        totalPosts: allContent.length,
+        postsWithMedia: 0,
+        validMedia: 0,
+        missingMedia: 0,
+        issues: []
+    };
+    
+    for (const post of allContent) {
+        if (post.mediaUrl) {
+            results.postsWithMedia++;
+            
+            const urls = post.mediaUrl.split(',').map(u => u.trim()).filter(u => u);
+            
+            for (const url of urls) {
+                if (url.startsWith('/media/')) {
+                    const filename = url.replace('/media/', '');
+                    const filePath = path.join(mediaDir, filename);
+                    
+                    if (fs.existsSync(filePath)) {
+                        const stats = fs.statSync(filePath);
+                        results.validMedia++;
+                        
+                        // Check for suspiciously small video files
+                        if (filename.endsWith('.mp4') && stats.size < 1000) {
+                            results.issues.push({
+                                postId: post.id,
+                                postTitle: post.title,
+                                mediaUrl: url,
+                                issue: 'Suspiciously small video file',
+                                size: stats.size
+                            });
+                        }
+                    } else {
+                        results.missingMedia++;
+                        results.issues.push({
+                            postId: post.id,
+                            postTitle: post.title,
+                            mediaUrl: url,
+                            issue: 'File not found',
+                            filePath
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
+    res.json(results);
 });

@@ -71,6 +71,27 @@
         .media-item { 
             width: 100%; max-height: 300px; object-fit: contain; 
             border-radius: 8px; background: #0f172a; 
+            border: 1px solid #334155;
+        }
+        
+        /* VIDEO SPECIFIC STYLING */
+        video.media-item {
+            background: #000; /* Better background for videos */
+        }
+        
+        video.media-item:hover {
+            border-color: #475569;
+        }
+        
+        /* MEDIA LOADING STATES */
+        .media-loading {
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            min-height: 150px;
         }
         
         .post-content { 
@@ -238,14 +259,32 @@
             if (mediaUrls.length === 0) return '';
             
             const mediaHtml = mediaUrls.map(url => {
-                if (post.mediaType && post.mediaType.includes('video')) {
-                    return `<video class="media-item" controls preload="metadata">
-                        <source src="${url}" type="${post.mediaType}">
-                        Your browser does not support video.
+                // Determine if this is a video based on file extension and/or mediaType
+                const isVideo = (post.mediaType && (post.mediaType.includes('video') || post.mediaType === 'video')) || 
+                              url.toLowerCase().includes('.mp4') || 
+                              url.toLowerCase().includes('.mov') || 
+                              url.toLowerCase().includes('.webm');
+                
+                if (isVideo) {
+                    // Determine proper MIME type
+                    let mimeType = 'video/mp4'; // default
+                    if (url.toLowerCase().includes('.webm')) mimeType = 'video/webm';
+                    if (url.toLowerCase().includes('.mov')) mimeType = 'video/quicktime';
+                    
+                    return `<video class="media-item" controls preload="metadata" 
+                            onloadedmetadata="this.style.opacity='1'" 
+                            oncanplay="this.style.opacity='1'"
+                            onerror="console.error('Video failed to load:', this.src); this.style.backgroundColor='#dc2626'; this.style.opacity='0.5';"
+                            style="opacity: 0.7; transition: opacity 0.3s;">
+                        <source src="${url}" type="${mimeType}">
+                        <source src="${url}">
+                        Video cannot be displayed. <a href="${url}" target="_blank" style="color: #60a5fa;">Download video</a>
                     </video>`;
                 } else {
                     return `<img class="media-item" src="${url}" alt="${escapeHtml(post.title)}" 
-                        onerror="this.style.display='none';">`;
+                        onload="this.style.opacity='1'"
+                        onerror="console.error('Image failed to load:', this.src); this.style.display='none';"
+                        style="opacity: 0.7; transition: opacity 0.3s;">`;
                 }
             }).join('');
             
@@ -368,6 +407,16 @@
             return div.innerHTML;
         }
         
+        async function validateMediaUrl(url) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                console.error(`Media validation failed for ${url}:`, error);
+                return false;
+            }
+        }
+        
         async function loadContent() {
             try {
                 log('🔄 Loading content from API...');
@@ -388,10 +437,29 @@
                 
                 // Log status breakdown
                 const statusCounts = {};
+                const mediaIssues = [];
+                
                 allPosts.forEach(post => {
                     statusCounts[post.status] = (statusCounts[post.status] || 0) + 1;
+                    
+                    // Check for potential media issues
+                    if (post.mediaUrl) {
+                        const urls = post.mediaUrl.split(',').map(u => u.trim()).filter(u => u);
+                        urls.forEach(url => {
+                            // Basic URL validation
+                            if (!url.startsWith('/media/') && !url.startsWith('http')) {
+                                mediaIssues.push(`${post.id}: Invalid media URL format - ${url}`);
+                            }
+                        });
+                    }
                 });
+                
                 log(`Status breakdown: ${JSON.stringify(statusCounts)}`);
+                
+                if (mediaIssues.length > 0) {
+                    log(`⚠️ Media issues found: ${mediaIssues.length}`);
+                    mediaIssues.forEach(issue => log(`🔍 ${issue}`));
+                }
                 
                 renderContent();
                 
