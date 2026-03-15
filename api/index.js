@@ -360,7 +360,7 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target'];
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
