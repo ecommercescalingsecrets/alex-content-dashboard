@@ -76,9 +76,8 @@ async function scheduleChecker() {
             console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toISOString()}`);
         }
 
-        // Process each post independently (don't let one failure block others)
+        // Process each post independently
         for (const item of itemsToPost) {
-            try {
             console.log(`📅 Auto-posting scheduled content: ${item.title}`);
             item.scheduledStatus = 'posting';
             upsertContent(item);
