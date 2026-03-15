@@ -1,0 +1,44 @@
+2026-03-15 03:31:13,145 - INFO - Starting tweet search and reply process...
+2026-03-15 03:31:13,146 - INFO - Searching for keyword: facebook ads
+2026-03-15 03:31:13,353 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,354 - INFO - Searching for keyword: ad spy tool
+2026-03-15 03:31:13,400 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,400 - INFO - Searching for keyword: competitor ads
+2026-03-15 03:31:13,443 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,444 - INFO - Searching for keyword: what ads are they running
+2026-03-15 03:31:13,488 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,488 - INFO - Searching for keyword: ad creative
+2026-03-15 03:31:13,531 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,532 - INFO - Searching for keyword: winning ads
+2026-03-15 03:31:13,581 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,581 - INFO - Searching for keyword: ad library
+2026-03-15 03:31:13,627 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,627 - INFO - Searching for keyword: facebook ad library
+2026-03-15 03:31:13,669 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,670 - INFO - Searching for keyword: spy on competitors
+2026-03-15 03:31:13,715 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,716 - INFO - Searching for keyword: ad intelligence
+2026-03-15 03:31:13,756 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,756 - INFO - Searching for keyword: facebook advertising
+2026-03-15 03:31:13,796 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,797 - INFO - Searching for keyword: ad analysis
+2026-03-15 03:31:13,833 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,834 - INFO - Searching for keyword: creative analysis
+2026-03-15 03:31:13,880 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,880 - INFO - Searching for keyword: ad tracking
+2026-03-15 03:31:13,927 - ERROR - Error searching tweets: 401 Unauthorized
+Unauthorized
+2026-03-15 03:31:13,928 - INFO - Found 0 total tweets, 0 eligible for reply

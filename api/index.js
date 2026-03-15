@@ -61,6 +61,7 @@ const twitterClient = new TwitterApi({
 async function scheduleChecker() {
     try {
         const now = new Date();
+        console.log(`🔍 Schedule check at ${now.toISOString()}`);
         const allContent = getAllContent();
         
         // Find items that need to be posted
@@ -72,11 +73,12 @@ async function scheduleChecker() {
         );
 
         if (itemsToPost.length > 0) {
-            console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toLocaleTimeString()}`);
+            console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toISOString()}`);
         }
 
+        // Process each post independently (don't let one failure block others)
         for (const item of itemsToPost) {
-
+            try {
             console.log(`📅 Auto-posting scheduled content: ${item.title}`);
             item.scheduledStatus = 'posting';
             upsertContent(item);
@@ -206,42 +208,37 @@ app.post('/api/content/:id/feedback', (req, res) => {
 // /api/content/scheduled/week route moved above :id param route to avoid conflicts
 
 // Split long text into tweet-sized chunks at paragraph boundaries
-function splitIntoTweets(text, maxLen = 270) {
-    // First split on the "2/2" or "X/X" thread marker
-    const sections = text.split(/\n\n(?=\d+\/\d+)/).filter(Boolean);
+function splitIntoTweets(text, maxLen = 280) {
+    // If the entire text fits in one tweet, NEVER split it
+    if (text.trim().length <= maxLen) {
+        return [text.trim()];
+    }
+    
+    // Only split if text actually exceeds the limit
+    const paragraphs = text.split('\n\n').filter(Boolean);
     const tweets = [];
-
-    for (const section of sections) {
-        if (section.length <= maxLen) {
-            tweets.push(section.trim());
-            continue;
-        }
-        // Split by paragraphs (double newline)
-        const paragraphs = section.split('\n\n').filter(Boolean);
-        let current = '';
-        for (const para of paragraphs) {
-            const candidate = current ? current + '\n\n' + para : para;
-            if (candidate.length <= maxLen) {
-                current = candidate;
-            } else {
-                if (current) tweets.push(current.trim());
-                // If single paragraph exceeds limit, hard split at sentence
-                if (para.length > maxLen) {
-                    const sentences = para.match(/[^.!?]+[.!?]+/g) || [para];
-                    let chunk = '';
-                    for (const s of sentences) {
-                        const next = chunk ? chunk + ' ' + s.trim() : s.trim();
-                        if (next.length <= maxLen) { chunk = next; }
-                        else { if (chunk) tweets.push(chunk.trim()); chunk = s.trim(); }
-                    }
-                    current = chunk;
-                } else {
-                    current = para;
+    let current = '';
+    for (const para of paragraphs) {
+        const candidate = current ? current + '\n\n' + para : para;
+        if (candidate.length <= maxLen) {
+            current = candidate;
+        } else {
+            if (current) tweets.push(current.trim());
+            if (para.length > maxLen) {
+                const sentences = para.match(/[^.!?]+[.!?]+/g) || [para];
+                let chunk = '';
+                for (const s of sentences) {
+                    const next = chunk ? chunk + ' ' + s.trim() : s.trim();
+                    if (next.length <= maxLen) { chunk = next; }
+                    else { if (chunk) tweets.push(chunk.trim()); chunk = s.trim(); }
                 }
+                current = chunk;
+            } else {
+                current = para;
             }
         }
-        if (current) tweets.push(current.trim());
     }
+    if (current) tweets.push(current.trim());
     return tweets;
 }
 
