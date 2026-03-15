@@ -295,6 +295,11 @@ app.post('/api/content/:id/post-now', async (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
 
+    // Idempotency: don't re-post if already posted
+    if (item.status === 'posted' && item.tweetIds) {
+        return res.json({ success: true, tweetIds: item.tweetIds, item, alreadyPosted: true });
+    }
+
     try {
         const { tweetIds, hasMedia } = await postItemToTwitter(item);
         item.status = 'posted';
