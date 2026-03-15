@@ -25,16 +25,20 @@ db.exec(`
     tweetId TEXT,
     tweetIds TEXT,
     postedAt TEXT,
-    feedbackHistory TEXT DEFAULT '[]'
+    feedbackHistory TEXT DEFAULT '[]',
+    replyContent TEXT
   )
 `);
+
+// Add replyContent column if missing (migration)
+try { db.prepare('ALTER TABLE content ADD COLUMN replyContent TEXT').run(); } catch(e) {}
 
 const stmts = {
   getAll: db.prepare('SELECT * FROM content'),
   get: db.prepare('SELECT * FROM content WHERE id = ?'),
   upsert: db.prepare(`INSERT OR REPLACE INTO content 
-    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory)
-    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory)`),
+    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory, replyContent)
+    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory, @replyContent)`),
   delete: db.prepare('DELETE FROM content WHERE id = ?'),
   count: db.prepare('SELECT COUNT(*) as cnt FROM content'),
 };
@@ -64,6 +68,7 @@ function serialize(item) {
     tweetIds: item.tweetIds ? JSON.stringify(item.tweetIds) : null,
     postedAt: item.postedAt || null,
     feedbackHistory: JSON.stringify(item.feedbackHistory || []),
+    replyContent: item.replyContent || null,
   };
 }
 
