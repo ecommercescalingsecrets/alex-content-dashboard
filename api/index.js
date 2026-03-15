@@ -281,6 +281,17 @@ async function postItemToTwitter(item) {
         tweetIds.push(lastTweetId);
     }
 
+    // Auto-reply with ad link if replyContent exists
+    if (item.replyContent && lastTweetId) {
+        try {
+            const replyResult = await twitterClient.v2.reply(item.replyContent, lastTweetId);
+            tweetIds.push(replyResult.data.id);
+            console.log(`Auto-reply posted: ${replyResult.data.id}`);
+        } catch (replyErr) {
+            console.error('Auto-reply failed:', replyErr.message || replyErr);
+        }
+    }
+
     return { tweetIds, hasMedia: !!mediaId };
 }
 
