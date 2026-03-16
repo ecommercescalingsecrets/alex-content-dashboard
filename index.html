@@ -946,55 +946,19 @@
             }
         }
 
-        // ── Google Sheets Push ──
-        async function pushToGoogleSheets() {
-            const btn = document.getElementById('sheets-btn');
-            const origText = btn.textContent;
-            btn.textContent = '⏳ Pushing...';
-            btn.disabled = true;
-
-            try {
-                const filterStatus = currentFilter === 'gethookd' ? 'all' : currentFilter;
-                const resp = await fetch('/api/google-sheets/push', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: filterStatus })
-                });
-                const data = await resp.json();
-                if (!resp.ok) throw new Error(data.error);
-
-                btn.textContent = `✅ Pushed ${data.rowsPushed} rows`;
-                btn.style.borderColor = '#34a853';
-                btn.style.color = '#34a853';
-                log(`Pushed ${data.rowsPushed} posts to Google Sheets`);
-
-                setTimeout(() => {
-                    btn.textContent = origText;
-                    btn.disabled = false;
-                }, 3000);
-            } catch (error) {
-                log(`Google Sheets error: ${error.message}`);
-                btn.textContent = '❌ Failed';
-                btn.style.borderColor = '#dc2626';
-                btn.style.color = '#dc2626';
-                alert(`Google Sheets push failed: ${error.message}`);
-                setTimeout(() => {
-                    btn.textContent = origText;
-                    btn.style.borderColor = '#34a853';
-                    btn.style.color = '#34a853';
-                    btn.disabled = false;
-                }, 3000);
-            }
+        // ── Google Sheets ──
+        function pushToGoogleSheets() {
+            const base = window.location.origin;
+            const formula = `=IMPORTDATA("${base}/api/content.csv")`;
+            navigator.clipboard.writeText(formula).then(() => {
+                const btn = document.getElementById('sheets-btn');
+                btn.textContent = '✅ Formula copied!';
+                setTimeout(() => { btn.textContent = '📊 Push to Sheets'; }, 3000);
+                alert('Formula copied to clipboard!\\n\\nOpen your Google Sheet, click cell A1, and paste (Ctrl+V).\\n\\nYour sheet will auto-sync with the dashboard.');
+            }).catch(() => {
+                prompt('Copy this formula and paste it into cell A1 of your Google Sheet:', `=IMPORTDATA("${base}/api/content.csv")`);
+            });
         }
-
-        // Check Sheets config on load
-        fetch('/api/google-sheets/status').then(r => r.json()).then(data => {
-            const btn = document.getElementById('sheets-btn');
-            if (btn && !data.configured) {
-                btn.style.opacity = '0.5';
-                btn.title = 'Google Sheets not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_SHEETS_ID env vars.';
-            }
-        }).catch(() => {});
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {

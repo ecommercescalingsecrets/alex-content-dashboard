@@ -589,108 +589,43 @@ app.get('/api/analytics/report', (req, res) => {
     }
 });
 
-// ── Google Sheets Integration (via Apps Script webhook) ──
-// Set GOOGLE_SHEETS_WEBHOOK_URL env var to your Apps Script web app URL
-// See /api/google-sheets/setup for the Apps Script code to paste into your sheet
+// ── Google Sheets Integration (zero setup — just paste a formula) ──
+// Public CSV endpoint that Google Sheets can pull with =IMPORTDATA()
+app.get('/api/content.csv', (req, res) => {
+    const status = req.query.status;
+    let content = getAllContent();
 
-app.post('/api/google-sheets/push', async (req, res) => {
-    try {
-        const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
-        if (!webhookUrl) {
-            return res.status(400).json({
-                error: 'Google Sheets not configured',
-                setup: 'Set GOOGLE_SHEETS_WEBHOOK_URL env var. Visit /api/google-sheets/setup for instructions.'
-            });
+    if (status && status !== 'all') {
+        if (status === 'scheduled') {
+            content = content.filter(p => p.status === 'approved' && p.scheduledAt);
+        } else {
+            content = content.filter(p => p.status === status);
         }
-
-        const { status } = req.body;
-        let content = getAllContent();
-
-        if (status && status !== 'all') {
-            if (status === 'scheduled') {
-                content = content.filter(p => p.status === 'approved' && p.scheduledAt);
-            } else {
-                content = content.filter(p => p.status === status);
-            }
-        }
-
-        const rows = content.map(post => ({
-            id: post.id || '',
-            title: post.title || '',
-            content: post.content || '',
-            status: post.status || '',
-            target: post.target || '',
-            createdAt: post.createdAt || '',
-            approvedAt: post.approvedAt || '',
-            scheduledAt: post.scheduledAt || '',
-            postedAt: post.postedAt || '',
-            tweetIds: Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''),
-            mediaUrl: post.mediaUrl || ''
-        }));
-
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rows })
-        });
-
-        // Apps Script redirects on success, so follow redirects
-        const text = await response.text();
-        let result;
-        try { result = JSON.parse(text); } catch { result = { raw: text }; }
-
-        res.json({
-            success: true,
-            rowsPushed: rows.length,
-            filter: status || 'all',
-            sheetsResponse: result
-        });
-    } catch (error) {
-        console.error('Google Sheets push error:', error);
-        res.status(500).json({ error: error.message });
     }
-});
 
-app.get('/api/google-sheets/status', (req, res) => {
-    const configured = !!process.env.GOOGLE_SHEETS_WEBHOOK_URL;
-    res.json({ configured });
-});
+    const escapeCsv = (val) => {
+        const str = String(val || '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    };
 
-// Setup instructions endpoint
-app.get('/api/google-sheets/setup', (req, res) => {
-    res.json({
-        instructions: [
-            '1. Open your Google Sheet',
-            '2. Go to Extensions → Apps Script',
-            '3. Paste the code below and click Deploy → New deployment → Web app',
-            '4. Set "Who has access" to "Anyone"',
-            '5. Copy the web app URL',
-            '6. Set GOOGLE_SHEETS_WEBHOOK_URL env var to that URL'
-        ],
-        appsScriptCode: `function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  var rows = data.rows;
+    const headers = ['Title', 'Content', 'Status', 'Target', 'Created', 'Posted', 'Tweet IDs'];
+    const rows = content.map(post => [
+        escapeCsv(post.title),
+        escapeCsv(post.content),
+        escapeCsv(post.status),
+        escapeCsv(post.target),
+        escapeCsv(post.createdAt),
+        escapeCsv(post.postedAt),
+        escapeCsv(Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''))
+    ].join(','));
 
-  // Clear existing data
-  sheet.clear();
-
-  // Write headers
-  var headers = ['ID', 'Title', 'Content', 'Status', 'Target', 'Created', 'Approved', 'Scheduled', 'Posted', 'Tweet IDs', 'Media URL'];
-  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-
-  // Write data
-  if (rows.length > 0) {
-    var values = rows.map(function(r) {
-      return [r.id, r.title, r.content, r.status, r.target, r.createdAt, r.approvedAt, r.scheduledAt, r.postedAt, r.tweetIds, r.mediaUrl];
-    });
-    sheet.getRange(2, 1, values.length, headers.length).setValues(values);
-  }
-
-  return ContentService.createTextOutput(JSON.stringify({ success: true, rows: rows.length })).setMimeType(ContentService.MimeType.JSON);
-}`
-    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(csv);
 });
 
 app.listen(port, () => {
