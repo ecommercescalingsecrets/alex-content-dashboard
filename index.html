@@ -947,17 +947,29 @@
         }
 
         // ── Google Sheets ──
-        function pushToGoogleSheets() {
-            const base = window.location.origin;
-            const formula = `=IMPORTDATA("${base}/api/content.csv")`;
-            navigator.clipboard.writeText(formula).then(() => {
-                const btn = document.getElementById('sheets-btn');
-                btn.textContent = '✅ Formula copied!';
-                setTimeout(() => { btn.textContent = '📊 Push to Sheets'; }, 3000);
-                alert('Formula copied to clipboard!\\n\\nOpen your Google Sheet, click cell A1, and paste (Ctrl+V).\\n\\nYour sheet will auto-sync with the dashboard.');
-            }).catch(() => {
-                prompt('Copy this formula and paste it into cell A1 of your Google Sheet:', `=IMPORTDATA("${base}/api/content.csv")`);
-            });
+        async function pushToGoogleSheets() {
+            const btn = document.getElementById('sheets-btn');
+            const origText = btn.textContent;
+            btn.textContent = '⏳ Pushing...';
+            btn.disabled = true;
+
+            try {
+                const filterStatus = currentFilter === 'gethookd' ? 'all' : currentFilter;
+                const resp = await fetch('/api/google-sheets/push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: filterStatus })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error);
+
+                btn.textContent = `✅ Pushed ${data.rowsPushed} rows`;
+                setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 3000);
+            } catch (error) {
+                btn.textContent = '❌ Failed';
+                alert('Push failed: ' + error.message);
+                setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 3000);
+            }
         }
 
         // Event listeners

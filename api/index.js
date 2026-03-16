@@ -589,43 +589,52 @@ app.get('/api/analytics/report', (req, res) => {
     }
 });
 
-// ── Google Sheets Integration (zero setup — just paste a formula) ──
-// Public CSV endpoint that Google Sheets can pull with =IMPORTDATA()
-app.get('/api/content.csv', (req, res) => {
-    const status = req.query.status;
-    let content = getAllContent();
+// ── Google Sheets Integration (via Apps Script webhook) ──
+const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbzE0IWLFZrPaV46m5gkqkI6TtPEY1LZjRfI3hgUf25WKxYObXgdaAoQ9p9cOYkRrRTkYQ/exec';
 
-    if (status && status !== 'all') {
-        if (status === 'scheduled') {
-            content = content.filter(p => p.status === 'approved' && p.scheduledAt);
-        } else {
-            content = content.filter(p => p.status === status);
+app.post('/api/google-sheets/push', async (req, res) => {
+    try {
+        const { status } = req.body;
+        let content = getAllContent();
+
+        if (status && status !== 'all') {
+            if (status === 'scheduled') {
+                content = content.filter(p => p.status === 'approved' && p.scheduledAt);
+            } else {
+                content = content.filter(p => p.status === status);
+            }
         }
+
+        const rows = content.map(post => ({
+            id: post.id || '',
+            title: post.title || '',
+            content: post.content || '',
+            status: post.status || '',
+            target: post.target || '',
+            createdAt: post.createdAt || '',
+            approvedAt: post.approvedAt || '',
+            scheduledAt: post.scheduledAt || '',
+            postedAt: post.postedAt || '',
+            tweetIds: Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''),
+            mediaUrl: post.mediaUrl || ''
+        }));
+
+        const response = await fetch(GOOGLE_SHEETS_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows }),
+            redirect: 'follow'
+        });
+
+        const text = await response.text();
+        let result;
+        try { result = JSON.parse(text); } catch { result = { raw: text }; }
+
+        res.json({ success: true, rowsPushed: rows.length, filter: status || 'all' });
+    } catch (error) {
+        console.error('Google Sheets push error:', error);
+        res.status(500).json({ error: error.message });
     }
-
-    const escapeCsv = (val) => {
-        const str = String(val || '');
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-            return '"' + str.replace(/"/g, '""') + '"';
-        }
-        return str;
-    };
-
-    const headers = ['Title', 'Content', 'Status', 'Target', 'Created', 'Posted', 'Tweet IDs'];
-    const rows = content.map(post => [
-        escapeCsv(post.title),
-        escapeCsv(post.content),
-        escapeCsv(post.status),
-        escapeCsv(post.target),
-        escapeCsv(post.createdAt),
-        escapeCsv(post.postedAt),
-        escapeCsv(Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''))
-    ].join(','));
-
-    const csv = [headers.join(','), ...rows].join('\n');
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(csv);
 });
 
 app.listen(port, () => {
