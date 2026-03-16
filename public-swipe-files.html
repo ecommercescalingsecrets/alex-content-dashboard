@@ -3,406 +3,381 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex's Gethookd Swipe Files - Public Access</title>
+    <title>Alex's Gethookd Swipe Files</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            color: #ffffff;
-            line-height: 1.6;
-            min-height: 100vh;
+            color: #ffffff; line-height: 1.6; min-height: 100vh;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-            padding: 40px 0;
-        }
-        
-        .header h1 {
-            font-size: 3rem;
-            color: #ff6b35;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-        
-        .header p {
-            font-size: 1.3rem;
-            color: #888;
-            margin-bottom: 10px;
-        }
-        
-        .header .subtitle {
-            font-size: 1rem;
-            color: #666;
-        }
-        
-        .stats {
-            background: linear-gradient(135deg, #ff6b35, #e55a2b);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .stats h2 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .collections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
-        }
-        
-        .collection-card {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .collection-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff6b35, #e55a2b);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .collection-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .collection-card:hover {
-            transform: translateY(-5px);
-            border-color: #ff6b35;
-            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
-        }
-        
-        .collection-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .collection-title {
-            font-size: 1.4rem;
-            color: #ff6b35;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-        
-        .collection-count {
-            background: #ff6b35;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-        
-        .collection-description {
-            color: #ccc;
-            margin-bottom: 20px;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        
-        .collection-criteria {
-            background: #333;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: #bbb;
-            margin-bottom: 20px;
-            border-left: 3px solid #ff6b35;
-        }
-        
-        .download-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .download-btn {
-            background: linear-gradient(135deg, #ff6b35, #e55a2b);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-        }
-        
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-        }
-        
-        .preview-btn {
-            background: transparent;
-            border: 1px solid #ff6b35;
-            color: #ff6b35;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-        
-        .preview-btn:hover {
-            background: #ff6b35;
-            color: white;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 40px 0;
-            border-top: 1px solid #333;
-            margin-top: 50px;
-        }
-        
-        .footer a {
-            color: #ff6b35;
-            text-decoration: none;
-        }
-        
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        .header { text-align: center; margin-bottom: 40px; padding: 40px 0; }
+        .header h1 { font-size: 3rem; color: #ff6b35; margin-bottom: 15px; font-weight: 700; }
+        .header p { font-size: 1.3rem; color: #888; margin-bottom: 10px; }
+        .header .subtitle { font-size: 1rem; color: #666; }
         .highlight {
             background: linear-gradient(135deg, #ff6b35, #e55a2b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 600;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; font-weight: 600;
         }
 
+        /* Source tabs */
+        .source-tabs {
+            display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .source-tab {
+            padding: 0.75rem 1.5rem; border: 1px solid #333; border-radius: 8px;
+            background: transparent; color: #888; cursor: pointer; font-size: 0.95rem;
+            font-weight: 500; transition: all 0.2s;
+        }
+        .source-tab:hover { border-color: #ff6b35; color: #ff6b35; }
+        .source-tab.active { background: #ff6b35; color: white; border-color: #ff6b35; }
+
+        /* Search bar */
+        .search-bar {
+            display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 30px;
+            flex-wrap: wrap; align-items: center;
+        }
+        .search-bar input {
+            padding: 0.75rem 1.25rem; border: 1px solid #333; border-radius: 8px;
+            background: #1a1a1a; color: #fff; font-size: 1rem; min-width: 300px;
+        }
+        .search-bar input:focus { outline: none; border-color: #ff6b35; }
+        .search-bar button {
+            padding: 0.75rem 1.5rem; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, #ff6b35, #e55a2b); color: white;
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .search-bar button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,107,53,0.3); }
+
+        /* Stats bar */
+        .stats {
+            background: linear-gradient(135deg, #ff6b35, #e55a2b);
+            border-radius: 12px; padding: 15px 20px; text-align: center; margin-bottom: 30px;
+            font-size: 1.1rem; font-weight: 600;
+        }
+
+        /* Collection cards grid */
+        .collections-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px; margin-bottom: 40px;
+        }
+        .collection-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #333; border-radius: 12px; padding: 25px;
+            transition: all 0.3s ease; position: relative; overflow: hidden; cursor: pointer;
+        }
+        .collection-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #ff6b35, #e55a2b);
+            transform: scaleX(0); transition: transform 0.3s ease;
+        }
+        .collection-card:hover::before { transform: scaleX(1); }
+        .collection-card:hover { transform: translateY(-3px); border-color: #ff6b35; box-shadow: 0 10px 30px rgba(255,107,53,0.15); }
+
+        .collection-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .collection-title { font-size: 1.3rem; color: #ff6b35; font-weight: 600; }
+        .collection-count { background: #ff6b35; color: white; padding: 3px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .collection-description { color: #ccc; margin-bottom: 10px; font-size: 0.95rem; }
+
+        /* Ad cards */
+        .ads-grid { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 30px; }
+        .ad-card {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+            padding: 1.25rem; transition: border-color 0.2s; border-left: 4px solid #ff6b35;
+        }
+        .ad-card:hover { border-color: #555; }
+        .ad-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; }
+        .ad-brand { color: #ff6b35; font-weight: 700; font-size: 1rem; }
+        .ad-score { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: #ff6b3520; color: #ff6b35; }
+        .ad-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; font-size: 0.8rem; color: #888; }
+        .ad-meta span { background: #222; padding: 0.2rem 0.5rem; border-radius: 4px; }
+        .ad-body {
+            color: #ccc; font-size: 0.9rem; margin-bottom: 0.75rem;
+            white-space: pre-wrap; max-height: 180px; overflow-y: auto;
+            background: #111; padding: 0.75rem; border-radius: 8px; border: 1px solid #333;
+        }
+        .ad-media-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.5rem; margin-bottom: 0.75rem;
+        }
+        .ad-media-grid img, .ad-media-grid video {
+            width: 100%; max-height: 180px; object-fit: cover;
+            border-radius: 8px; border: 1px solid #333;
+        }
+        .ad-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .ad-tag {
+            padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem;
+            font-weight: 600; background: #ff6b3515; color: #ff6b35; border: 1px solid #ff6b3530;
+        }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 0.5rem; justify-content: center; margin: 1.5rem 0; }
+        .pagination button {
+            padding: 0.5rem 1rem; border: 1px solid #333; border-radius: 8px;
+            background: #1a1a1a; color: #888; cursor: pointer; font-size: 0.85rem;
+        }
+        .pagination button:hover { border-color: #ff6b35; color: #ff6b35; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination .current-page { background: #ff6b35; color: white; border-color: #ff6b35; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem; color: #ff6b35;
+            font-size: 0.95rem; cursor: pointer; margin-bottom: 1.5rem; border: none;
+            background: none; font-weight: 500;
+        }
+        .back-btn:hover { text-decoration: underline; }
+
+        .loading { text-align: center; color: #ff6b35; padding: 3rem; font-size: 1.1rem; }
+        .error { text-align: center; color: #ef4444; padding: 2rem; background: #dc262620; border-radius: 8px; }
+        .empty { text-align: center; color: #666; padding: 3rem; font-size: 1.1rem; }
+
+        .footer { text-align: center; padding: 40px 0; border-top: 1px solid #333; margin-top: 40px; }
+        .footer a { color: #ff6b35; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
         @media (max-width: 768px) {
-            .collections-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .download-section {
-                flex-direction: column;
-            }
+            .collections-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+            .search-bar input { min-width: 200px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔥 Alex's Gethookd Swipe Files</h1>
+            <h1>Alex's Gethookd Swipe Files</h1>
             <p>Curated collections of <span class="highlight">high-performing ads</span></p>
-            <div class="subtitle">Analyzed from 4,981 ads in the Gethookd database</div>
+            <div class="subtitle" id="header-subtitle">Powered by Gethookd API - Live Data</div>
         </div>
-        
-        <div class="stats">
-            <h2>📊 589 Total Ads • 6 Curated Collections • Ready for Download</h2>
-            <p>Each collection includes performance scores, hook analysis, and strategic insights</p>
+
+        <div class="source-tabs">
+            <button class="source-tab active" onclick="switchSource('live')">Live API</button>
+            <button class="source-tab" onclick="switchSource('local')">Saved Collections</button>
         </div>
-        
-        <div class="collections-grid">
-            <!-- Long Runners Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">🏃‍♂️ Long Runners</div>
-                    <div class="collection-count">100 ads</div>
-                </div>
-                <div class="collection-description">
-                    Ads running 30+ days - these are <strong>proven profitable</strong>. If an ad runs this long, it's making money.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Criteria:</strong> 30+ days active (likely profitable)
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/long-runners.json" download="long-runners.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                    <button onclick="previewCollection('long-runners')" class="preview-btn">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
 
-            <!-- Elite Performers Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">⭐ Elite Performers</div>
-                    <div class="collection-count">12 ads</div>
-                </div>
-                <div class="collection-description">
-                    Top 80+ performance score ads - the <strong>cream of the crop</strong>. These are the highest-performing ads in the database.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Criteria:</strong> Performance score ≥ 80
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/elite-performers.json" download="elite-performers.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                    <button onclick="previewCollection('elite-performers')" class="preview-btn">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
-
-            <!-- Supplement Winners Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">💊 Supplement Winners</div>
-                    <div class="collection-count">12 ads</div>
-                </div>
-                <div class="collection-description">
-                    High-performing supplement ads (60+ score). Perfect for studying supplement marketing strategies.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Criteria:</strong> Supplement niche + 60+ performance score
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/supplement-winners.json" download="supplement-winners.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                    <button onclick="previewCollection('supplement-winners')" class="preview-btn">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
-
-            <!-- Authority Positioning Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">👨‍⚕️ Authority Positioning</div>
-                    <div class="collection-count">2 ads</div>
-                </div>
-                <div class="collection-description">
-                    Doctor/expert authority plays that build <strong>instant credibility</strong>. Study how top brands use expert positioning.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Criteria:</strong> Contains authority markers (Dr., expert, etc.)
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/authority-positioning.json" download="authority-positioning.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                    <button onclick="previewCollection('authority-positioning')" class="preview-btn">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
-
-            <!-- UGC Testimonials Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">📱 UGC Testimonials</div>
-                    <div class="collection-count">1 ad</div>
-                </div>
-                <div class="collection-description">
-                    User-generated content style ads that feel <strong>authentic</strong>. Perfect for understanding UGC that converts.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Criteria:</strong> Personal voice, first-person style
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/ugc-testimonials.json" download="ugc-testimonials.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                    <button onclick="previewCollection('ugc-testimonials')" class="preview-btn">
-                        👁️ Preview
-                    </button>
-                </div>
-            </div>
-
-            <!-- Summary Collection -->
-            <div class="collection-card">
-                <div class="collection-header">
-                    <div class="collection-title">📋 Complete Summary</div>
-                    <div class="collection-count">All</div>
-                </div>
-                <div class="collection-description">
-                    Overview of all collections with <strong>generation stats</strong> and metadata. Perfect for understanding the full dataset.
-                </div>
-                <div class="collection-criteria">
-                    <strong>Contains:</strong> Collection stats, criteria, and generation info
-                </div>
-                <div class="download-section">
-                    <a href="/swipe-files/summary.json" download="summary.json" class="download-btn">
-                        📥 Download JSON
-                    </a>
-                </div>
-            </div>
+        <div id="search-section" class="search-bar">
+            <input id="search-input" type="text" placeholder="Search ads (supplements, protein, skincare...)" onkeydown="if(event.key==='Enter')searchAds();">
+            <button onclick="searchAds()">Search</button>
         </div>
-        
+
+        <div id="stats-bar" class="stats" style="display:none;"></div>
+        <div id="main-content"><div class="loading">Loading collections...</div></div>
+
         <div class="footer">
-            <p>Generated from <strong>4,981 ads</strong> in the Gethookd database</p>
-            <p>Created by <a href="https://gethookd.ai" target="_blank">Gethookd AI</a> • 
+            <p>Powered by <a href="https://gethookd.ai" target="_blank">Gethookd AI</a> |
                Curated by <a href="https://twitter.com/FedotOff90" target="_blank">@FedotOff90</a></p>
-            <p style="margin-top: 15px; color: #666;">
-                Each JSON file includes: brand name, ad copy, performance score, hook type, days active, media URLs, landing pages, and strategic analysis
-            </p>
         </div>
     </div>
 
     <script>
-        function previewCollection(collectionName) {
-            // For preview, we'll just show a simple modal with collection info
-            // In a full implementation, this could load and display sample ads
-            alert(`Preview feature coming soon for ${collectionName} collection!`);
+        let currentSource = 'live';
+        let currentPage = 1;
+        let currentQuery = '';
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
-        
-        // Add some interactive elements
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add loading states to download buttons
-            const downloadButtons = document.querySelectorAll('.download-btn');
-            downloadButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '⏳ Downloading...';
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                    }, 2000);
-                });
+
+        function switchSource(source) {
+            currentSource = source;
+            currentPage = 1;
+            currentQuery = '';
+            document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.source-tab').forEach(t => {
+                if ((source === 'live' && t.textContent === 'Live API') ||
+                    (source === 'local' && t.textContent === 'Saved Collections'))
+                    t.classList.add('active');
             });
-        });
+
+            const searchSection = document.getElementById('search-section');
+            searchSection.style.display = source === 'live' ? 'flex' : 'none';
+
+            if (source === 'live') {
+                loadLiveExplore();
+            } else {
+                loadLocalCollections();
+            }
+        }
+
+        // ── LIVE API MODE ──
+        async function loadLiveExplore() {
+            const main = document.getElementById('main-content');
+            main.innerHTML = '<div class="loading">Fetching ads from GetHookd API...</div>';
+
+            try {
+                const queryParam = currentQuery ? `&query=${encodeURIComponent(currentQuery)}` : '';
+                const resp = await fetch(`/api/gethookd/explore?page=${currentPage}&per_page=20${queryParam}`);
+                if (!resp.ok) throw new Error(`API returned ${resp.status}`);
+                const data = await resp.json();
+
+                const ads = data.data || [];
+                if (!ads.length) {
+                    main.innerHTML = '<div class="empty">No ads found. Try a different search term.</div>';
+                    document.getElementById('stats-bar').style.display = 'none';
+                    return;
+                }
+
+                const statsBar = document.getElementById('stats-bar');
+                statsBar.style.display = 'block';
+                statsBar.textContent = currentQuery
+                    ? `Showing results for "${currentQuery}" — Page ${currentPage}`
+                    : `Browsing all ads — Page ${currentPage}`;
+
+                main.innerHTML = renderAdCards(ads) + renderPagination();
+            } catch (error) {
+                main.innerHTML = `<div class="error">Failed to load from GetHookd API: ${escapeHtml(error.message)}<br>
+                    <button onclick="loadLiveExplore()" style="margin-top:1rem;padding:0.5rem 1rem;background:#ff6b35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+                    <button onclick="switchSource('local')" style="margin-top:1rem;margin-left:0.5rem;padding:0.5rem 1rem;background:#333;color:white;border:none;border-radius:8px;cursor:pointer;">View Saved Collections</button>
+                </div>`;
+                document.getElementById('stats-bar').style.display = 'none';
+            }
+        }
+
+        function searchAds() {
+            currentQuery = document.getElementById('search-input').value.trim();
+            currentPage = 1;
+            loadLiveExplore();
+        }
+
+        function changePage(delta) {
+            currentPage = Math.max(1, currentPage + delta);
+            loadLiveExplore();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ── LOCAL COLLECTIONS MODE ──
+        async function loadLocalCollections() {
+            const main = document.getElementById('main-content');
+            document.getElementById('stats-bar').style.display = 'none';
+            main.innerHTML = '<div class="loading">Loading saved collections...</div>';
+
+            const collections = [
+                { name: 'long-runners', icon: '🏃‍♂️', file: 'long-runners.json' },
+                { name: 'elite-performers', icon: '⭐', file: 'elite-performers.json' },
+                { name: 'supplement-winners', icon: '💊', file: 'supplement-winners.json' },
+                { name: 'authority-positioning', icon: '👨‍⚕️', file: 'authority-positioning.json' },
+                { name: 'ugc-testimonials', icon: '📱', file: 'ugc-testimonials.json' },
+                { name: 'transformation-hooks', icon: '🔄', file: 'transformation-hooks.json' },
+            ];
+
+            let totalAds = 0;
+            const cards = [];
+
+            for (const col of collections) {
+                try {
+                    const resp = await fetch(`/swipe-files/${col.file}`);
+                    const data = await resp.json();
+                    const count = data.count || data.ads?.length || 0;
+                    totalAds += count;
+                    cards.push({ ...col, data, count, description: data.description || '' });
+                } catch (e) {
+                    cards.push({ ...col, data: null, count: 0, description: 'Failed to load' });
+                }
+            }
+
+            const statsBar = document.getElementById('stats-bar');
+            statsBar.style.display = 'block';
+            statsBar.textContent = `${totalAds} Total Saved Ads across ${cards.filter(c => c.count > 0).length} Collections`;
+
+            main.innerHTML = `<div class="collections-grid">${cards.map(c => `
+                <div class="collection-card" onclick="viewLocalCollection('${c.file}', '${escapeHtml(c.icon)} ${escapeHtml(c.name)}')">
+                    <div class="collection-header">
+                        <div class="collection-title">${c.icon} ${c.name.replace(/-/g, ' ')}</div>
+                        <div class="collection-count">${c.count} ads</div>
+                    </div>
+                    <div class="collection-description">${escapeHtml(c.description)}</div>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        async function viewLocalCollection(file, label) {
+            const main = document.getElementById('main-content');
+            main.innerHTML = '<div class="loading">Loading collection...</div>';
+
+            try {
+                const resp = await fetch(`/swipe-files/${file}`);
+                const data = await resp.json();
+                const ads = data.ads || [];
+
+                if (!ads.length) {
+                    main.innerHTML = `<button class="back-btn" onclick="loadLocalCollections()">← Back to Collections</button>
+                        <div class="empty">This collection is empty. Try refreshing from the Live API.</div>`;
+                    return;
+                }
+
+                const statsBar = document.getElementById('stats-bar');
+                statsBar.textContent = `${label} — ${ads.length} ads (saved ${data.generated ? new Date(data.generated).toLocaleDateString() : 'unknown'})`;
+
+                main.innerHTML = `<button class="back-btn" onclick="loadLocalCollections()">← Back to Collections</button>`
+                    + renderAdCards(ads);
+            } catch (error) {
+                main.innerHTML = `<button class="back-btn" onclick="loadLocalCollections()">← Back to Collections</button>
+                    <div class="error">Failed to load: ${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        // ── SHARED RENDERERS ──
+        function renderAdCards(ads) {
+            return `<div class="ads-grid">${ads.map(ad => {
+                const brand = ad.brand?.name || ad.brand || 'Unknown';
+                const score = ad.score || ad.performance_score;
+                const days = ad.days_active;
+                const cta = ad.cta || ad.cta_type;
+                const landing = ad.landing_page;
+                const analysis = ad.analysis || {};
+
+                const tags = [];
+                if (analysis.hook_type) tags.push(analysis.hook_type);
+                if (analysis.emotional_trigger && analysis.emotional_trigger !== 'neutral') tags.push(analysis.emotional_trigger);
+                if (analysis.performance_tier) tags.push(analysis.performance_tier);
+                if (analysis.social_proof || analysis.has_social_proof) tags.push('social proof');
+                if (analysis.urgency) tags.push('urgency');
+                if (analysis.authority || analysis.has_authority) tags.push('authority');
+                if (analysis.has_transformation) tags.push('transformation');
+                if (analysis.is_ugc_style) tags.push('UGC');
+
+                const mediaHtml = (ad.media || []).slice(0, 3).map(m => {
+                    const url = m.url || m.thumbnail_url || '';
+                    if (m.type === 'video' && m.thumbnail_url) {
+                        return `<img src="${escapeHtml(m.thumbnail_url)}" alt="Video thumbnail" onerror="this.style.display='none'">`;
+                    }
+                    return `<img src="${escapeHtml(url)}" alt="Ad media" onerror="this.style.display='none'">`;
+                }).join('');
+
+                return `<div class="ad-card">
+                    <div class="ad-header">
+                        <div class="ad-brand">${escapeHtml(brand)}${ad.title ? ' — ' + escapeHtml(ad.title) : ''}</div>
+                        ${score ? `<div class="ad-score">Score: ${score}</div>` : ''}
+                    </div>
+                    <div class="ad-meta">
+                        ${cta ? `<span>CTA: ${escapeHtml(cta)}</span>` : ''}
+                        ${days ? `<span>${days} days active</span>` : ''}
+                        ${landing ? `<span><a href="${escapeHtml(landing)}" target="_blank" style="color:#ff6b35;text-decoration:none;">Landing Page</a></span>` : ''}
+                    </div>
+                    ${tags.length ? `<div class="ad-tags">${tags.map(t => `<span class="ad-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                    ${mediaHtml ? `<div class="ad-media-grid">${mediaHtml}</div>` : ''}
+                    <div class="ad-body">${escapeHtml(ad.body || 'No copy available')}</div>
+                </div>`;
+            }).join('')}</div>`;
+        }
+
+        function renderPagination() {
+            return `<div class="pagination">
+                <button ${currentPage <= 1 ? 'disabled' : ''} onclick="changePage(-1)">← Previous</button>
+                <button class="current-page" disabled>Page ${currentPage}</button>
+                <button onclick="changePage(1)">Next →</button>
+            </div>`;
+        }
+
+        // ── INIT ──
+        loadLiveExplore();
     </script>
 </body>
 </html>
