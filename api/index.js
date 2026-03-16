@@ -559,6 +559,36 @@ app.get('/swipe', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public-swipe-files.html'));
 });
 
+// Twitter Analytics — fetch & analyze 180 days of tweet data
+const analytics = require('../scripts/analyze-180-days');
+
+app.get('/api/analytics/run', async (req, res) => {
+    try {
+        console.log('Starting 180-day analytics fetch...');
+        const raw = await analytics.fetchAllTweets();
+        const dataDir = path.join(__dirname, '..', 'data');
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+        fs.writeFileSync(path.join(dataDir, 'tweets-180-days.json'), JSON.stringify(raw, null, 2));
+
+        const report = analytics.analyze(raw);
+        fs.writeFileSync(path.join(dataDir, 'analytics-report.json'), JSON.stringify(report, null, 2));
+
+        res.json(report);
+    } catch (error) {
+        console.error('Analytics error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/analytics/report', (req, res) => {
+    const reportPath = path.join(__dirname, '..', 'data', 'analytics-report.json');
+    if (fs.existsSync(reportPath)) {
+        res.json(JSON.parse(fs.readFileSync(reportPath, 'utf8')));
+    } else {
+        res.status(404).json({ error: 'No analytics report yet. Hit GET /api/analytics/run first.' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Dashboard running on port ${port}`);
     console.log(`📦 Database has ${getCount()} posts`);
