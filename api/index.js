@@ -675,116 +675,72 @@ app.get('/api/google-sheets-export', (req, res) => {
     res.send(csvContent);
 });
 
-// Secondary content export endpoint
+// Simple assistant export endpoint
 app.get('/api/secondary-content-export', (req, res) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     
     // Secondary content data
     const secondaryContent = [
         {
-            account: 'account1',
-            brand: 'KilgourMD',
             hookQuote: 'When a nutritionist who works with the Royal Family says ...',
-            mediaFilename: 'kilgourmd.mp4',
-            fileSize: '41MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84198456?signature=c972946bbdce62540f28743dd475700e7f3cc261abc4af3b20fdcbcb84425380'
+            brand: 'KilgourMD',
+            mediaFilename: 'kilgourmd.mp4'
         },
         {
-            account: 'account1',
-            brand: 'Caleigh Mackenzie',
             hookQuote: 'Men Love This Supplement Duo',
-            mediaFilename: 'caleigh_mackenzie.mp4',
-            fileSize: '7.7MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84162848?signature=8603285e4d5011a503fcdf15b246ad453457757c8a79bfb2283f2a63867cc9fa'
+            brand: 'Caleigh Mackenzie',
+            mediaFilename: 'caleigh_mackenzie.mp4'
         },
         {
-            account: 'account1',
-            brand: 'Wild Nutrition',
             hookQuote: 'The biggest lesson I learnt in my weight loss journey',
-            mediaFilename: 'wild_nutrition.mp4',
-            fileSize: '1.5MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84161665?signature=a74d08a3761da831b9ed292208de383f06a631d2f79416d83eb1bc01ad9bdec3'
+            brand: 'Wild Nutrition',
+            mediaFilename: 'wild_nutrition.mp4'
         },
         {
-            account: 'account1',
-            brand: 'Maxine Laceby',
             hookQuote: 'Introducing Sculpt Pro, the supplement system designed to...',
-            mediaFilename: 'maxine_laceby.mp4',
-            fileSize: '4.8MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84153422?signature=7ad560908e2e3dcc433a078518f1023389bd27ac0dd78d81b57f3ae230fb5cde'
+            brand: 'Maxine Laceby',
+            mediaFilename: 'maxine_laceby.mp4'
         },
         {
-            account: 'account1',
-            brand: 'Ancestral Supplements',
             hookQuote: 'As a world-leading expert in intermittent fasting',
-            mediaFilename: 'ancestral_supplements.mp4',
-            fileSize: '25MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84072350?signature=22ebb9b6b824bfcc38f87c876e83297b3fe9d39664d72b7c1bfffcbb7a805af1'
+            brand: 'Ancestral Supplements',
+            mediaFilename: 'ancestral_supplements.mp4'
         },
         {
-            account: 'account2',
-            brand: 'Cata-Kor',
             hookQuote: 'Celebrities are ditching expensive IV drips, collagen shots',
-            mediaFilename: 'cata_kor.mp4',
-            fileSize: '9.2MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84255499?signature=312d76a022db46bc024acf13590a540d8517e68f9dcd37761f23cde8520be58b'
+            brand: 'Cata-Kor',
+            mediaFilename: 'cata_kor.mp4'
         },
         {
-            account: 'account2',
-            brand: 'Enflux Testosterone Support',
             hookQuote: 'Unlock unstoppable power with Turkesterone',
-            mediaFilename: 'enflux_testosterone_support.mp4',
-            fileSize: '2.5MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84190392?signature=dc28f1119a5e5d758a985971e64e279f6a53130bfbbe51272e3bdb6e87e2ff05'
+            brand: 'Enflux Testosterone Support',
+            mediaFilename: 'enflux_testosterone_support.mp4'
         },
         {
-            account: 'account2',
-            brand: 'T-Drive Testosterone Booster',
             hookQuote: 'THEY DIDNT WANT US TO SHOW YOU THESE STATS',
-            mediaFilename: 't_drive_testosterone_booster.mp4',
-            fileSize: '1.1MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84158944?signature=d14bc506cc2d92b5d4a2f61f858e63ca1563c34cfcb9d0fc091f3b2bb884e685'
+            brand: 'T-Drive Testosterone Booster',
+            mediaFilename: 't_drive_testosterone_booster.mp4'
         },
         {
-            account: 'account2',
-            brand: 'Cutler Nutrition',
             hookQuote: 'Build Lean Muscle and Support Testosterone',
-            mediaFilename: 'cutler_nutrition.mp4',
-            fileSize: '7.1MB',
-            replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84117464?signature=61abf673415b05710a764e6ab0b18663fc3285efca50da6a552210788df59aae'
+            brand: 'Cutler Nutrition',
+            mediaFilename: 'cutler_nutrition.mp4'
         }
     ];
     
-    // CSV headers
+    // Simple CSV headers - just what's needed
     const headers = [
-        'Account',
-        'Brand', 
-        'Hook Quote',
         'Post Text',
-        'Media Download URL',
-        'Media Filename',
-        'File Size',
-        'Reply Text',
-        'Gethookd Ad Link',
-        'Created Date'
+        'Media Download Link'
     ];
     
     const rows = secondaryContent.map(item => {
         const postText = `"${item.hookQuote}"\n\n${item.brand} is printing.\n\nUsed gethookd.ai to find this.`;
         const mediaDownloadUrl = `${baseUrl}/media/${item.mediaFilename}`;
-        const gethookdLink = item.replyText.replace('Full breakdown: ', '');
         
         return [
-            item.account,
-            item.brand,
-            item.hookQuote,
             postText,
-            mediaDownloadUrl,
-            item.mediaFilename,
-            item.fileSize,
-            item.replyText,
-            gethookdLink,
-            new Date().toISOString()
+            mediaDownloadUrl
         ];
     });
     
@@ -795,7 +751,7 @@ app.get('/api/secondary-content-export', (req, res) => {
     
     // Set response headers for CSV download
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="secondary_content_for_google_sheets.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="secondary_posts_simple.csv"');
     res.send(csvContent);
 });
 

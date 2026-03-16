@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secondary Pages Content - Google Sheets Ready</title>
+    <title>Secondary Posts - Simple Export for Assistant</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -76,14 +76,6 @@
             font-size: 14px;
         }
         .download-link:hover { background: #1976D2; }
-        .account-tag {
-            background: #FF9800;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
         .post-text {
             background: #f8f9fa;
             padding: 15px;
@@ -103,24 +95,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Secondary Pages Content Package</h1>
-            <p>Ready-to-import content for Google Sheets with direct download links</p>
+            <h1>📱 Secondary Posts - Simple Export</h1>
+            <p>Post text + download links - ready for your assistant to schedule</p>
         </div>
 
         <div class="export-section">
-            <h2>🚀 Quick Export</h2>
+            <h2>🚀 Simple Export for Assistant</h2>
             <div class="instructions">
-                <h3>📋 Google Sheets Import Instructions:</h3>
-                <ol>
-                    <li><strong>Download CSV:</strong> Click the button below to get the spreadsheet-ready file</li>
-                    <li><strong>Import to Google Sheets:</strong> File → Import → Upload the CSV file</li>
-                    <li><strong>Download Media:</strong> Use the individual download links below for each video</li>
-                    <li><strong>Upload to Drive:</strong> Create a Google Drive folder and upload all videos</li>
-                    <li><strong>Link in Sheet:</strong> Add Drive links to a new "Media URL" column</li>
-                </ol>
+                <h3>📋 What You Get:</h3>
+                <ul>
+                    <li><strong>Post Text:</strong> Ready-to-copy text for each post</li>
+                    <li><strong>Media Download Link:</strong> Direct link to download each video file</li>
+                    <li><strong>That's it!</strong> Simple 2-column format for easy scheduling</li>
+                </ul>
+                <p><strong>For your assistant:</strong> Download the CSV, copy the post text, and use the download links to get the videos. No complex setup needed.</p>
             </div>
-            <a href="api/secondary-content-export" class="export-btn">📁 Download CSV for Google Sheets</a>
-            <a href="content_export_20260316.zip" class="export-btn">📦 Download Complete ZIP (103MB)</a>
+            <a href="api/secondary-content-export" class="export-btn">📁 Download Simple CSV</a>
+            <a href="content_export_20260316.zip" class="export-btn">📦 Download All Videos (103MB)</a>
         </div>
 
         <div class="content-grid">
@@ -133,76 +124,58 @@
         // Content data from the CSV export
         const contentData = [
             {
-                account: 'account1',
                 brand: 'KilgourMD',
                 hookQuote: 'When a nutritionist who works with the Royal Family says ...',
                 mediaFilename: 'kilgourmd.mp4',
-                fileSize: '41MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84198456?signature=c972946bbdce62540f28743dd475700e7f3cc261abc4af3b20fdcbcb84425380'
+                fileSize: '41MB'
             },
             {
-                account: 'account1',
                 brand: 'Caleigh Mackenzie',
                 hookQuote: 'Men Love This Supplement Duo',
                 mediaFilename: 'caleigh_mackenzie.mp4',
-                fileSize: '7.7MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84162848?signature=8603285e4d5011a503fcdf15b246ad453457757c8a79bfb2283f2a63867cc9fa'
+                fileSize: '7.7MB'
             },
             {
-                account: 'account1',
                 brand: 'Wild Nutrition',
                 hookQuote: 'The biggest lesson I learnt in my weight loss journey',
                 mediaFilename: 'wild_nutrition.mp4',
-                fileSize: '1.5MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84161665?signature=a74d08a3761da831b9ed292208de383f06a631d2f79416d83eb1bc01ad9bdec3'
+                fileSize: '1.5MB'
             },
             {
-                account: 'account1',
                 brand: 'Maxine Laceby',
                 hookQuote: 'Introducing Sculpt Pro, the supplement system designed to...',
                 mediaFilename: 'maxine_laceby.mp4',
-                fileSize: '4.8MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84153422?signature=7ad560908e2e3dcc433a078518f1023389bd27ac0dd78d81b57f3ae230fb5cde'
+                fileSize: '4.8MB'
             },
             {
-                account: 'account1',
                 brand: 'Ancestral Supplements',
                 hookQuote: 'As a world-leading expert in intermittent fasting',
                 mediaFilename: 'ancestral_supplements.mp4',
-                fileSize: '25MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84072350?signature=22ebb9b6b824bfcc38f87c876e83297b3fe9d39664d72b7c1bfffcbb7a805af1'
+                fileSize: '25MB'
             },
             {
-                account: 'account2',
                 brand: 'Cata-Kor',
                 hookQuote: 'Celebrities are ditching expensive IV drips, collagen shots',
                 mediaFilename: 'cata_kor.mp4',
-                fileSize: '9.2MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84255499?signature=312d76a022db46bc024acf13590a540d8517e68f9dcd37761f23cde8520be58b'
+                fileSize: '9.2MB'
             },
             {
-                account: 'account2',
                 brand: 'Enflux Testosterone Support',
                 hookQuote: 'Unlock unstoppable power with Turkesterone',
                 mediaFilename: 'enflux_testosterone_support.mp4',
-                fileSize: '2.5MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84190392?signature=dc28f1119a5e5d758a985971e64e279f6a53130bfbbe51272e3bdb6e87e2ff05'
+                fileSize: '2.5MB'
             },
             {
-                account: 'account2',
                 brand: 'T-Drive Testosterone Booster',
                 hookQuote: 'THEY DIDNT WANT US TO SHOW YOU THESE STATS',
                 mediaFilename: 't_drive_testosterone_booster.mp4',
-                fileSize: '1.1MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84158944?signature=d14bc506cc2d92b5d4a2f61f858e63ca1563c34cfcb9d0fc091f3b2bb884e685'
+                fileSize: '1.1MB'
             },
             {
-                account: 'account2',
                 brand: 'Cutler Nutrition',
                 hookQuote: 'Build Lean Muscle and Support Testosterone',
                 mediaFilename: 'cutler_nutrition.mp4',
-                fileSize: '7.1MB',
-                replyText: 'Full breakdown: https://app.gethookd.ai/share/ad/84117464?signature=61abf673415b05710a764e6ab0b18663fc3285efca50da6a552210788df59aae'
+                fileSize: '7.1MB'
             }
         ];
 
@@ -213,7 +186,6 @@
                 <div class="content-item">
                     <div class="item-header">
                         <div>
-                            <span class="account-tag">${item.account}</span>
                             <strong>${item.brand}</strong>
                         </div>
                         <a href="/media/${item.mediaFilename}" class="download-link" download>
@@ -230,7 +202,6 @@ Used gethookd.ai to find this.</div>
                             <source src="/media/${item.mediaFilename}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
-                        <p><strong>Auto-reply:</strong> ${item.replyText}</p>
                     </div>
                 </div>
             `).join('');
