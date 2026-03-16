@@ -22,21 +22,9 @@ const port = process.env.PORT || 3333;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
-// Media directory: use Railway volume if available, fallback to local
-const MEDIA_DIR = fs.existsSync('/app/data') ? '/app/data/media' : path.join(__dirname, '..', 'media');
+// Media directory: local only
+const MEDIA_DIR = path.join(__dirname, '..', 'media');
 if (!fs.existsSync(MEDIA_DIR)) fs.mkdirSync(MEDIA_DIR, { recursive: true });
-
-// Copy any existing media from repo to volume on first boot
-const repoMedia = path.join(__dirname, '..', 'media');
-if (MEDIA_DIR !== repoMedia && fs.existsSync(repoMedia)) {
-    const files = fs.readdirSync(repoMedia);
-    for (const f of files) {
-        const dest = path.join(MEDIA_DIR, f);
-        if (!fs.existsSync(dest)) {
-            try { fs.copyFileSync(path.join(repoMedia, f), dest); } catch(e) {}
-        }
-    }
-}
 
 // Enhanced media serving with proper headers for videos
 app.use('/media', (req, res, next) => {
@@ -292,17 +280,8 @@ async function scheduleChecker() {
 
 setInterval(scheduleChecker, 60000);
 
-// Self-ping to prevent Railway from idling the process
-// Runs every 5 minutes to keep setInterval alive
-setInterval(() => {
-    const http = require('http');
-    http.get(`http://localhost:${port}/api/health`, () => {}).on('error', () => {});
-}, 5 * 60 * 1000);
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    // Also trigger schedule check on any health ping
-    scheduleChecker().catch(() => {});
     res.json({ ok: true, time: new Date().toISOString() });
 });
 
