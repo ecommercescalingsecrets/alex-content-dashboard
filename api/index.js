@@ -76,8 +76,8 @@ const twitterClient = new TwitterApi({
 });
 
 // GetHookd API configuration
-const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY || 'gh_v6VamB0rhDYRr0hm5Jmxq2FZLaYFcqpiL8XkDC5Ja7ed9b23';
-const GETHOOKD_BASE_URL = 'https://api.gethookd.ai/v1';
+const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
+const GETHOOKD_BASE_URL = 'https://app.gethookd.ai/api/v1';
 const swipeBuilder = new SwipeFileBuilder();
 
 // Simple in-memory cache for GetHookd API responses (15 min TTL)
@@ -91,17 +91,21 @@ function setCache(key, data) {
     gethookdCache[key] = { data, ts: Date.now() };
 }
 
-// GetHookd API proxy - explore ads
+// GetHookd API proxy - explore ads (supports ?query= for search)
 app.get('/api/gethookd/explore', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const perPage = Math.min(parseInt(req.query.per_page) || 20, 100);
-    const cacheKey = `explore_${page}_${perPage}`;
+    const query = req.query.query || '';
+    const cacheKey = `explore_${page}_${perPage}_${query}`;
 
     const cached = getCached(cacheKey);
     if (cached) return res.json(cached);
 
     try {
-        const response = await fetch(`${GETHOOKD_BASE_URL}/explore?page=${page}&per_page=${perPage}`, {
+        const params = new URLSearchParams({ page, per_page: perPage });
+        if (query) params.append('query', query);
+
+        const response = await fetch(`${GETHOOKD_BASE_URL}/explore?${params}`, {
             headers: {
                 'Authorization': `Bearer ${GETHOOKD_API_KEY}`,
                 'Content-Type': 'application/json'

@@ -3,8 +3,8 @@ const fetch = require('node-fetch');
 
 class SwipeFileBuilder {
     constructor() {
-        this.apiKey = 'gh_v6VamB0rhDYRr0hm5Jmxq2FZLaYFcqpiL8XkDC5Ja7ed9b23';
-        this.baseUrl = 'https://api.gethookd.ai/v1';
+        this.apiKey = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
+        this.baseUrl = 'https://app.gethookd.ai/api/v1';
         
         this.collections = {
             'high-performers': {

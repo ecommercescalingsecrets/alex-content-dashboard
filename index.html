@@ -796,6 +796,9 @@
             const container = document.getElementById('content');
             container.innerHTML = `
                 <div class="gethookd-controls">
+                    <input id="gethookd-search" type="text" placeholder="Search ads (e.g. supplements, protein...)"
+                        style="min-width:220px;" onkeydown="if(event.key==='Enter'){gethookdPage=1;loadGetHookdAds();}">
+                    <button class="btn btn-post-now" onclick="gethookdPage=1;loadGetHookdAds();" style="font-size:0.85rem;">Search</button>
                     <select id="gethookd-collection" onchange="gethookdCollection=this.value; gethookdPage=1; loadGetHookdAds();">
                         <option value="all">All Ads (Explore)</option>
                         <option value="high-performers">High Performers (80+)</option>
@@ -819,7 +822,9 @@
             try {
                 let data;
                 if (gethookdCollection === 'all') {
-                    const resp = await fetch(`/api/gethookd/explore?page=${gethookdPage}&per_page=20`);
+                    const searchQuery = document.getElementById('gethookd-search')?.value || '';
+                    const queryParam = searchQuery ? `&query=${encodeURIComponent(searchQuery)}` : '';
+                    const resp = await fetch(`/api/gethookd/explore?page=${gethookdPage}&per_page=20${queryParam}`);
                     if (!resp.ok) throw new Error(`API returned ${resp.status}`);
                     data = await resp.json();
                     renderGetHookdAds(data.data || [], data);
