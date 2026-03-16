@@ -3,7 +3,6 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { TwitterApi } = require('twitter-api-v2');
-const { google } = require('googleapis');
 const { getAllContent, getContent, upsertContent, deleteContent, getCount } = require('./db');
 const SwipeFileBuilder = require('../swipe-file-builder');
 
@@ -590,95 +589,21 @@ app.get('/api/analytics/report', (req, res) => {
     }
 });
 
-// ── Google Sheets Integration ──
-// Requires GOOGLE_SHEETS_ID env var and either:
-//   GOOGLE_SERVICE_ACCOUNT_JSON (full JSON string) or
-//   GOOGLE_SERVICE_ACCOUNT_FILE (path to JSON file)
-function getGoogleSheetsClient() {
-    let credentials;
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-        credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-    } else if (process.env.GOOGLE_SERVICE_ACCOUNT_FILE) {
-        credentials = JSON.parse(fs.readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_FILE, 'utf8'));
-    } else {
-        throw new Error('Google Sheets not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SERVICE_ACCOUNT_FILE env var.');
-    }
+// ── Google Sheets Integration (via Apps Script webhook) ──
+// Set GOOGLE_SHEETS_WEBHOOK_URL env var to your Apps Script web app URL
+// See /api/google-sheets/setup for the Apps Script code to paste into your sheet
 
-    const auth = new google.auth.GoogleAuth({
-        credentials,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets']
-    });
-    return google.sheets({ version: 'v4', auth });
-}
-
-// Push all content to Google Sheet
 app.post('/api/google-sheets/push', async (req, res) => {
     try {
-        const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-        if (!spreadsheetId) {
-            return res.status(400).json({ error: 'GOOGLE_SHEETS_ID env var not set' });
+        const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+        if (!webhookUrl) {
+            return res.status(400).json({
+                error: 'Google Sheets not configured',
+                setup: 'Set GOOGLE_SHEETS_WEBHOOK_URL env var. Visit /api/google-sheets/setup for instructions.'
+            });
         }
 
-        const sheets = getGoogleSheetsClient();
-        const allContent = getAllContent();
-
-        // Build header row + data rows
-        const headers = ['ID', 'Title', 'Content', 'Status', 'Target', 'Created', 'Approved', 'Scheduled', 'Posted', 'Tweet IDs', 'Media URL'];
-        const rows = allContent.map(post => [
-            post.id || '',
-            post.title || '',
-            post.content || '',
-            post.status || '',
-            post.target || '',
-            post.createdAt || '',
-            post.approvedAt || '',
-            post.scheduledAt || '',
-            post.postedAt || '',
-            Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''),
-            post.mediaUrl || ''
-        ]);
-
-        // Clear existing data and write fresh
-        const sheetName = req.body.sheetName || 'Sheet1';
-        const range = `${sheetName}!A1`;
-
-        // Clear the sheet first
-        await sheets.spreadsheets.values.clear({
-            spreadsheetId,
-            range: `${sheetName}!A:K`
-        });
-
-        // Write headers + data
-        await sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range,
-            valueInputOption: 'RAW',
-            requestBody: {
-                values: [headers, ...rows]
-            }
-        });
-
-        res.json({
-            success: true,
-            rowsPushed: rows.length,
-            spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
-        });
-    } catch (error) {
-        console.error('Google Sheets push error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Push only filtered content (by status)
-app.post('/api/google-sheets/push-filtered', async (req, res) => {
-    try {
-        const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-        if (!spreadsheetId) {
-            return res.status(400).json({ error: 'GOOGLE_SHEETS_ID env var not set' });
-        }
-
-        const { status, sheetName } = req.body;
-        const sheets = getGoogleSheetsClient();
+        const { status } = req.body;
         let content = getAllContent();
 
         if (status && status !== 'all') {
@@ -689,57 +614,82 @@ app.post('/api/google-sheets/push-filtered', async (req, res) => {
             }
         }
 
-        const headers = ['ID', 'Title', 'Content', 'Status', 'Target', 'Created', 'Approved', 'Scheduled', 'Posted', 'Tweet IDs', 'Media URL'];
-        const rows = content.map(post => [
-            post.id || '',
-            post.title || '',
-            post.content || '',
-            post.status || '',
-            post.target || '',
-            post.createdAt || '',
-            post.approvedAt || '',
-            post.scheduledAt || '',
-            post.postedAt || '',
-            Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''),
-            post.mediaUrl || ''
-        ]);
+        const rows = content.map(post => ({
+            id: post.id || '',
+            title: post.title || '',
+            content: post.content || '',
+            status: post.status || '',
+            target: post.target || '',
+            createdAt: post.createdAt || '',
+            approvedAt: post.approvedAt || '',
+            scheduledAt: post.scheduledAt || '',
+            postedAt: post.postedAt || '',
+            tweetIds: Array.isArray(post.tweetIds) ? post.tweetIds.join(', ') : (post.tweetIds || ''),
+            mediaUrl: post.mediaUrl || ''
+        }));
 
-        const sheet = sheetName || 'Sheet1';
-        await sheets.spreadsheets.values.clear({
-            spreadsheetId,
-            range: `${sheet}!A:K`
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows })
         });
 
-        await sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: `${sheet}!A1`,
-            valueInputOption: 'RAW',
-            requestBody: {
-                values: [headers, ...rows]
-            }
-        });
+        // Apps Script redirects on success, so follow redirects
+        const text = await response.text();
+        let result;
+        try { result = JSON.parse(text); } catch { result = { raw: text }; }
 
         res.json({
             success: true,
             rowsPushed: rows.length,
             filter: status || 'all',
-            spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+            sheetsResponse: result
         });
     } catch (error) {
-        console.error('Google Sheets push-filtered error:', error);
+        console.error('Google Sheets push error:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Check Google Sheets connection status
 app.get('/api/google-sheets/status', (req, res) => {
-    const hasCredentials = !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_FILE);
-    const hasSheetId = !!process.env.GOOGLE_SHEETS_ID;
+    const configured = !!process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    res.json({ configured });
+});
+
+// Setup instructions endpoint
+app.get('/api/google-sheets/setup', (req, res) => {
     res.json({
-        configured: hasCredentials && hasSheetId,
-        hasCredentials,
-        hasSheetId,
-        spreadsheetId: hasSheetId ? process.env.GOOGLE_SHEETS_ID : null
+        instructions: [
+            '1. Open your Google Sheet',
+            '2. Go to Extensions → Apps Script',
+            '3. Paste the code below and click Deploy → New deployment → Web app',
+            '4. Set "Who has access" to "Anyone"',
+            '5. Copy the web app URL',
+            '6. Set GOOGLE_SHEETS_WEBHOOK_URL env var to that URL'
+        ],
+        appsScriptCode: `function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  var rows = data.rows;
+
+  // Clear existing data
+  sheet.clear();
+
+  // Write headers
+  var headers = ['ID', 'Title', 'Content', 'Status', 'Target', 'Created', 'Approved', 'Scheduled', 'Posted', 'Tweet IDs', 'Media URL'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+
+  // Write data
+  if (rows.length > 0) {
+    var values = rows.map(function(r) {
+      return [r.id, r.title, r.content, r.status, r.target, r.createdAt, r.approvedAt, r.scheduledAt, r.postedAt, r.tweetIds, r.mediaUrl];
+    });
+    sheet.getRange(2, 1, values.length, headers.length).setValues(values);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ success: true, rows: rows.length })).setMimeType(ContentService.MimeType.JSON);
+}`
     });
 });
 

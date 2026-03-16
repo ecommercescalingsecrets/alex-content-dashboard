@@ -955,7 +955,7 @@
 
             try {
                 const filterStatus = currentFilter === 'gethookd' ? 'all' : currentFilter;
-                const resp = await fetch('/api/google-sheets/push-filtered', {
+                const resp = await fetch('/api/google-sheets/push', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: filterStatus })
