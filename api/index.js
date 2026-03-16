@@ -20,9 +20,25 @@ const port = process.env.PORT || 3333;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
+// Media directory: use Railway volume if available, fallback to local
+const MEDIA_DIR = fs.existsSync('/app/data') ? '/app/data/media' : path.join(__dirname, '..', 'media');
+if (!fs.existsSync(MEDIA_DIR)) fs.mkdirSync(MEDIA_DIR, { recursive: true });
+
+// Copy any existing media from repo to volume on first boot
+const repoMedia = path.join(__dirname, '..', 'media');
+if (MEDIA_DIR !== repoMedia && fs.existsSync(repoMedia)) {
+    const files = fs.readdirSync(repoMedia);
+    for (const f of files) {
+        const dest = path.join(MEDIA_DIR, f);
+        if (!fs.existsSync(dest)) {
+            try { fs.copyFileSync(path.join(repoMedia, f), dest); } catch(e) {}
+        }
+    }
+}
+
 // Enhanced media serving with proper headers for videos
 app.use('/media', (req, res, next) => {
-    const filePath = path.join(__dirname, '..', 'media', req.path);
+    const filePath = path.join(MEDIA_DIR, req.path);
     
     // Set proper MIME types for videos
     if (req.path.toLowerCase().endsWith('.mp4')) {
@@ -45,7 +61,7 @@ app.use('/media', (req, res, next) => {
     res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
     
     next();
-}, express.static(path.join(__dirname, '..', 'media')));
+}, express.static(MEDIA_DIR));
 
 app.use('/swipe-files', express.static(path.join(__dirname, '..', 'swipe-files')));
 
@@ -88,7 +104,7 @@ async function scheduleChecker() {
 
                 if (item.mediaUrl) {
                     try {
-                        const mediaPath = path.join(__dirname, '..', item.mediaUrl);
+                        const mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
                         if (fs.existsSync(mediaPath)) {
                             mediaId = await twitterClient.v1.uploadMedia(mediaPath);
                         }
@@ -263,7 +279,7 @@ async function postItemToTwitter(item) {
 
     if (item.mediaUrl) {
         try {
-            const mediaPath = path.join(__dirname, '..', item.mediaUrl);
+            const mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
             if (fs.existsSync(mediaPath)) {
                 console.log(`Uploading media: ${mediaPath} (${fs.statSync(mediaPath).size} bytes)`);
                 mediaId = await twitterClient.v1.uploadMedia(mediaPath);
@@ -449,7 +465,7 @@ app.post('/api/migrate/add-missing-ctas', (req, res) => {
 // Upload media files directly
 const multer = require('multer');
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'media')),
+    destination: (req, file, cb) => cb(null, MEDIA_DIR),
     filename: (req, file, cb) => cb(null, req.query.name || file.originalname)
 });
 const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
