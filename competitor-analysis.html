@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitor Analysis - @Outscaler</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a; color: #e2e8f0; line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 1.5rem 2rem; border-bottom: 1px solid #334155;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { color: #60a5fa; font-size: 1.5rem; font-weight: 700; }
+        .header a { color: #94a3b8; text-decoration: none; font-size: 0.85rem; }
+        .header a:hover { color: #60a5fa; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+        /* Profile Card */
+        .profile-card {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+            border: 1px solid #334155; border-radius: 16px; padding: 2rem;
+            margin-bottom: 2rem; display: flex; gap: 2rem; align-items: center;
+        }
+        .profile-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700; flex-shrink: 0;
+        }
+        .profile-info h2 { font-size: 1.5rem; color: #f1f5f9; }
+        .profile-info .handle { color: #60a5fa; font-size: 1rem; margin-bottom: 0.5rem; }
+        .profile-info .niche { color: #94a3b8; font-size: 0.85rem; }
+        .profile-stats { display: flex; gap: 2rem; margin-left: auto; }
+        .profile-stat { text-align: center; }
+        .profile-stat .num { color: #f59e0b; font-size: 1.75rem; font-weight: 700; }
+        .profile-stat .label { color: #64748b; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Summary Grid */
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem; margin-bottom: 2.5rem;
+        }
+        .summary-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem;
+        }
+        .summary-card h3 {
+            color: #60a5fa; font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 1rem;
+        }
+
+        /* Pattern bars */
+        .pattern-item { margin-bottom: 0.75rem; }
+        .pattern-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .pattern-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
+        .pattern-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .fill-blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .fill-amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .fill-green { background: linear-gradient(90deg, #10b981, #34d399); }
+        .fill-purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .fill-rose { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+        .fill-cyan { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+
+        /* Key Insight */
+        .insight-box {
+            background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+            font-size: 0.85rem; color: #fbbf24;
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-size: 1.25rem; font-weight: 700; color: #f1f5f9;
+            margin: 2rem 0 1rem; padding-bottom: 0.5rem;
+            border-bottom: 2px solid #334155;
+        }
+
+        /* Playbook */
+        .playbook {
+            background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+            border: 1px solid #334155; border-radius: 16px; padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .playbook h3 { color: #f59e0b; font-size: 1.1rem; margin-bottom: 1.25rem; }
+        .playbook-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .playbook-item {
+            background: rgba(255,255,255,0.03); border: 1px solid #334155;
+            border-radius: 10px; padding: 1.25rem;
+        }
+        .playbook-item h4 { color: #60a5fa; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .playbook-item p { color: #94a3b8; font-size: 0.85rem; }
+        .playbook-item .template {
+            background: #0f172a; border: 1px solid #475569; border-radius: 6px;
+            padding: 0.75rem; margin-top: 0.75rem; font-family: monospace;
+            font-size: 0.8rem; color: #e2e8f0; white-space: pre-line;
+        }
+
+        /* Post Cards */
+        .posts-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .post-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 1.5rem; display: grid; grid-template-columns: 60px 1fr 200px;
+            gap: 1.5rem; align-items: start; transition: border-color 0.2s;
+        }
+        .post-card:hover { border-color: #475569; }
+
+        .rank-badge {
+            width: 48px; height: 48px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; font-weight: 700;
+            font-size: 1.25rem;
+        }
+        .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1e293b; }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #1e293b; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #a0522d); color: #1e293b; }
+        .rank-default { background: #334155; color: #94a3b8; }
+
+        .post-content { min-width: 0; }
+        .post-text { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.75rem; white-space: pre-line; }
+        .post-date { font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; }
+
+        .post-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .tag {
+            padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .tag-format { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .tag-hook { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .tag-type { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .tag-media { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+        .post-metrics { text-align: right; }
+        .metric { margin-bottom: 0.5rem; }
+        .metric .value { font-size: 1.1rem; font-weight: 700; }
+        .metric .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; }
+        .metric-likes .value { color: #f43f5e; }
+        .metric-rt .value { color: #10b981; }
+        .metric-replies .value { color: #3b82f6; }
+        .metric-total .value { color: #f59e0b; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 0.6rem 1.2rem; border: 1px solid #334155; border-radius: 8px;
+            background: transparent; color: #94a3b8; cursor: pointer;
+            font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+        }
+        .tab-btn:hover { border-color: #475569; }
+        .tab-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-card { flex-direction: column; text-align: center; }
+            .profile-stats { margin-left: 0; }
+            .post-card { grid-template-columns: 1fr; }
+            .post-metrics { text-align: left; display: flex; gap: 1.5rem; }
+            .playbook-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Competitor Reverse Engineering</h1>
+        <a href="index.html">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <!-- Profile -->
+        <div class="profile-card">
+            <div class="profile-avatar">O</div>
+            <div class="profile-info">
+                <h2>Outscaler</h2>
+                <div class="handle">@Outscaler</div>
+                <div class="niche">E-commerce / Dropshipping / DTC Brands / Meta Ads</div>
+            </div>
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="num">20</div>
+                    <div class="label">Posts Analyzed</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="num">358</div>
+                    <div class="label">Top Engagement</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="num">43.5</div>
+                    <div class="label">Avg Engagement</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PATTERNS SUMMARY -->
+        <h2 class="section-header">Patterns Decoded</h2>
+        <div class="summary-grid">
+            <!-- Hook Types -->
+            <div class="summary-card">
+                <h3>Top Hook Types (What opens the post)</h3>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Dollar Amount Hook ($XXK)</span><span>25%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-amber" style="width:100%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Competitor Comparison</span><span>15%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-blue" style="width:60%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Contrarian/Myth-Buster</span><span>15%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-purple" style="width:60%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Promise (Find/Get/Unlock)</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-green" style="width:40%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Provocative Question</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-rose" style="width:40%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>News/Update/Announce</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-cyan" style="width:40%"></div></div>
+                </div>
+                <div class="insight-box">The #1 hook opens with specific revenue numbers. Creates instant credibility + curiosity.</div>
+            </div>
+
+            <!-- Content Types -->
+            <div class="summary-card">
+                <h3>Content Types (What the post IS)</h3>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Niche Breakdown / Case Study</span><span>25%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-amber" style="width:100%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Product Feature / Plug</span><span>25%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-blue" style="width:100%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Strategic Insight / Framework</span><span>20%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-purple" style="width:80%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Product Comparison</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-green" style="width:40%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Discussion / Community</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-rose" style="width:40%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Product Update / BIP</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-cyan" style="width:40%"></div></div>
+                </div>
+                <div class="insight-box">50% of content is value-first (case studies + insights), 50% is product-related. Smart balance.</div>
+            </div>
+
+            <!-- Format Structures -->
+            <div class="summary-card">
+                <h3>Post Structure (How it's built)</h3>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Revenue Proof + Insight</span><span>25%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-amber" style="width:100%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Contrarian Take + Framework</span><span>20%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-blue" style="width:80%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Comparison + Reveal</span><span>15%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-purple" style="width:60%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Numbered Steps / List</span><span>15%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-green" style="width:60%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Short Announcement</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-rose" style="width:40%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Question + Discussion</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-cyan" style="width:40%"></div></div>
+                </div>
+                <div class="insight-box">85% of posts use images/video. The top post (312 likes) uses image + pattern reveal format.</div>
+            </div>
+
+            <!-- Media & Engagement -->
+            <div class="summary-card">
+                <h3>Key Metrics</h3>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Posts with Images</span><span>75%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-blue" style="width:75%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Posts with Video</span><span>10%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-purple" style="width:10%"></div></div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-label"><span>Text Only</span><span>15%</span></div>
+                    <div class="pattern-bar"><div class="pattern-fill fill-green" style="width:15%"></div></div>
+                </div>
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #334155;">
+                    <div class="pattern-item">
+                        <div class="pattern-label"><span>Avg Likes per Post</span><span style="color: #f43f5e; font-weight: 700;">37.3</span></div>
+                    </div>
+                    <div class="pattern-item">
+                        <div class="pattern-label"><span>Avg Retweets per Post</span><span style="color: #10b981; font-weight: 700;">4.1</span></div>
+                    </div>
+                    <div class="pattern-item">
+                        <div class="pattern-label"><span>Avg Replies per Post</span><span style="color: #3b82f6; font-weight: 700;">2.1</span></div>
+                    </div>
+                    <div class="pattern-item">
+                        <div class="pattern-label"><span>Like:RT Ratio</span><span style="color: #f59e0b; font-weight: 700;">9:1</span></div>
+                    </div>
+                </div>
+                <div class="insight-box">Low RT ratio = audience saves/likes but doesn't share much. Content is niche-specific, not broadly viral.</div>
+            </div>
+        </div>
+
+        <!-- REVERSE-ENGINEERED PLAYBOOK -->
+        <h2 class="section-header">Reverse-Engineered Playbook</h2>
+        <div class="playbook">
+            <h3>The @Outscaler Content Formula</h3>
+            <div class="playbook-grid">
+                <div class="playbook-item">
+                    <h4>1. The Revenue Proof Post (Top Performer)</h4>
+                    <p>Opens with a specific dollar amount range, followed by the niche/product, then a unique insight about WHY it works.</p>
+                    <div class="template">$[Revenue Range] a month selling [Product]
+
+[X] active meta ads.
+
+[Unique insight about the niche/audience that most people miss]</div>
+                </div>
+                <div class="playbook-item">
+                    <h4>2. The Myth-Buster / Contrarian</h4>
+                    <p>Challenges a common belief (usually "saturation") with data, then reframes the real problem.</p>
+                    <div class="template">[Bold contrarian statement]
+
+[Data point that proves it]
+
+But yeah, your problem is "[common excuse]"
+
+[Hard truth / alternative framing]</div>
+                </div>
+                <div class="playbook-item">
+                    <h4>3. The Actionable Framework</h4>
+                    <p>Starts with "Do this" instruction, then numbered steps that deliver immediate value.</p>
+                    <div class="template">Do this for [outcome]:
+
+1. [Step]
+2. [Step]
+3. [Key insight that connects the dots]
+4. [The payoff / multiplier]</div>
+                </div>
+                <div class="playbook-item">
+                    <h4>4. The Competitor Comparison</h4>
+                    <p>Names specific competing tools, then positions his product as the better alternative.</p>
+                    <div class="template">For [use case]
+
+Better than [competitor 1], [competitor 2] and [competitor 3]
+
+You need [key requirement] because of [reason]
+
+[Product name] does [specific capability]
+
+[CTA]</div>
+                </div>
+                <div class="playbook-item">
+                    <h4>5. The Niche Story</h4>
+                    <p>Paints a picture of a niche with narrative storytelling, ending with revenue data.</p>
+                    <div class="template">[Niche] is [bold opinion]
+
+[Emotional narrative about the customer]
+
+[Why they keep buying]
+
+$[Revenue]/day selling [specific product] - [X] active meta ads</div>
+                </div>
+                <div class="playbook-item">
+                    <h4>6. The Pattern/Strategy Reveal</h4>
+                    <p>Shares a non-obvious strategy with a real example, making the audience feel like insiders.</p>
+                    <div class="template">[Strategy observation] work really well on [platform]
+
+[Real example with link/screenshot]
+
+([Soft CTA to tool for finding more examples])</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KEY TAKEAWAYS -->
+        <div class="playbook" style="border-left: 4px solid #f59e0b;">
+            <h3>What You Can Steal for Your Content</h3>
+            <div class="playbook-grid">
+                <div class="playbook-item">
+                    <h4>Always Lead with Numbers</h4>
+                    <p>Posts with specific $ amounts get 3-5x more engagement than generic claims. "$257K-$467K/month" beats "Making great money" every time.</p>
+                </div>
+                <div class="playbook-item">
+                    <h4>50/50 Value-to-Promo Ratio</h4>
+                    <p>Half of posts are pure value (case studies, frameworks), half mention his product. But even promo posts lead with value first.</p>
+                </div>
+                <div class="playbook-item">
+                    <h4>Attack "Saturation" Repeatedly</h4>
+                    <p>He hammers the same contrarian angle from different angles. Found a belief his audience holds that he disagrees with, and keeps proving it wrong with data.</p>
+                </div>
+                <div class="playbook-item">
+                    <h4>Screenshots = Proof</h4>
+                    <p>85% of posts include images. Usually screenshots of dashboards, ad libraries, or revenue data. Visual proof > text claims.</p>
+                </div>
+                <div class="playbook-item">
+                    <h4>Name Competitors Directly</h4>
+                    <p>Not afraid to say "Better than [tool X]". Creates instant positioning and borrows the competitor's audience through search/engagement.</p>
+                </div>
+                <div class="playbook-item">
+                    <h4>Short, Punchy, Spaced Out</h4>
+                    <p>Almost every post uses line breaks between sentences. No walls of text. Each line is a standalone thought that keeps you scrolling.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS: View Posts -->
+        <h2 class="section-header">All 20 Posts Ranked by Engagement</h2>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="filterPosts('all')">All Posts</button>
+            <button class="tab-btn" onclick="filterPosts('case-study')">Case Studies</button>
+            <button class="tab-btn" onclick="filterPosts('product')">Product Posts</button>
+            <button class="tab-btn" onclick="filterPosts('insight')">Strategic Insights</button>
+            <button class="tab-btn" onclick="filterPosts('contrarian')">Contrarian</button>
+        </div>
+
+        <div class="posts-grid" id="postsGrid"></div>
+    </div>
+
+    <script>
+    const posts = [
+        { rank: 1, date: "Aug 31, 2025", likes: 312, rt: 36, replies: 10, total: 358, text: "Ads like this that lead to advertorials work really well on Meta ads as they look native (random example btw)\n\nThey lead to this for example: [link]\n\n(use Brandsearch's Discovery to find creatives and funnels scaling in the BIG5)", format: "insight + example + CTA", hook: "Pattern reveal", type: "Educational + Product Plug", media: "image", category: "insight" },
+        { rank: 2, date: "Aug 31, 2025", likes: 89, rt: 7, replies: 2, total: 98, text: "Do this for market research validation:\n\n1. Go to Amazon\n2. Find the best-sellers\n3. Amazon is pull marketing + market aware audience (searching for the solution, not the problem) so:\n4. Potential x100 on monthly revenue for your DTC brand", format: "numbered steps", hook: "Direct instruction", type: "Actionable Framework", media: "image", category: "insight" },
+        { rank: 3, date: "Aug 29, 2025", likes: 52, rt: 4, replies: 1, total: 57, text: "Find unlimited WINNING PRODUCTS in your niche with AI similar stores.\n\nJump from store to store that are scaling with Meta ads on over 5M Shopify stores analyzed with AI.\n\nDirectly on the Brandsearch chrome extension", format: "benefit + how it works", hook: "Promise", type: "Product Feature", media: "image", category: "product" },
+        { rank: 4, date: "Jul 16, 2025", likes: 41, rt: 8, replies: 3, total: 52, text: "For product research\n\nBetter than kalodata, pipiads and winninghunter\n\nYou need Meta validated products because of the high-scalability\n\nThis tool tracks all shopify stores live meta ads, with their winning ads, hooks and funnels\n\nIt's Brandsearch, try it", format: "comparison + reveal", hook: "Competitor comparison", type: "Product Comparison", media: "image", category: "product" },
+        { rank: 5, date: "Jun 30, 2025", likes: 29, rt: 3, replies: 3, total: 35, text: "Think your product is too saturated to hit $100K/days?\n\nYou don't need a new product.\nYou need a new MECHANISM.\n\nHere's how the biggest scaling brands do it to win US markets\n\nKorean skincare didn't take over because it worked better.\n\nIt won because it looked and felt new:", format: "contrarian + thread", hook: "Myth-buster question", type: "Strategic Insight", media: "image", category: "contrarian" },
+        { rank: 6, date: "May 11, 2025", likes: 21, rt: 3, replies: 3, total: 27, text: "What if Foreplay & Atria had million $ products?\n\nI made a tool with all Shopify stores with traffic, meta ads count, best-sellers and an ad library with ads from all of them for product research and creative inspiration and..\n\n..When you spot a brand killing it. Add it to", format: "what-if + demo", hook: "What-if hypothetical", type: "Product Demo", media: "video", category: "product" },
+        { rank: 7, date: "Jul 13, 2025", likes: 18, rt: 4, replies: 2, total: 24, text: "Feels like it's the whole month for many, I track over 180+ DTC brands and they're all their creative output and killing ads too", format: "observation + data", hook: "Relatable observation", type: "Industry Commentary", media: "image", category: "insight" },
+        { rank: 8, date: "Jul 11, 2025", likes: 15, rt: 3, replies: 2, total: 20, text: "Literally over 4k stores selling banana oil in the EU + big 5\n\nAnd a TON of them are scaling rn with meta ads\n\nBut yeah, your problem is \"saturation\"\n\nngmi", format: "data + sarcasm", hook: "Shocking stat", type: "Contrarian / Myth-Buster", media: "image", category: "contrarian" },
+        { rank: 9, date: "Jul 9, 2025", likes: 15, rt: 3, replies: 1, total: 19, text: "Instead of Koala inspector you can try our free Brandsearch extensions.\n\nSame features and more with amazon monthly/daily revenue too and EU spend on meta ads", format: "alternative suggestion", hook: "Competitor callout", type: "Product Comparison", media: "image", category: "product" },
+        { rank: 10, date: "Aug 30, 2025", likes: 14, rt: 3, replies: 1, total: 18, text: "Best product research tools by platform\n\nMeta Ads / Shopify → Brandsearch\nTiktok Shop → Kalodata/Fastmoss\nAmazon → Helium10/Junglescout", format: "categorized list", hook: "Best-of list", type: "Resource List", media: "none", category: "insight" },
+        { rank: 11, date: "Aug 31, 2025", likes: 15, rt: 1, replies: 1, total: 17, text: "We're integrating Spylib (EU & UK Adspend for Meta ads) on Brandsearch\n\nShould be a few hours.\n\nAnd available around next week with new UI/UX!", format: "product update", hook: "News/Update", type: "Building in Public", media: "image", category: "product" },
+        { rank: 12, date: "May 16, 2025", likes: 13, rt: 2, replies: 2, total: 17, text: "The pet niche is cooked\n\nYou want to give your pet the best life\n\nToys, food, supplements..\n\nIt works or not, they can't tell you\n\nSo you keep on buying, again and again..\n\n$4K /day selling dog probiotics - 47 active meta ads", format: "niche story + data", hook: "Bold statement", type: "Niche Breakdown", media: "image", category: "case-study" },
+        { rank: 13, date: "Aug 23, 2025", likes: 14, rt: 0, replies: 2, total: 16, text: "I'm blown af rn\n\nYou can edit your theme with Claude Code and have it synced live with Github.\n\nAnd. Make. Everything.\n\nSubscription based offers.\n\nDynamic sections and not hard-coded, even by feeding figma LPs etc..\n\nPrelanders cleaner and faster than any landing page builder", format: "excited discovery", hook: "Emotional reaction", type: "Tool Discovery", media: "none", category: "insight" },
+        { rank: 14, date: "Apr 5, 2025", likes: 14, rt: 0, replies: 2, total: 16, text: "$208K - $378K a month selling Halal Collagen Protein\n\n23 active meta ads.\n\nThere's always sub-niches with problem/solutions you wouldn't think about if you aren't in it", format: "revenue proof + insight", hook: "Dollar amount", type: "Niche Breakdown", media: "image", category: "case-study" },
+        { rank: 15, date: "Jun 28, 2025", likes: 13, rt: 1, replies: 2, total: 16, text: "Amazon revenue chrome extension is live", format: "short announcement", hook: "News/Update", type: "Product Update", media: "image", category: "product" },
+        { rank: 16, date: "Apr 29, 2025", likes: 14, rt: 0, replies: 1, total: 15, text: "Dmm that old dashboard when on fb ads you could scale garlic presses", format: "nostalgia", hook: "Nostalgia", type: "Community / Humor", media: "none", category: "insight" },
+        { rank: 17, date: "May 17, 2025", likes: 14, rt: 0, replies: 1, total: 15, text: "Could you launch a new fresh brand with statics only?\n\nLet's say most competitors in the market have 70% video 30% static distribution.\n\nAnd we're not in a product or most aware market and personnas.\n\nCan statics * adv/listicles just work to scale $10k/day in a competitive market", format: "open question", hook: "Provocative question", type: "Discussion Starter", media: "none", category: "insight" },
+        { rank: 18, date: "Apr 5, 2025", likes: 13, rt: 0, replies: 0, total: 13, text: "$257K - $467K a month targeting blue collars.\n\nThey spend a lot on high-end tools to work better, more efficiently, to save time or reduce damage to their body.", format: "revenue proof + audience insight", hook: "Dollar amount", type: "Niche Breakdown", media: "video", category: "case-study" },
+        { rank: 19, date: "Jul 1, 2025", likes: 12, rt: 0, replies: 0, total: 12, text: "Even the most saturated niches aren't saturated\n\nEcom is cyclical.\n\nNew people enter the market every year.\n\nNew pains, same desires.\n\n→ Young people age\n→ Same problems resurface\n→ Brands keep scaling (+100% growth)\n\nSaturated markets reset.\n\nThe winners just show up with:\n→ Better creative\n→ Better mechanism\n→ Better funnel", format: "contrarian + framework", hook: "Contrarian statement", type: "Strategic Insight", media: "image", category: "contrarian" },
+        { rank: 20, date: "May 4, 2025", likes: 11, rt: 0, replies: 1, total: 12, text: "This is what a $400k/m ecom brand looks like, running 99 active ads on Meta atm", format: "behind-the-scenes reveal", hook: "Curiosity", type: "Case Study", media: "image", category: "case-study" }
+    ];
+
+    function renderPosts(filter) {
+        const grid = document.getElementById('postsGrid');
+        const filtered = filter === 'all' ? posts : posts.filter(p => p.category === filter);
+
+        grid.innerHTML = filtered.map(p => `
+            <div class="post-card" data-category="${p.category}">
+                <div>
+                    <div class="rank-badge ${p.rank <= 3 ? 'rank-' + p.rank : 'rank-default'}">#${p.rank}</div>
+                </div>
+                <div class="post-content">
+                    <div class="post-date">${p.date} ${p.media !== 'none' ? '&bull; ' + p.media.toUpperCase() : ''}</div>
+                    <div class="post-text">${p.text}</div>
+                    <div class="post-tags">
+                        <span class="tag tag-hook">${p.hook}</span>
+                        <span class="tag tag-format">${p.format}</span>
+                        <span class="tag tag-type">${p.type}</span>
+                        ${p.media !== 'none' ? '<span class="tag tag-media">' + p.media + '</span>' : ''}
+                    </div>
+                </div>
+                <div class="post-metrics">
+                    <div class="metric metric-total"><div class="value">${p.total}</div><div class="label">Total Eng.</div></div>
+                    <div class="metric metric-likes"><div class="value">${p.likes}</div><div class="label">Likes</div></div>
+                    <div class="metric metric-rt"><div class="value">${p.rt}</div><div class="label">Retweets</div></div>
+                    <div class="metric metric-replies"><div class="value">${p.replies}</div><div class="label">Replies</div></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterPosts(category) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        renderPosts(category);
+    }
+
+    // Initial render
+    renderPosts('all');
+    </script>
+</body>
+</html>
