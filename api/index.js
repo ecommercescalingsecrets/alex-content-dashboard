@@ -1,8 +1,10 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const fetch = require('node-fetch');
 const { TwitterApi } = require('twitter-api-v2');
 const { getAllContent, getContent, upsertContent, deleteContent, getCount } = require('./db');
+const SwipeFileBuilder = require('../swipe-file-builder');
 
 // Auto-seed on first boot if DB is empty
 if (getCount() === 0) {
@@ -71,6 +73,147 @@ const twitterClient = new TwitterApi({
     appSecret: process.env.TWITTER_API_SECRET || 'nAAEWk2x6ofyhdMpe1pCmJOm141w6s7rW2Vmdt83lSxvoIPDoU',
     accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-zen0WfNRJeARDWAGV9iRgSKU5vTb91',
     accessSecret: process.env.TWITTER_ACCESS_SECRET || 'KtseVJNS72KTf7xwVrElWTmyb9LOgPkmwCkIu5IiFuIfP'
+});
+
+// GetHookd API configuration
+const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
+const GETHOOKD_BASE_URL = 'https://app.gethookd.ai/api/v1';
+const swipeBuilder = new SwipeFileBuilder();
+
+// Simple in-memory cache for GetHookd API responses (15 min TTL)
+const gethookdCache = {};
+function getCached(key) {
+    const entry = gethookdCache[key];
+    if (entry && Date.now() - entry.ts < 15 * 60 * 1000) return entry.data;
+    return null;
+}
+function setCache(key, data) {
+    gethookdCache[key] = { data, ts: Date.now() };
+}
+
+// GetHookd API proxy - explore ads (supports ?query= for search)
+app.get('/api/gethookd/explore', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = Math.min(parseInt(req.query.per_page) || 20, 100);
+    const query = req.query.query || '';
+    const cacheKey = `explore_${page}_${perPage}_${query}`;
+
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
+    try {
+        const params = new URLSearchParams({ page, per_page: perPage });
+        if (query) params.append('query', query);
+
+        const response = await fetch(`${GETHOOKD_BASE_URL}/explore?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${GETHOOKD_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            return res.status(response.status).json({ error: `GetHookd API returned ${response.status}` });
+        }
+
+        const data = await response.json();
+
+        // Enrich ads with analysis from SwipeFileBuilder
+        if (data.data) {
+            data.data = data.data.map(ad => ({
+                ...ad,
+                analysis: swipeBuilder.analyzeAd(ad)
+            }));
+        }
+
+        const result = { ...data, page, per_page: perPage };
+        setCache(cacheKey, result);
+        res.json(result);
+    } catch (error) {
+        console.error('GetHookd API error:', error.message);
+        res.status(502).json({ error: 'Failed to fetch from GetHookd API', details: error.message });
+    }
+});
+
+// GetHookd API - get ad collections (filtered)
+app.get('/api/gethookd/collections', async (req, res) => {
+    const pages = Math.min(parseInt(req.query.pages) || 1, 5);
+    const cacheKey = `collections_${pages}`;
+
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
+    try {
+        const swipeFiles = await swipeBuilder.createSwipeFiles(pages);
+        const result = {};
+        for (const [name, collection] of Object.entries(swipeFiles)) {
+            result[name] = {
+                description: collection.description,
+                count: collection.count,
+                ads: collection.ads.slice(0, 20).map(ad => ({
+                    id: ad.id,
+                    brand: ad.brand?.name,
+                    title: ad.title,
+                    body: ad.body,
+                    cta: ad.cta_type,
+                    score: ad.performance_score,
+                    days_active: ad.days_active,
+                    landing_page: ad.landing_page,
+                    media: ad.media,
+                    analysis: swipeBuilder.analyzeAd(ad)
+                }))
+            };
+        }
+        setCache(cacheKey, result);
+        res.json(result);
+    } catch (error) {
+        console.error('GetHookd collections error:', error.message);
+        res.status(502).json({ error: 'Failed to build collections', details: error.message });
+    }
+});
+
+// GetHookd API - refresh static swipe files from live API
+app.post('/api/gethookd/refresh-swipe-files', async (req, res) => {
+    try {
+        const swipeFiles = await swipeBuilder.exportToFiles();
+        const collections = Object.entries(swipeFiles).map(([name, col]) => ({
+            name, count: col.count, description: col.description
+        }));
+        res.json({ success: true, refreshed: collections });
+    } catch (error) {
+        console.error('Swipe file refresh error:', error.message);
+        res.status(502).json({ error: 'Failed to refresh swipe files', details: error.message });
+    }
+});
+
+// GetHookd API - import an ad as dashboard content
+app.post('/api/gethookd/import', (req, res) => {
+    const { ad } = req.body;
+    if (!ad) return res.status(400).json({ error: 'Ad data is required in request body' });
+
+    const id = 'gethookd-' + (ad.id || Date.now());
+
+    // Check if already imported
+    const existing = getContent(id);
+    if (existing) return res.json({ success: true, item: existing, alreadyImported: true });
+
+    const mediaUrl = ad.media?.[0]?.url || null;
+    const mediaType = ad.media?.[0]?.type || null;
+
+    const item = {
+        id,
+        title: ad.brand?.name ? `${ad.brand.name} - ${ad.title || 'Ad'}` : (ad.title || 'GetHookd Import'),
+        content: ad.body || '',
+        mediaUrl,
+        mediaType,
+        status: 'review',
+        target: 'Solo ecommerce founders',
+        createdAt: new Date().toISOString(),
+        feedbackHistory: []
+    };
+
+    upsertContent(item);
+    res.json({ success: true, item });
 });
 
 // Scheduler - check every minute for content that should be posted
@@ -414,6 +557,36 @@ app.get('/swipe-files', (req, res) => {
 
 app.get('/swipe', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public-swipe-files.html'));
+});
+
+// Twitter Analytics — fetch & analyze 180 days of tweet data
+const analytics = require('../scripts/analyze-180-days');
+
+app.get('/api/analytics/run', async (req, res) => {
+    try {
+        console.log('Starting 180-day analytics fetch...');
+        const raw = await analytics.fetchAllTweets();
+        const dataDir = path.join(__dirname, '..', 'data');
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+        fs.writeFileSync(path.join(dataDir, 'tweets-180-days.json'), JSON.stringify(raw, null, 2));
+
+        const report = analytics.analyze(raw);
+        fs.writeFileSync(path.join(dataDir, 'analytics-report.json'), JSON.stringify(report, null, 2));
+
+        res.json(report);
+    } catch (error) {
+        console.error('Analytics error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/analytics/report', (req, res) => {
+    const reportPath = path.join(__dirname, '..', 'data', 'analytics-report.json');
+    if (fs.existsSync(reportPath)) {
+        res.json(JSON.parse(fs.readFileSync(reportPath, 'utf8')));
+    } else {
+        res.status(404).json({ error: 'No analytics report yet. Hit GET /api/analytics/run first.' });
+    }
 });
 
 app.listen(port, () => {
