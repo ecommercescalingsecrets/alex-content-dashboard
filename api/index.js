@@ -677,70 +677,67 @@ app.get('/api/google-sheets-export', (req, res) => {
 
 // Simple assistant export endpoint
 app.get('/api/secondary-content-export', (req, res) => {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    
-    // Secondary content data
+    // Secondary content data with Gethookd ad links
     const secondaryContent = [
         {
             hookQuote: 'When a nutritionist who works with the Royal Family says ...',
             brand: 'KilgourMD',
-            mediaFilename: 'kilgourmd.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84198456?signature=c972946bbdce62540f28743dd475700e7f3cc261abc4af3b20fdcbcb84425380'
         },
         {
             hookQuote: 'Men Love This Supplement Duo',
             brand: 'Caleigh Mackenzie',
-            mediaFilename: 'caleigh_mackenzie.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84162848?signature=8603285e4d5011a503fcdf15b246ad453457757c8a79bfb2283f2a63867cc9fa'
         },
         {
             hookQuote: 'The biggest lesson I learnt in my weight loss journey',
             brand: 'Wild Nutrition',
-            mediaFilename: 'wild_nutrition.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84161665?signature=a74d08a3761da831b9ed292208de383f06a631d2f79416d83eb1bc01ad9bdec3'
         },
         {
             hookQuote: 'Introducing Sculpt Pro, the supplement system designed to...',
             brand: 'Maxine Laceby',
-            mediaFilename: 'maxine_laceby.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84153422?signature=7ad560908e2e3dcc433a078518f1023389bd27ac0dd78d81b57f3ae230fb5cde'
         },
         {
             hookQuote: 'As a world-leading expert in intermittent fasting',
             brand: 'Ancestral Supplements',
-            mediaFilename: 'ancestral_supplements.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84072350?signature=22ebb9b6b824bfcc38f87c876e83297b3fe9d39664d72b7c1bfffcbb7a805af1'
         },
         {
             hookQuote: 'Celebrities are ditching expensive IV drips, collagen shots',
             brand: 'Cata-Kor',
-            mediaFilename: 'cata_kor.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84255499?signature=312d76a022db46bc024acf13590a540d8517e68f9dcd37761f23cde8520be58b'
         },
         {
             hookQuote: 'Unlock unstoppable power with Turkesterone',
             brand: 'Enflux Testosterone Support',
-            mediaFilename: 'enflux_testosterone_support.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84190392?signature=dc28f1119a5e5d758a985971e64e279f6a53130bfbbe51272e3bdb6e87e2ff05'
         },
         {
             hookQuote: 'THEY DIDNT WANT US TO SHOW YOU THESE STATS',
             brand: 'T-Drive Testosterone Booster',
-            mediaFilename: 't_drive_testosterone_booster.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84158944?signature=d14bc506cc2d92b5d4a2f61f858e63ca1563c34cfcb9d0fc091f3b2bb884e685'
         },
         {
             hookQuote: 'Build Lean Muscle and Support Testosterone',
             brand: 'Cutler Nutrition',
-            mediaFilename: 'cutler_nutrition.mp4'
+            adLink: 'https://app.gethookd.ai/share/ad/84117464?signature=61abf673415b05710a764e6ab0b18663fc3285efca50da6a552210788df59aae'
         }
     ];
     
-    // Simple CSV headers - just what's needed
+    // Simple CSV headers
     const headers = [
-        'Post Text',
-        'Media Download Link'
+        'Tweet Copy',
+        'Ad Link'
     ];
     
     const rows = secondaryContent.map(item => {
-        const postText = `"${item.hookQuote}"\n\n${item.brand} is printing.\n\nUsed gethookd.ai to find this.`;
-        const mediaDownloadUrl = `${baseUrl}/media/${item.mediaFilename}`;
+        const tweetCopy = `"${item.hookQuote}"\n\n${item.brand} is printing.\n\nUsed gethookd.ai to find this.`;
         
         return [
-            postText,
-            mediaDownloadUrl
+            tweetCopy,
+            item.adLink
         ];
     });
     
@@ -751,13 +748,18 @@ app.get('/api/secondary-content-export', (req, res) => {
     
     // Set response headers for CSV download
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="secondary_posts_simple.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="tweet_copy_and_ads.csv"');
     res.send(csvContent);
 });
 
-// Secondary content page
+// Secondary content page (old version)
 app.get('/secondary-content', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'secondary-content.html'));
+});
+
+// Simple tweets page
+app.get('/tweets', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'simple-tweets.html'));
 });
 
 app.listen(port, () => {
