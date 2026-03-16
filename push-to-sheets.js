@@ -13,7 +13,7 @@ const fetch = require('node-fetch');
 const { getAllContent } = require('./api/db');
 
 const WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL
-    || 'https://script.google.com/macros/s/AKfycbzE0IWLFZrPaV46m5gkqkI6TtPEY1LZjRfI3hgUf25WKxYObXgdaAoQ9p9cOYkRrRTkYQ/exec';
+    || 'https://script.google.com/macros/s/AKfycbzCPTs4dIgmnnwR_tFCnT1uiH6obIm5MLsgfUmS76CSXtsqHaVnUzdXDpFeBPhYxeOj/exec';
 
 async function pushRows(rows) {
     console.log(`Pushing ${rows.length} row(s) to Google Sheets...`);
