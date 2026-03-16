@@ -762,6 +762,60 @@ app.get('/tweets', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'simple-tweets.html'));
 });
 
+// Webhook to send new content to Google Sheets via Apps Script
+app.post('/api/webhook/google-sheets', async (req, res) => {
+    try {
+        const { content } = req.body;
+        
+        // Apps Script Web App URL (will be provided by Alex)
+        const appsScriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+        
+        // Send content to Apps Script
+        const response = await fetch(appsScriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'addContent',
+                data: content
+            })
+        });
+        
+        const result = await response.text();
+        res.json({ success: true, result });
+    } catch (error) {
+        console.error('Webhook error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Auto-send content to Google Sheets when new secondary content is created
+app.post('/api/content/secondary', async (req, res) => {
+    try {
+        const { posts } = req.body;
+        
+        // Format for Google Sheets
+        const formattedPosts = posts.map(post => [
+            post.content, // Tweet copy
+            post.videoLink // Gethookd video link
+        ]);
+        
+        // Send to webhook
+        if (process.env.APPS_SCRIPT_URL) {
+            await fetch(`${req.protocol}://${req.get('host')}/api/webhook/google-sheets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: formattedPosts })
+            });
+        }
+        
+        res.json({ success: true, posts: formattedPosts.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Dashboard running on port ${port}`);
     console.log(`📦 Database has ${getCount()} posts`);
