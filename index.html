@@ -207,6 +207,71 @@
         .loading { text-align: center; color: #60a5fa; padding: 3rem; font-size: 1.1rem; }
         .error { text-align: center; color: #ef4444; padding: 2rem; background: #dc262620; border-radius: 8px; }
         .empty { text-align: center; color: #64748b; padding: 3rem; font-size: 1.1rem; }
+
+        /* GETHOOKD ADS BROWSER */
+        .gethookd-controls {
+            display: flex; gap: 0.75rem; margin-bottom: 1.5rem;
+            align-items: center; flex-wrap: wrap; justify-content: center;
+        }
+        .gethookd-controls select, .gethookd-controls input {
+            padding: 0.6rem 1rem; border: 1px solid #334155; border-radius: 8px;
+            background: #1e293b; color: #e2e8f0; font-size: 0.9rem;
+        }
+        .gethookd-controls select:focus, .gethookd-controls input:focus {
+            outline: none; border-color: #60a5fa;
+        }
+        .ad-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s;
+            border-left: 4px solid #10b981;
+        }
+        .ad-card:hover { border-color: #475569; }
+        .ad-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; }
+        .ad-brand { color: #10b981; font-weight: 700; font-size: 1rem; }
+        .ad-score {
+            padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;
+            font-weight: 600; background: #10b98120; color: #10b981;
+        }
+        .ad-body {
+            color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;
+            white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+            background: #0f172a; padding: 1rem; border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .ad-meta {
+            display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;
+            font-size: 0.8rem; color: #64748b;
+        }
+        .ad-meta span { background: #0f172a; padding: 0.2rem 0.6rem; border-radius: 4px; }
+        .ad-media-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem; margin-bottom: 1rem;
+        }
+        .ad-media-grid img, .ad-media-grid video {
+            width: 100%; max-height: 200px; object-fit: cover;
+            border-radius: 8px; border: 1px solid #334155;
+        }
+        .ad-analysis {
+            display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;
+        }
+        .ad-tag {
+            padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.72rem;
+            font-weight: 600; background: #2563eb20; color: #60a5fa;
+            border: 1px solid #2563eb40;
+        }
+        .btn-import { background: #10b981; color: white; }
+        .btn-import:hover { background: #059669; }
+        .btn-import:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+        .pagination {
+            display: flex; gap: 0.5rem; justify-content: center; margin-top: 1.5rem;
+        }
+        .pagination button {
+            padding: 0.5rem 1rem; border: 1px solid #334155; border-radius: 8px;
+            background: #1e293b; color: #94a3b8; cursor: pointer; font-size: 0.85rem;
+        }
+        .pagination button:hover { border-color: #60a5fa; color: #60a5fa; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination .current-page { background: #2563eb; color: white; border-color: #2563eb; }
         
         .scheduled-info { 
             background: linear-gradient(135deg, #a855f720, #a855f710); 
@@ -280,6 +345,7 @@
             <button class="filter-btn" data-filter="approved">✅ Approved</button>
             <button class="filter-btn" data-filter="scheduled">📅 Scheduled</button>
             <button class="filter-btn" data-filter="posted">🚀 Posted</button>
+            <button class="filter-btn" data-filter="gethookd" style="border-color: #10b981; color: #10b981;">🔍 GetHookd Ads</button>
         </div>
         
         <div id="content">
@@ -296,15 +362,23 @@
             console.log('📊', message);
         }
         
+        let gethookdPage = 1;
+        let gethookdCollection = 'all';
+
         function setFilter(filter) {
             log(`Setting filter to: ${filter}`);
             currentFilter = filter;
-            
+
             // Update button styles
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filter === filter);
             });
-            
+
+            if (filter === 'gethookd') {
+                renderGetHookdBrowser();
+                return;
+            }
+
             renderContent();
         }
         
@@ -717,6 +791,155 @@
             }
         }
         
+        // ── GetHookd Ads Browser ──
+        async function renderGetHookdBrowser() {
+            const container = document.getElementById('content');
+            container.innerHTML = `
+                <div class="gethookd-controls">
+                    <select id="gethookd-collection" onchange="gethookdCollection=this.value; gethookdPage=1; loadGetHookdAds();">
+                        <option value="all">All Ads (Explore)</option>
+                        <option value="high-performers">High Performers (80+)</option>
+                        <option value="transformation-hooks">Transformation Hooks</option>
+                        <option value="authority-positioning">Authority Positioning</option>
+                        <option value="ugc-testimonials">UGC Testimonials</option>
+                        <option value="supplement-winners">Supplement Winners</option>
+                    </select>
+                    <button class="btn btn-import" onclick="refreshSwipeFiles()" style="font-size:0.85rem;">Refresh Swipe Files</button>
+                </div>
+                <div id="gethookd-ads"><div class="loading">Fetching ads from GetHookd API...</div></div>
+            `;
+            await loadGetHookdAds();
+        }
+
+        async function loadGetHookdAds() {
+            const adsContainer = document.getElementById('gethookd-ads');
+            if (!adsContainer) return;
+            adsContainer.innerHTML = '<div class="loading">Fetching ads from GetHookd API...</div>';
+
+            try {
+                let data;
+                if (gethookdCollection === 'all') {
+                    const resp = await fetch(`/api/gethookd/explore?page=${gethookdPage}&per_page=20`);
+                    if (!resp.ok) throw new Error(`API returned ${resp.status}`);
+                    data = await resp.json();
+                    renderGetHookdAds(data.data || [], data);
+                } else {
+                    const resp = await fetch(`/api/gethookd/collections?pages=2`);
+                    if (!resp.ok) throw new Error(`API returned ${resp.status}`);
+                    data = await resp.json();
+                    const collection = data[gethookdCollection];
+                    if (collection) {
+                        renderGetHookdAds(collection.ads || [], { collection: gethookdCollection, description: collection.description });
+                    } else {
+                        adsContainer.innerHTML = '<div class="empty">No ads found in this collection</div>';
+                    }
+                }
+            } catch (error) {
+                log(`GetHookd API error: ${error.message}`);
+                adsContainer.innerHTML = `<div class="error">Failed to load GetHookd ads: ${error.message}<br>
+                    <button onclick="loadGetHookdAds()" style="margin-top:1rem;padding:0.5rem 1rem;background:#2563eb;color:white;border:none;border-radius:4px;cursor:pointer;">Retry</button>
+                </div>`;
+            }
+        }
+
+        function renderGetHookdAds(ads, meta) {
+            const adsContainer = document.getElementById('gethookd-ads');
+            if (!ads.length) {
+                adsContainer.innerHTML = '<div class="empty">No ads found</div>';
+                return;
+            }
+
+            const html = ads.map(ad => {
+                const analysis = ad.analysis || {};
+                const mediaHtml = (ad.media || []).slice(0, 3).map(m => {
+                    if (m.type === 'video') {
+                        return `<video controls preload="metadata" src="${escapeHtml(m.url)}"></video>`;
+                    }
+                    return `<img src="${escapeHtml(m.url || m.thumbnail)}" alt="Ad media" onerror="this.style.display='none'">`;
+                }).join('');
+
+                const tags = [];
+                if (analysis.hook_type) tags.push(analysis.hook_type);
+                if (analysis.emotional_trigger && analysis.emotional_trigger !== 'neutral') tags.push(analysis.emotional_trigger);
+                if (analysis.social_proof) tags.push('social proof');
+                if (analysis.urgency) tags.push('urgency');
+                if (analysis.authority) tags.push('authority');
+
+                return `
+                    <div class="ad-card">
+                        <div class="ad-header">
+                            <div class="ad-brand">${escapeHtml(ad.brand?.name || ad.brand || 'Unknown Brand')}${ad.title ? ' - ' + escapeHtml(ad.title) : ''}</div>
+                            ${ad.score || ad.performance_score ? `<div class="ad-score">Score: ${ad.score || ad.performance_score}</div>` : ''}
+                        </div>
+                        <div class="ad-meta">
+                            ${ad.cta || ad.cta_type ? `<span>CTA: ${escapeHtml(ad.cta || ad.cta_type)}</span>` : ''}
+                            ${ad.days_active ? `<span>${ad.days_active} days active</span>` : ''}
+                            ${ad.landing_page ? `<span><a href="${escapeHtml(ad.landing_page)}" target="_blank" style="color:#60a5fa;text-decoration:none;">Landing Page</a></span>` : ''}
+                        </div>
+                        ${tags.length ? `<div class="ad-analysis">${tags.map(t => `<span class="ad-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                        ${mediaHtml ? `<div class="ad-media-grid">${mediaHtml}</div>` : ''}
+                        <div class="ad-body">${escapeHtml(ad.body || 'No copy available')}</div>
+                        <div class="actions">
+                            <button class="btn btn-import" onclick="importAd(this, ${escapeHtml(JSON.stringify(JSON.stringify(ad)))})">Import to Dashboard</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Pagination for explore mode
+            let paginationHtml = '';
+            if (gethookdCollection === 'all') {
+                paginationHtml = `
+                    <div class="pagination">
+                        <button ${gethookdPage <= 1 ? 'disabled' : ''} onclick="gethookdPage--; loadGetHookdAds();">Previous</button>
+                        <button class="current-page" disabled>Page ${gethookdPage}</button>
+                        <button onclick="gethookdPage++; loadGetHookdAds();">Next</button>
+                    </div>
+                `;
+            }
+
+            adsContainer.innerHTML = html + paginationHtml;
+        }
+
+        async function importAd(btnEl, adJson) {
+            const ad = JSON.parse(adJson);
+            btnEl.disabled = true;
+            btnEl.textContent = 'Importing...';
+
+            try {
+                const resp = await fetch('/api/gethookd/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ad })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    btnEl.textContent = data.alreadyImported ? 'Already Imported' : 'Imported!';
+                    btnEl.style.background = '#059669';
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                btnEl.textContent = 'Failed';
+                btnEl.style.background = '#dc2626';
+                log(`Import error: ${error.message}`);
+            }
+        }
+
+        async function refreshSwipeFiles() {
+            try {
+                const resp = await fetch('/api/gethookd/refresh-swipe-files', { method: 'POST' });
+                const data = await resp.json();
+                if (resp.ok) {
+                    alert(`Swipe files refreshed! ${data.refreshed.map(c => c.name + ': ' + c.count).join(', ')}`);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                alert(`Failed to refresh: ${error.message}`);
+            }
+        }
+
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.filter-btn').forEach(btn => {
