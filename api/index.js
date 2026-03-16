@@ -133,8 +133,24 @@ async function scheduleChecker() {
 
 setInterval(scheduleChecker, 60000);
 
+// Self-ping to prevent Railway from idling the process
+// Runs every 5 minutes to keep setInterval alive
+setInterval(() => {
+    const http = require('http');
+    http.get(`http://localhost:${port}/api/health`, () => {}).on('error', () => {});
+}, 5 * 60 * 1000);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    // Also trigger schedule check on any health ping
+    scheduleChecker().catch(() => {});
+    res.json({ ok: true, time: new Date().toISOString() });
+});
+
 // API Routes
 app.get('/api/content', (req, res) => {
+    // Piggyback schedule check on content fetches too
+    scheduleChecker().catch(() => {});
     res.json(getAllContent());
 });
 
