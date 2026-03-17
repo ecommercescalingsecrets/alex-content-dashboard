@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const { upsertContent, getCount } = require('./api/db');
 
 const WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL
-    || 'https://script.google.com/macros/s/AKfycbzxUuXQiLE93pFTXXKtVKfN3M8P2fMUuajTZL4YnV0CkL3dWX9sDsaUKYshoAmabFz8/exec';
+    || 'https://script.google.com/macros/s/AKfycbzw2h8SkxlhgWzElUUm9lSaR6lv6ronDRuvs-3DuQ3ceGGgr5KQdcBMCrfL0UwL5TJP/exec';
 
 const gethookdCTA = `
 

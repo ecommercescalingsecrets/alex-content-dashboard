@@ -569,7 +569,7 @@ app.get('/api/analytics/report', (req, res) => {
 });
 
 // ── Google Sheets Integration (via Apps Script webhook) ──
-const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbzxUuXQiLE93pFTXXKtVKfN3M8P2fMUuajTZL4YnV0CkL3dWX9sDsaUKYshoAmabFz8/exec';
+const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbzw2h8SkxlhgWzElUUm9lSaR6lv6ronDRuvs-3DuQ3ceGGgr5KQdcBMCrfL0UwL5TJP/exec';
 
 app.post('/api/google-sheets/push', async (req, res) => {
     try {
