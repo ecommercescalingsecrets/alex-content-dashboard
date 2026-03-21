@@ -875,6 +875,34 @@ app.post('/api/media/upload', upload.single('file'), (req, res) => {
     res.json({ success: true, filename: req.file.filename, size: req.file.size, path: `/media/${req.file.filename}` });
 });
 
+// Download media from URL to persistent storage
+app.post('/api/media/download', async (req, res) => {
+    const { url, filename } = req.body;
+    if (!url) return res.status(400).json({ error: 'url required' });
+    const fname = filename || path.basename(new URL(url).pathname);
+    const dest = path.join(MEDIA_DIR, fname);
+    try {
+        const https = require('https');
+        const http = require('http');
+        const mod = url.startsWith('https') ? https : http;
+        const file = fs.createWriteStream(dest);
+        await new Promise((resolve, reject) => {
+            mod.get(url, (response) => {
+                if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                    mod.get(response.headers.location, (r2) => { r2.pipe(file); file.on('finish', () => { file.close(); resolve(); }); }).on('error', reject);
+                } else {
+                    response.pipe(file);
+                    file.on('finish', () => { file.close(); resolve(); });
+                }
+            }).on('error', reject);
+        });
+        const size = fs.statSync(dest).size;
+        res.json({ success: true, filename: fname, size, path: `/media/${fname}` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/media/list', (req, res) => {
     const mediaDir = path.join(__dirname, '..', 'media');
     const files = fs.existsSync(mediaDir) ? fs.readdirSync(mediaDir).map(f => ({
