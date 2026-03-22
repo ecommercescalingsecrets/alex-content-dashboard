@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { TwitterApi } = require('twitter-api-v2');
-const { getAllContent, getContent, upsertContent, deleteContent, getCount } = require('./db');
+const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting } = require('./db');
 const SwipeFileBuilder = require('../swipe-file-builder');
 
 // Auto-seed on first boot if DB is empty
@@ -74,6 +74,167 @@ const twitterClient = new TwitterApi({
     accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-zen0WfNRJeARDWAGV9iRgSKU5vTb91',
     accessSecret: process.env.TWITTER_ACCESS_SECRET || 'KtseVJNS72KTf7xwVrElWTmyb9LOgPkmwCkIu5IiFuIfP'
 });
+
+// LinkedIn OAuth configuration
+const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID || '';
+const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET || '';
+const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'https://web-production-c72a.up.railway.app/api/linkedin/callback';
+const LINKEDIN_SCOPES = 'w_member_social openid profile';
+
+// LinkedIn OAuth - Step 1: Redirect to LinkedIn authorization
+app.get('/api/linkedin/auth', (req, res) => {
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: LINKEDIN_CLIENT_ID,
+        redirect_uri: LINKEDIN_REDIRECT_URI,
+        scope: LINKEDIN_SCOPES,
+        state: 'linkedin_oauth_' + Date.now()
+    });
+    res.redirect(`https://www.linkedin.com/oauth/v2/authorization?${params}`);
+});
+
+// LinkedIn OAuth - Step 2: Exchange code for access token
+app.get('/api/linkedin/callback', async (req, res) => {
+    const { code, error, error_description } = req.query;
+    if (error) return res.status(400).json({ error, error_description });
+    if (!code) return res.status(400).json({ error: 'No authorization code received' });
+
+    try {
+        // Exchange code for token
+        const tokenRes = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                client_id: LINKEDIN_CLIENT_ID,
+                client_secret: LINKEDIN_CLIENT_SECRET,
+                redirect_uri: LINKEDIN_REDIRECT_URI
+            })
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) return res.status(400).json({ error: 'Failed to get access token', details: tokenData });
+
+        const accessToken = tokenData.access_token;
+        const expiresIn = tokenData.expires_in || 5184000; // default 60 days
+        const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
+        // Get user info (sub = LinkedIn person ID)
+        const userRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const userData = await userRes.json();
+        const userId = userData.sub;
+
+        // Store in settings
+        setSetting('linkedin_access_token', accessToken);
+        setSetting('linkedin_token_expires_at', expiresAt);
+        setSetting('linkedin_user_id', userId);
+
+        res.send(`<h1>✅ LinkedIn Connected!</h1><p>User ID: ${userId}</p><p>Token expires: ${expiresAt}</p><p><a href="/">Back to Dashboard</a></p>`);
+    } catch (err) {
+        console.error('LinkedIn callback error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// LinkedIn status check
+app.get('/api/linkedin/status', (req, res) => {
+    const token = getSetting('linkedin_access_token');
+    const expiresAt = getSetting('linkedin_token_expires_at');
+    const userId = getSetting('linkedin_user_id');
+    const now = new Date();
+    const isValid = token && expiresAt && new Date(expiresAt) > now;
+    res.json({
+        connected: !!token,
+        valid: isValid,
+        userId,
+        expiresAt,
+        expiresIn: isValid ? Math.round((new Date(expiresAt) - now) / 1000 / 3600 / 24) + ' days' : null
+    });
+});
+
+// LinkedIn posting function
+async function postToLinkedIn(content, mediaUrl) {
+    const accessToken = getSetting('linkedin_access_token');
+    const userId = getSetting('linkedin_user_id');
+    const expiresAt = getSetting('linkedin_token_expires_at');
+
+    if (!accessToken || !userId) throw new Error('LinkedIn not connected. Visit /api/linkedin/auth first.');
+    if (new Date(expiresAt) <= new Date()) throw new Error('LinkedIn token expired. Re-authorize at /api/linkedin/auth');
+
+    const author = `urn:li:person:${userId}`;
+    const headers = {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'LinkedIn-Version': '202401',
+        'X-Restli-Protocol-Version': '2.0.0'
+    };
+
+    let imageUrn = null;
+
+    // Upload image if mediaUrl provided
+    if (mediaUrl) {
+        try {
+            const mediaPath = path.join(MEDIA_DIR, path.basename(mediaUrl));
+            if (fs.existsSync(mediaPath)) {
+                // Step 1: Initialize upload
+                const initRes = await fetch('https://api.linkedin.com/rest/images?action=initializeUpload', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ initializeUploadRequest: { owner: author } })
+                });
+                const initData = await initRes.json();
+                const uploadUrl = initData.value.uploadUrl;
+                imageUrn = initData.value.image;
+
+                // Step 2: Upload binary
+                const imageBuffer = fs.readFileSync(mediaPath);
+                await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: imageBuffer
+                });
+            }
+        } catch (mediaErr) {
+            console.error('LinkedIn media upload failed:', mediaErr.message);
+            imageUrn = null;
+        }
+    }
+
+    // Build post body
+    const postBody = {
+        author,
+        commentary: content,
+        visibility: 'PUBLIC',
+        distribution: { feedDistribution: 'MAIN_FEED', targetEntities: [], thirdPartyDistributionChannels: [] },
+        lifecycleState: 'PUBLISHED'
+    };
+
+    if (imageUrn) {
+        postBody.content = {
+            media: { title: 'Image', id: imageUrn }
+        };
+    }
+
+    const postRes = await fetch('https://api.linkedin.com/rest/posts', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(postBody)
+    });
+
+    if (!postRes.ok) {
+        const errText = await postRes.text();
+        throw new Error(`LinkedIn post failed (${postRes.status}): ${errText}`);
+    }
+
+    // LinkedIn returns the post URN in x-restli-id header
+    const linkedinPostId = postRes.headers.get('x-restli-id') || postRes.headers.get('x-linkedin-id') || 'posted';
+    return linkedinPostId;
+}
 
 // GetHookd API configuration
 const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
@@ -242,40 +403,27 @@ async function scheduleChecker() {
             upsertContent(item);
 
             try {
-                const text = item.content;
-                let mediaId = null;
+                const postTarget = item.postTarget || 'twitter';
 
-                if (item.mediaUrl) {
-                    try {
-                        const mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
-                        if (fs.existsSync(mediaPath)) {
-                            mediaId = await twitterClient.v1.uploadMedia(mediaPath);
-                        }
-                    } catch (mediaError) {
-                        console.error('Scheduled media upload failed:', mediaError);
-                    }
+                // Post to Twitter if target includes it
+                if (postTarget === 'twitter' || postTarget === 'both') {
+                    const { tweetIds } = await postItemToTwitter(item);
+                    item.tweetIds = tweetIds;
                 }
 
-                const tweets = splitIntoTweets(text);
-                let lastTweetId = null;
-                const tweetIds = [];
-
-                for (let i = 0; i < tweets.length; i++) {
-                    if (i === 0) {
-                        const opts = { text: tweets[i] };
-                        if (mediaId) opts.media = { media_ids: [mediaId] };
-                        const result = await twitterClient.v2.tweet(opts);
-                        lastTweetId = result.data.id;
-                    } else {
-                        const result = await twitterClient.v2.reply(tweets[i], lastTweetId);
-                        lastTweetId = result.data.id;
+                // Post to LinkedIn if target includes it
+                if (postTarget === 'linkedin' || postTarget === 'both') {
+                    try {
+                        const linkedinPostId = await postToLinkedIn(item.content, item.mediaUrl);
+                        item.linkedinPostId = linkedinPostId;
+                    } catch (liErr) {
+                        console.error(`LinkedIn scheduled post failed for ${item.title}:`, liErr.message);
+                        if (postTarget === 'linkedin') throw liErr;
                     }
-                    tweetIds.push(lastTweetId);
                 }
 
                 item.status = 'posted';
                 item.scheduledStatus = 'posted';
-                item.tweetIds = tweetIds;
                 item.postedAt = new Date().toISOString();
                 upsertContent(item);
                 console.log(`✅ Successfully posted scheduled: ${item.title}`);
@@ -475,15 +623,39 @@ app.post('/api/content/:id/post-now', async (req, res) => {
         return res.json({ success: true, tweetIds: item.tweetIds, item, alreadyPosted: true });
     }
 
+    const postTarget = item.postTarget || 'twitter';
+    const results = { success: true };
+
     try {
-        const { tweetIds, hasMedia } = await postItemToTwitter(item);
+        // Post to Twitter if target includes it
+        if (postTarget === 'twitter' || postTarget === 'both') {
+            const { tweetIds, hasMedia } = await postItemToTwitter(item);
+            item.tweetIds = tweetIds;
+            results.tweetIds = tweetIds;
+            results.hasMedia = hasMedia;
+        }
+
+        // Post to LinkedIn if target includes it
+        if (postTarget === 'linkedin' || postTarget === 'both') {
+            try {
+                const linkedinPostId = await postToLinkedIn(item.content, item.mediaUrl);
+                item.linkedinPostId = linkedinPostId;
+                results.linkedinPostId = linkedinPostId;
+            } catch (liErr) {
+                console.error('LinkedIn post error:', liErr.message);
+                results.linkedinError = liErr.message;
+                // Don't fail the whole request if Twitter succeeded
+                if (postTarget === 'linkedin') throw liErr;
+            }
+        }
+
         item.status = 'posted';
-        item.tweetIds = tweetIds;
         item.postedAt = new Date().toISOString();
         upsertContent(item);
-        res.json({ success: true, tweetIds, item, hasMedia });
+        results.item = item;
+        res.json(results);
     } catch (err) {
-        console.error('Twitter post-now error:', err);
+        console.error('Post-now error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -536,7 +708,7 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus'];
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
