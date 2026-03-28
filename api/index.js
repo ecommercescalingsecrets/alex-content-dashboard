@@ -530,7 +530,7 @@ app.post('/api/content/:id/feedback', (req, res) => {
 // /api/content/scheduled/week route moved above :id param route to avoid conflicts
 
 // Split long text into tweet-sized chunks at paragraph boundaries
-function splitIntoTweets(text, maxLen = 280) {
+function splitIntoTweets(text, maxLen = 4000) {
     // If the entire text fits in one tweet, NEVER split it
     if (text.trim().length <= maxLen) {
         return [text.trim()];
