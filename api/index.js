@@ -398,6 +398,19 @@ async function scheduleChecker() {
 
         // Process each post independently
         for (const item of itemsToPost) {
+            // PRE-POST MEDIA CHECK: skip posts with broken/missing media
+            if (item.mediaUrl && item.mediaUrl.startsWith('/media/')) {
+                const mediaPath = path.join(MEDIA_DIR, item.mediaUrl.replace('/media/', ''));
+                if (!fs.existsSync(mediaPath) || fs.statSync(mediaPath).size === 0) {
+                    console.log(`🚫 BLOCKED: ${item.title} — media missing or 0 bytes (${item.mediaUrl}). Moving to review.`);
+                    item.scheduledStatus = 'blocked';
+                    item.status = 'review';
+                    item.feedback = (item.feedback || '') + '\n[AUTO] Blocked from posting: media file missing or empty. Run /api/media/auto-repair to fix.';
+                    upsertContent(item);
+                    continue;
+                }
+            }
+            
             console.log(`📅 Auto-posting scheduled content: ${item.title}`);
             item.scheduledStatus = 'posting';
             upsertContent(item);
@@ -1076,9 +1089,8 @@ app.post('/api/media/download', async (req, res) => {
 });
 
 app.get('/api/media/list', (req, res) => {
-    const mediaDir = path.join(__dirname, '..', 'media');
-    const files = fs.existsSync(mediaDir) ? fs.readdirSync(mediaDir).map(f => ({
-        name: f, size: fs.statSync(path.join(mediaDir, f)).size
+    const files = fs.existsSync(MEDIA_DIR) ? fs.readdirSync(MEDIA_DIR).map(f => ({
+        name: f, size: fs.statSync(path.join(MEDIA_DIR, f)).size
     })) : [];
     res.json({ count: files.length, files });
 });
@@ -1100,21 +1112,22 @@ app.get('/api/debug/upload-test', async (req, res) => {
 
 // Debug endpoint - check media files
 app.get('/api/debug/media', (req, res) => {
-    const mediaDir = path.join(__dirname, '..', 'media');
-    const exists = fs.existsSync(mediaDir);
-    const files = exists ? fs.readdirSync(mediaDir) : [];
-    res.json({ __dirname, mediaDir, exists, fileCount: files.length, files: files.slice(0, 10) });
+    const exists = fs.existsSync(MEDIA_DIR);
+    const files = exists ? fs.readdirSync(MEDIA_DIR) : [];
+    res.json({ __dirname, MEDIA_DIR, exists, fileCount: files.length, files: files.slice(0, 10) });
 });
 
 // Validate all media files referenced in content
 app.get('/api/validate-media', (req, res) => {
     const allContent = getAllContent();
-    const mediaDir = path.join(__dirname, '..', 'media');
     const results = {
         totalPosts: allContent.length,
         postsWithMedia: 0,
         validMedia: 0,
         missingMedia: 0,
+        zeroByteMedia: 0,
+        externalMedia: 0,
+        typeMismatch: 0,
         issues: []
     };
     
@@ -1125,23 +1138,39 @@ app.get('/api/validate-media', (req, res) => {
             const urls = post.mediaUrl.split(',').map(u => u.trim()).filter(u => u);
             
             for (const url of urls) {
+                if (url.startsWith('http')) {
+                    results.externalMedia++;
+                    continue;
+                }
                 if (url.startsWith('/media/')) {
                     const filename = url.replace('/media/', '');
-                    const filePath = path.join(mediaDir, filename);
+                    const filePath = path.join(MEDIA_DIR, filename);
                     
                     if (fs.existsSync(filePath)) {
                         const stats = fs.statSync(filePath);
-                        results.validMedia++;
                         
-                        // Check for suspiciously small video files
-                        if (filename.endsWith('.mp4') && stats.size < 1000) {
+                        if (stats.size === 0) {
+                            results.zeroByteMedia++;
                             results.issues.push({
                                 postId: post.id,
                                 postTitle: post.title,
                                 mediaUrl: url,
-                                issue: 'Suspiciously small video file',
-                                size: stats.size
+                                issue: 'Zero-byte file',
+                                status: post.status,
+                                scheduledAt: post.scheduledAt
                             });
+                        } else if (stats.size < 1000) {
+                            results.issues.push({
+                                postId: post.id,
+                                postTitle: post.title,
+                                mediaUrl: url,
+                                issue: 'Suspiciously small file',
+                                size: stats.size,
+                                status: post.status,
+                                scheduledAt: post.scheduledAt
+                            });
+                        } else {
+                            results.validMedia++;
                         }
                     } else {
                         results.missingMedia++;
@@ -1150,7 +1179,8 @@ app.get('/api/validate-media', (req, res) => {
                             postTitle: post.title,
                             mediaUrl: url,
                             issue: 'File not found',
-                            filePath
+                            status: post.status,
+                            scheduledAt: post.scheduledAt
                         });
                     }
                 }
@@ -1158,5 +1188,124 @@ app.get('/api/validate-media', (req, res) => {
         }
     }
     
+    res.json(results);
+});
+
+// Auto-repair: re-download broken media from Gethookd API
+app.post('/api/media/auto-repair', async (req, res) => {
+    const GETHOOKD_API = 'https://api.gethookd.ai/api/v1';
+    const GETHOOKD_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
+    const allContent = getAllContent();
+    const results = { repaired: 0, failed: 0, skipped: 0, details: [] };
+    
+    // Only repair scheduled/approved posts with broken local media
+    const needsRepair = allContent.filter(p => {
+        if (p.status === 'posted' || p.status === 'draft') return false;
+        if (!p.mediaUrl || p.mediaUrl.startsWith('http')) return false;
+        const filePath = path.join(MEDIA_DIR, p.mediaUrl.replace('/media/', ''));
+        return !fs.existsSync(filePath) || fs.statSync(filePath).size === 0;
+    });
+    
+    for (const post of needsRepair) {
+        try {
+            // Extract ad ID from post content
+            const adMatch = (post.content || '').match(/share\/ad\/(\d+)/);
+            if (!adMatch) {
+                // Try videoUrl as fallback
+                if (post.videoUrl && post.videoUrl.startsWith('http')) {
+                    const resp = await fetch(post.videoUrl);
+                    if (resp.ok) {
+                        const buffer = Buffer.from(await resp.arrayBuffer());
+                        const filename = path.basename(new URL(post.videoUrl).pathname);
+                        fs.writeFileSync(path.join(MEDIA_DIR, filename), buffer);
+                        updateContent(post.id, { mediaUrl: '/media/' + filename, mediaType: 'video' });
+                        results.repaired++;
+                        results.details.push({ id: post.id, action: 'downloaded from videoUrl' });
+                        continue;
+                    }
+                }
+                results.skipped++;
+                results.details.push({ id: post.id, reason: 'no ad ID found in content' });
+                continue;
+            }
+            
+            const adId = adMatch[1];
+            const adResp = await fetch(`${GETHOOKD_API}/ads/${adId}`, {
+                headers: { 'Authorization': `Bearer ${GETHOOKD_KEY}` }
+            });
+            
+            if (!adResp.ok) {
+                results.failed++;
+                results.details.push({ id: post.id, reason: `API ${adResp.status}` });
+                continue;
+            }
+            
+            const adData = await adResp.json();
+            const media = (adData.media || adData.data?.media || []);
+            
+            if (!media.length) {
+                results.failed++;
+                results.details.push({ id: post.id, reason: 'no media in API response' });
+                continue;
+            }
+            
+            // Find best media URL
+            let mediaUrl = null;
+            let isVideo = false;
+            
+            // Prefer video
+            for (const m of media) {
+                const url = m.url || m.thumbnail_url || '';
+                if (url.endsWith('.mp4')) { mediaUrl = url; isVideo = true; break; }
+            }
+            // Fallback to image
+            if (!mediaUrl) {
+                for (const m of media) {
+                    const url = m.url || m.thumbnail_url || '';
+                    if (url.match(/\.(jpg|jpeg|png|webp)/i)) { mediaUrl = url; break; }
+                }
+            }
+            // Last resort: any URL
+            if (!mediaUrl && media[0]) {
+                mediaUrl = media[0].url || media[0].thumbnail_url;
+            }
+            
+            if (!mediaUrl) {
+                results.failed++;
+                results.details.push({ id: post.id, reason: 'no usable URL in media array' });
+                continue;
+            }
+            
+            // Download
+            const dlResp = await fetch(mediaUrl);
+            if (!dlResp.ok) {
+                results.failed++;
+                results.details.push({ id: post.id, reason: `download failed ${dlResp.status}` });
+                continue;
+            }
+            
+            const buffer = Buffer.from(await dlResp.arrayBuffer());
+            if (buffer.length < 1000) {
+                results.failed++;
+                results.details.push({ id: post.id, reason: `downloaded file too small (${buffer.length}b)` });
+                continue;
+            }
+            
+            const ext = isVideo ? '.mp4' : (mediaUrl.match(/\.(jpg|jpeg|png|webp)/i)?.[0] || '.jpg');
+            const filename = `${post.id.replace(/[^a-zA-Z0-9-]/g, '_')}${ext}`;
+            fs.writeFileSync(path.join(MEDIA_DIR, filename), buffer);
+            updateContent(post.id, { mediaUrl: '/media/' + filename, mediaType: isVideo ? 'video' : 'image' });
+            results.repaired++;
+            results.details.push({ id: post.id, action: 'repaired', size: buffer.length, type: isVideo ? 'video' : 'image' });
+            
+            // Rate limit
+            await new Promise(r => setTimeout(r, 200));
+        } catch (e) {
+            results.failed++;
+            results.details.push({ id: post.id, reason: e.message });
+        }
+    }
+    
+    results.totalBroken = needsRepair.length;
     res.json(results);
 });
