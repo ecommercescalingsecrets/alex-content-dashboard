@@ -195,8 +195,8 @@
         .btn-approve:hover { background: #047857; }
         .btn-post-now { background: #2563eb; color: white; }
         .btn-post-now:hover { background: #1d4ed8; }
-        .btn-delete { background: #dc2626; color: white; }
-        .btn-delete:hover { background: #b91c1c; }
+        .btn-delete { background: #16a34a; color: white; }
+        .btn-delete:hover { background: #15803d; }
 
         .type-badge {
             padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.72rem;
@@ -509,7 +509,7 @@
                             ${post.status === 'approved' && post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
                             ` : ''}
-                            <button class="btn btn-delete" onclick="deletePost('${post.id}')">🗑️ Delete</button>
+                            <button class="btn btn-delete" onclick="markPosted('${post.id}')">✅ Mark Posted</button>
                         </div>
                     </div>
                 `;
@@ -771,6 +771,25 @@
             } catch (error) {
                 log(`❌ Post Now error: ${error.message}`);
                 alert(`Failed to post: ${error.message}`);
+            }
+        }
+
+        async function markPosted(id) {
+            try {
+                log(`Marking post ${id} as posted...`);
+                const response = await fetch(`/api/content/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'posted', postedAt: new Date().toISOString() })
+                });
+                if (response.ok) {
+                    log(`✅ Post ${id} marked as posted`);
+                    await loadContent();
+                } else {
+                    throw new Error(`Mark posted failed: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
             }
         }
 
