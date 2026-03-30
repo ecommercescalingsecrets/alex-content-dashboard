@@ -500,9 +500,6 @@
                         </div>
 
                         <div class="actions">
-                            ${post.status === 'review' ? `
-                                <button class="btn btn-approve" onclick="approvePost('${post.id}')">✅ Approve</button>
-                            ` : ''}
                             ${post.status === 'approved' && !post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
                             ` : ''}
