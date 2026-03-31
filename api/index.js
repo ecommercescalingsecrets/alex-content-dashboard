@@ -69,10 +69,10 @@ app.use('/swipe-files', express.static(path.join(__dirname, '..', 'swipe-files')
 
 // Twitter client
 const twitterClient = new TwitterApi({
-    appKey: process.env.TWITTER_API_KEY || 'bZYuI6XhyekBAFf4tEwyvVo7H',
-    appSecret: process.env.TWITTER_API_SECRET || 'mWWEhpMjbKwH69qDPR1SwycOzqvrZWKo1sjRHNaHaNPNgTPGEX',
-    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-pUfcpyt4KDZbeOEts00Rb8zMfFEUGg',
-    accessSecret: process.env.TWITTER_ACCESS_SECRET || '5dVkBzuHywHbdlcu6VeIPugIlGCdmFhglJEGzGUG45gcQ'
+    appKey: process.env.TWITTER_API_KEY || 'afPOMOM5RV4b655Yy56MoTfGY',
+    appSecret: process.env.TWITTER_API_SECRET || '30D4XExxLrLWrBiuqjbwqrgMt3glryogYlHTrtlkA01AHDaSdP',
+    accessToken: process.env.TWITTER_ACCESS_TOKEN || '1761047014723268608-uNaojr5jHYpZf76mKwzbWMizZTitbu',
+    accessSecret: process.env.TWITTER_ACCESS_SECRET || 'PDAWJO2mLDP2IMa09uI3RMrrIOP65eFrzT7pIsuA3jwRY'
 });
 
 // LinkedIn OAuth configuration
