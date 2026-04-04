@@ -396,8 +396,17 @@ async function scheduleChecker() {
             console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toISOString()}`);
         }
 
-        // Process each post independently
-        for (const item of itemsToPost) {
+        // Sort by scheduledAt so oldest posts go first
+        itemsToPost.sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+
+        // STAGGER RULE: Only post ONE item per scheduler cycle (60s).
+        // This guarantees at least 60 seconds between tweets, even if
+        // multiple posts are overdue. Remaining posts will be picked up
+        // in subsequent cycles.
+        const batch = itemsToPost.slice(0, 1);
+
+        // Process one post per cycle
+        for (const item of batch) {
             // PRE-POST MEDIA CHECK: skip posts with broken/missing media
             if (item.mediaUrl && item.mediaUrl.startsWith('/media/')) {
                 const mediaPath = path.join(MEDIA_DIR, item.mediaUrl.replace('/media/', ''));
