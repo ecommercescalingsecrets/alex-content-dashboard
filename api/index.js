@@ -702,12 +702,29 @@ app.post('/api/content/:id/post', async (req, res) => {
 });
 
 app.post('/api/content', (req, res) => {
-    const { title, content, target } = req.body;
     const id = 'post-' + Date.now();
     const item = {
-        id, title, content, target: target || 'Solo ecommerce founders',
-        status: 'review', createdAt: new Date().toISOString(), feedbackHistory: []
+        id,
+        title: req.body.title || null,
+        content: req.body.content,
+        target: req.body.target || 'Solo ecommerce founders',
+        status: req.body.status || 'review',
+        scheduledStatus: req.body.scheduledStatus || null,
+        scheduledAt: req.body.scheduledAt || null,
+        category: req.body.category || null,
+        contentType: req.body.contentType || null,
+        mediaUrl: req.body.mediaUrl || null,
+        mediaType: req.body.mediaType || null,
+        videoUrl: req.body.videoUrl || null,
+        postTarget: req.body.postTarget || 'twitter',
+        createdAt: new Date().toISOString(),
+        feedbackHistory: []
     };
+    // Auto-normalize: if scheduledAt is set and status is 'scheduled', treat as 'approved'
+    // so the scheduler picks it up
+    if (item.scheduledAt && item.scheduledStatus === 'scheduled' && item.status === 'scheduled') {
+        item.status = 'approved';
+    }
     upsertContent(item);
     res.json(item);
 });
