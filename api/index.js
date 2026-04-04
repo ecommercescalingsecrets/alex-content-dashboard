@@ -385,10 +385,12 @@ async function scheduleChecker() {
         const allContent = getAllContent();
         
         // Find items that need to be posted
+        // Accept both 'approved' and 'scheduled' status — posts created via API
+        // may use either status value
         const itemsToPost = allContent.filter(item => 
             item.scheduledStatus === 'scheduled' &&
             item.scheduledAt &&
-            item.status === 'approved' &&
+            (item.status === 'approved' || item.status === 'scheduled') &&
             new Date(item.scheduledAt) <= now
         );
 
