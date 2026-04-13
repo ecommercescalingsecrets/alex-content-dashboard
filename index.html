@@ -518,10 +518,10 @@
                         </div>
 
                         <div class="actions">
-                            ${post.status === 'approved' && !post.scheduledAt ? `
+                            ${post.category !== 'reply' && post.status === 'approved' && !post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
                             ` : ''}
-                            ${post.status === 'approved' && post.scheduledAt ? `
+                            ${post.category !== 'reply' && post.status === 'approved' && post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
                             ` : ''}
                             <button class="btn btn-delete" onclick="markPosted('${post.id}')">✅ Mark Posted</button>
