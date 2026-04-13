@@ -391,6 +391,7 @@ async function scheduleChecker() {
             item.scheduledStatus === 'scheduled' &&
             item.scheduledAt &&
             (item.status === 'approved' || item.status === 'scheduled') &&
+            item.category !== 'reply' &&
             new Date(item.scheduledAt) <= now
         );
 
@@ -749,7 +750,7 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget'];
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
