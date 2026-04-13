@@ -37,6 +37,9 @@ try { db.prepare('ALTER TABLE content ADD COLUMN replyContent TEXT').run(); } ca
 try { db.prepare('ALTER TABLE content ADD COLUMN postTarget TEXT DEFAULT \'twitter\'').run(); } catch(e) {}
 try { db.prepare('ALTER TABLE content ADD COLUMN linkedinPostId TEXT').run(); } catch(e) {}
 
+// Category column (reply, swipe, breakdown, etc.)
+try { db.prepare('ALTER TABLE content ADD COLUMN category TEXT').run(); } catch(e) {}
+
 // Settings table for LinkedIn tokens etc.
 db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`);
 
@@ -44,8 +47,8 @@ const stmts = {
   getAll: db.prepare('SELECT * FROM content'),
   get: db.prepare('SELECT * FROM content WHERE id = ?'),
   upsert: db.prepare(`INSERT OR REPLACE INTO content 
-    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory, replyContent, postTarget, linkedinPostId)
-    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory, @replyContent, @postTarget, @linkedinPostId)`),
+    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory, replyContent, postTarget, linkedinPostId, category)
+    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory, @replyContent, @postTarget, @linkedinPostId, @category)`),
   delete: db.prepare('DELETE FROM content WHERE id = ?'),
   count: db.prepare('SELECT COUNT(*) as cnt FROM content'),
 };
@@ -78,6 +81,7 @@ function serialize(item) {
     replyContent: item.replyContent || null,
     postTarget: item.postTarget || 'twitter',
     linkedinPostId: item.linkedinPostId || null,
+    category: item.category || null,
   };
 }
 
