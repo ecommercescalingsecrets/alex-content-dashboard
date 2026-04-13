@@ -491,13 +491,28 @@
                             </div>
                         ` : ''}
 
+                        ${post.category === 'reply' ? (() => {
+                            const match = (post.content || '').match(/REPLY TO:\\s*(https:\\/\\/x\\.com\\/\\S+)/);
+                            const tweetUrl = match ? match[1] : null;
+                            const replyText = (post.content || '').replace(/REPLY TO:\\s*https:\\/\\/x\\.com\\/\\S+\\n?\\n?/, '').trim();
+                            return `
+                                ${tweetUrl ? `<a href="${tweetUrl}" target="_blank" rel="noopener" style="display:block;margin-bottom:1rem;padding:0.75rem 1.25rem;background:#1d9bf0;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.95rem;text-align:center;">🔗 Open Tweet to Reply To</a>` : ''}
+                                <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:1rem;margin-bottom:1rem;">
+                                    <div style="color:#64748b;font-size:0.75rem;text-transform:uppercase;margin-bottom:0.5rem;">Copy this reply:</div>
+                                    <div style="color:#e2e8f0;font-size:0.95rem;line-height:1.5;user-select:all;cursor:text;">${escapeHtml(replyText)}</div>
+                                </div>
+                            `;
+                        })() : ''}
+
+                        ${post.category !== 'reply' ? `
                         <div class="content-preview-toggle">
                             <span style="color: #64748b; font-size: 0.8rem;">Preview:</span>
                             <button class="toggle-btn active" data-view="full" onclick="toggleContentView('${post.id}', 'full')">📄 Full</button>
                             <button class="toggle-btn" data-view="twitter" onclick="toggleContentView('${post.id}', 'twitter')">🐦 Twitter</button>
                         </div>
+                        ` : ''}
 
-                        <div class="content-container">
+                        <div class="content-container" ${post.category === 'reply' ? 'style="display:none"' : ''}>
                             <div class="media-section">${!post.mediaUrl ? '' : renderMediaFiles(post)}</div>
                             <div class="post-content">${escapeHtml(post.content)}</div>
                         </div>
