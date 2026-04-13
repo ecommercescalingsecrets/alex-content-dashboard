@@ -484,7 +484,7 @@
                             <span class="badge ${post.status}">${post.status}</span>
                         </div>
 
-                        ${post.scheduledAt ? `
+                        ${post.scheduledAt && post.category !== 'reply' ? `
                             <div class="scheduled-info">
                                 <div><strong>📅 Scheduled for:</strong></div>
                                 <div class="schedule-time">${formatScheduleTime(post.scheduledAt)}</div>
