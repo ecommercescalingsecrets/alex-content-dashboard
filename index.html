@@ -458,7 +458,7 @@
             } else if (currentFilter === 'scheduled') {
                 filtered = allPosts.filter(post => post.status === 'approved' && post.scheduledAt && post.category !== 'reply');
             } else if (currentFilter === 'replies') {
-                filtered = allPosts.filter(post => post.category === 'reply');
+                filtered = allPosts.filter(post => post.category === 'reply' && post.status !== 'posted');
             } else {
                 filtered = allPosts.filter(post => post.status === currentFilter && post.category !== 'reply');
             }
