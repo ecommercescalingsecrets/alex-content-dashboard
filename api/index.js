@@ -1137,6 +1137,39 @@ app.get('/api/media/list', (req, res) => {
     res.json({ count: files.length, files });
 });
 
+// Ad DNA reports - list HTML reports in media dir
+app.get('/api/ad-dna/reports', (req, res) => {
+    try {
+        const files = fs.existsSync(MEDIA_DIR) ? fs.readdirSync(MEDIA_DIR) : [];
+        const reports = files
+            .filter(f => f.endsWith('.html') && f.includes('ad-dna'))
+            .map(f => {
+                const stat = fs.statSync(path.join(MEDIA_DIR, f));
+                // Try to extract brand name from filename: brand-name-ad-dna-YYYYMMDD.html
+                const match = f.match(/^(.+?)-ad-dna-(\d{4})(\d{2})(\d{2})\.html$/);
+                let brand = f, date = '';
+                if (match) {
+                    brand = match[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    date = `${match[2]}-${match[3]}-${match[4]}`;
+                }
+                // Try to extract scenes/duration from file content (first 2KB)
+                let scenes = '', duration = '';
+                try {
+                    const head = fs.readFileSync(path.join(MEDIA_DIR, f), 'utf8').slice(0, 3000);
+                    const scenesMatch = head.match(/(\d+)\s*scenes/);
+                    const durationMatch = head.match(/(\d+:\d+)/);
+                    if (scenesMatch) scenes = scenesMatch[1];
+                    if (durationMatch) duration = durationMatch[1];
+                } catch(e) {}
+                return { filename: f, brand, date, scenes, duration, size: stat.size };
+            })
+            .sort((a, b) => b.date.localeCompare(a.date));
+        res.json(reports);
+    } catch(e) {
+        res.json([]);
+    }
+});
+
 // Debug endpoint - test media upload to Twitter
 app.get('/api/debug/upload-test', async (req, res) => {
     try {

@@ -347,6 +347,7 @@
             <button class="filter-btn" data-filter="posted">🚀 Posted</button>
             <button class="filter-btn" data-filter="replies" style="border-color: #f472b6; color: #f472b6;">💬 Replies</button>
             <button class="filter-btn" data-filter="gethookd" style="border-color: #10b981; color: #10b981;">🔍 GetHookd Ads</button>
+            <button class="filter-btn" data-filter="addna" style="border-color: #a78bfa; color: #a78bfa;">🧬 Ad DNA</button>
         </div>
         
         <div id="content">
@@ -377,6 +378,11 @@
 
             if (filter === 'gethookd') {
                 renderGetHookdBrowser();
+                return;
+            }
+
+            if (filter === 'addna') {
+                renderAdDNA();
                 return;
             }
 
@@ -831,6 +837,43 @@
         }
         
         // ── GetHookd Ads Browser ──
+        function renderAdDNA() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div style="margin-bottom:1.5rem;">
+                    <h2 style="color:#a78bfa;margin-bottom:0.5rem;">🧬 Ad DNA Reports</h2>
+                    <p style="color:#94a3b8;font-size:0.9rem;">Click any report to view full analysis — hook, psychology, strategy, visual DNA, and scene-by-scene replication prompts.</p>
+                </div>
+                <div id="dna-reports" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1rem;">
+                    <div style="color:#64748b;">Loading reports...</div>
+                </div>
+            `;
+            fetch('/api/ad-dna/reports')
+                .then(r => r.json())
+                .then(reports => {
+                    const container = document.getElementById('dna-reports');
+                    if (!reports.length) {
+                        container.innerHTML = '<div style="color:#64748b;padding:2rem;text-align:center;">No Ad DNA reports yet. Generate one via the pipeline.</div>';
+                        return;
+                    }
+                    container.innerHTML = reports.map(r => `
+                        <a href="/media/${r.filename}" target="_blank" style="text-decoration:none;">
+                            <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:1.5rem;transition:border-color 0.2s;border-left:4px solid #a78bfa;cursor:pointer;" onmouseover="this.style.borderColor='#a78bfa'" onmouseout="this.style.borderColor='#334155'">
+                                <div style="color:#e2e8f0;font-weight:600;font-size:1.1rem;margin-bottom:0.5rem;">${r.brand || r.filename}</div>
+                                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                    ${r.duration ? `<span style="background:#a78bfa20;color:#a78bfa;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.75rem;">${r.duration}</span>` : ''}
+                                    ${r.scenes ? `<span style="background:#60a5fa20;color:#60a5fa;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.75rem;">${r.scenes} scenes</span>` : ''}
+                                    <span style="background:#f59e0b20;color:#f59e0b;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.75rem;">${r.date}</span>
+                                </div>
+                            </div>
+                        </a>
+                    `).join('');
+                })
+                .catch(() => {
+                    document.getElementById('dna-reports').innerHTML = '<div style="color:#64748b;padding:2rem;text-align:center;">Could not load reports.</div>';
+                });
+        }
+
         async function renderGetHookdBrowser() {
             const container = document.getElementById('content');
             container.innerHTML = `
