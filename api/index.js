@@ -569,6 +569,12 @@ app.post('/api/content/:id/feedback', (req, res) => {
 
 // Split long text into tweet-sized chunks at paragraph boundaries
 function splitIntoTweets(text, maxLen = 4000) {
+    // Explicit thread delimiter takes priority
+    const THREAD_DELIM = '---THREAD---';
+    if (text.includes(THREAD_DELIM)) {
+        return text.split(THREAD_DELIM).map(t => t.trim()).filter(Boolean);
+    }
+
     // If the entire text fits in one tweet, NEVER split it
     if (text.trim().length <= maxLen) {
         return [text.trim()];
@@ -606,7 +612,14 @@ async function postItemToTwitter(item) {
     const text = item.content;
     let mediaId = null;
 
-    if (item.mediaUrl) {
+    // Parse threadMedia if it's a JSON string
+    let threadMedia = item.threadMedia;
+    if (typeof threadMedia === 'string') {
+        try { threadMedia = JSON.parse(threadMedia); } catch(e) { threadMedia = null; }
+    }
+
+    // Upload single mediaUrl for non-thread posts (or thread tweet 0 fallback)
+    if (item.mediaUrl && !threadMedia) {
         try {
             const mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
             if (fs.existsSync(mediaPath)) {
@@ -620,20 +633,49 @@ async function postItemToTwitter(item) {
     }
 
     const tweets = splitIntoTweets(text);
-    console.log(`Posting ${tweets.length} tweet(s), media: ${!!mediaId}`);
+    console.log(`Posting ${tweets.length} tweet(s), media: ${!!mediaId}, threadMedia: ${!!threadMedia}`);
 
     let lastTweetId = null;
     const tweetIds = [];
 
     for (let i = 0; i < tweets.length; i++) {
+        // Upload per-tweet media if threadMedia is available
+        let tweetMediaId = null;
+        if (threadMedia && threadMedia[i]) {
+            try {
+                const mPath = path.join(MEDIA_DIR, path.basename(threadMedia[i]));
+                if (fs.existsSync(mPath)) {
+                    console.log(`Uploading thread media [${i}]: ${mPath} (${fs.statSync(mPath).size} bytes)`);
+                    tweetMediaId = await twitterClient.v1.uploadMedia(mPath);
+                    console.log(`Thread media [${i}] uploaded: ${tweetMediaId}`);
+                }
+            } catch (mErr) {
+                console.error(`Thread media [${i}] upload failed:`, mErr.message || mErr);
+            }
+        }
+
+        // Use per-tweet media, or fallback to single mediaId for first tweet
+        const currentMediaId = tweetMediaId || (i === 0 ? mediaId : null);
+
         if (i === 0) {
             const opts = { text: tweets[i] };
-            if (mediaId) opts.media = { media_ids: [mediaId] };
+            if (currentMediaId) opts.media = { media_ids: [currentMediaId] };
             const result = await twitterClient.v2.tweet(opts);
             lastTweetId = result.data.id;
         } else {
-            const result = await twitterClient.v2.reply(tweets[i], lastTweetId);
-            lastTweetId = result.data.id;
+            // For replies with media, we need to use the v2 tweet endpoint with reply params
+            if (currentMediaId) {
+                const opts = {
+                    text: tweets[i],
+                    media: { media_ids: [currentMediaId] },
+                    reply: { in_reply_to_tweet_id: lastTweetId }
+                };
+                const result = await twitterClient.v2.tweet(opts);
+                lastTweetId = result.data.id;
+            } else {
+                const result = await twitterClient.v2.reply(tweets[i], lastTweetId);
+                lastTweetId = result.data.id;
+            }
         }
         tweetIds.push(lastTweetId);
     }
@@ -730,6 +772,7 @@ app.post('/api/content', (req, res) => {
         mediaUrl: req.body.mediaUrl || null,
         mediaType: req.body.mediaType || null,
         videoUrl: req.body.videoUrl || null,
+        threadMedia: req.body.threadMedia || null,
         postTarget: req.body.postTarget || 'twitter',
         createdAt: new Date().toISOString(),
         feedbackHistory: []
@@ -763,7 +806,7 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category'];
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category', 'threadMedia'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
