@@ -348,6 +348,8 @@
             <button class="filter-btn" data-filter="replies" style="border-color: #f472b6; color: #f472b6;">💬 Replies</button>
             <button class="filter-btn" data-filter="gethookd" style="border-color: #10b981; color: #10b981;">🔍 GetHookd Ads</button>
             <button class="filter-btn" data-filter="addna" style="border-color: #a78bfa; color: #a78bfa;">🧬 Ad DNA</button>
+            <button class="filter-btn" data-filter="zednilm1" style="border-color: #38bdf8; color: #38bdf8;">🐦 ZedNilm1</button>
+            <button class="filter-btn" data-filter="henrycrochemore" style="border-color: #fb923c; color: #fb923c;">🐦 HenryCrochemore</button>
         </div>
         
         <div id="content">
@@ -465,6 +467,8 @@
                 filtered = allPosts.filter(post => post.status === 'approved' && post.scheduledAt && post.category !== 'reply');
             } else if (currentFilter === 'replies') {
                 filtered = allPosts.filter(post => post.category === 'reply' && post.status !== 'posted');
+            } else if (currentFilter === 'zednilm1' || currentFilter === 'henrycrochemore') {
+                filtered = allPosts.filter(post => post.category === currentFilter && post.status !== 'posted');
             } else {
                 filtered = allPosts.filter(post => post.status === currentFilter && post.category !== 'reply');
             }
