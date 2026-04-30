@@ -410,12 +410,12 @@ async function scheduleChecker() {
         // MIN GAP RULE: Don't post if another post was posted within the last 60 minutes
         const recentlyPosted = allContent.filter(item => 
             item.status === 'posted' && item.postedAt &&
-            (now - new Date(item.postedAt)) < 60 * 60 * 1000
+            (now - new Date(item.postedAt)) < 5 * 60 * 1000
         );
         if (recentlyPosted.length > 0 && itemsToPost.length > 0) {
             const lastPosted = recentlyPosted.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt))[0];
             const minSince = Math.round((now - new Date(lastPosted.postedAt)) / 60000);
-            console.log(`⏳ Last post was ${minSince}min ago (${lastPosted.title?.slice(0,40)}). Waiting for 60min gap.`);
+            console.log(`⏳ Last post was ${minSince}min ago (${lastPosted.title?.slice(0,40)}). Waiting for 5min gap.`);
             return;
         }
 
