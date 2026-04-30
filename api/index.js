@@ -757,8 +757,51 @@ app.post('/api/content/:id/post', async (req, res) => {
     }
 });
 
+// Helper: find nearest open slot (no other post within 30 min)
+function findOpenSlot(requestedAt, excludeId) {
+    const allContent = getAllContent();
+    const requested = new Date(requestedAt);
+    const scheduled = allContent.filter(p =>
+        p.scheduledAt &&
+        p.id !== excludeId &&
+        (p.scheduledStatus === 'scheduled' || p.status === 'posted') &&
+        p.category !== 'reply'
+    );
+
+    // Check if requested slot is clear (30 min buffer)
+    const hasConflict = scheduled.some(p => {
+        const diff = Math.abs(new Date(p.scheduledAt) - requested) / 60000;
+        return diff < 30;
+    });
+
+    if (!hasConflict) return requestedAt;
+
+    // Find nearest open slot by shifting forward in 30-min increments (max 6 hours)
+    for (let offset = 30; offset <= 360; offset += 30) {
+        const candidate = new Date(requested.getTime() + offset * 60000);
+        const candidateClear = !scheduled.some(p => {
+            const diff = Math.abs(new Date(p.scheduledAt) - candidate) / 60000;
+            return diff < 30;
+        });
+        if (candidateClear) {
+            console.log(`📅 Schedule conflict: moved ${requestedAt} → ${candidate.toISOString()} (+${offset}min)`);
+            return candidate.toISOString();
+        }
+    }
+    // Fallback: use original (shouldn't happen)
+    console.log(`⚠️ No open slot found within 6h of ${requestedAt}, using original`);
+    return requestedAt;
+}
+
 app.post('/api/content', (req, res) => {
     const id = 'post-' + Date.now();
+    let scheduledAt = req.body.scheduledAt || null;
+
+    // Auto-resolve scheduling conflicts (30 min minimum gap)
+    if (scheduledAt && req.body.scheduledStatus === 'scheduled') {
+        scheduledAt = findOpenSlot(scheduledAt, id);
+    }
+
     const item = {
         id,
         title: req.body.title || null,
@@ -766,7 +809,7 @@ app.post('/api/content', (req, res) => {
         target: req.body.target || 'Solo ecommerce founders',
         status: req.body.status || 'review',
         scheduledStatus: req.body.scheduledStatus || null,
-        scheduledAt: req.body.scheduledAt || null,
+        scheduledAt,
         category: req.body.category || null,
         contentType: req.body.contentType || null,
         mediaUrl: req.body.mediaUrl || null,
@@ -809,6 +852,11 @@ app.put('/api/content/:id', (req, res) => {
     const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category', 'threadMedia'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
+    }
+
+    // Auto-resolve scheduling conflicts on update too
+    if (req.body.scheduledAt && item.scheduledStatus === 'scheduled') {
+        item.scheduledAt = findOpenSlot(item.scheduledAt, item.id);
     }
     
     upsertContent(item);
