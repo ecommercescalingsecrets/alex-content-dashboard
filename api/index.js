@@ -387,11 +387,17 @@ async function scheduleChecker() {
         // Find items that need to be posted
         // Accept both 'approved' and 'scheduled' status — posts created via API
         // may use either status value
-        const itemsToPost = allContent.filter(item => 
-            item.scheduledStatus === 'scheduled' &&
+        // Accept items whose scheduledStatus is 'scheduled' OR null/undefined —
+        // some create/update paths don't set scheduledStatus, which was causing
+        // posts with status='scheduled' + null scheduledStatus to be silently
+        // skipped forever. Still exclude terminal states (posted/posting/
+        // blocked/failed) so we don't double-post or retry quarantined items.
+        const TERMINAL_SCHED_STATES = new Set(['posted', 'posting', 'blocked', 'failed']);
+        const itemsToPost = allContent.filter(item =>
             item.scheduledAt &&
             (item.status === 'approved' || item.status === 'scheduled') &&
             item.category !== 'reply' &&
+            !TERMINAL_SCHED_STATES.has(item.scheduledStatus) &&
             new Date(item.scheduledAt) <= now
         );
 
