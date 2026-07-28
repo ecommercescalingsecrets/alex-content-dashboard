@@ -533,10 +533,10 @@
                         </div>
 
                         <div class="actions">
-                            ${post.category !== 'reply' && post.status === 'approved' && !post.scheduledAt ? `
+                            ${post.category !== 'reply' && !['zednilm1','henrycrochemore','edwardiavinel','tobiaraviglie','jackolivieri','marksaint','steveadsguy','matthewsilver','wapilaura','raffaellothe2nd','tommyguera','enexoo','emyinflorence','nicoleads1','perrycreatives','timsayer','krydecom','jesselancaster'].includes(post.category) && post.status === 'approved' && !post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now</button>
                             ` : ''}
-                            ${post.category !== 'reply' && post.status === 'approved' && post.scheduledAt ? `
+                            ${post.category !== 'reply' && !['zednilm1','henrycrochemore','edwardiavinel','tobiaraviglie','jackolivieri','marksaint','steveadsguy','matthewsilver','wapilaura','raffaellothe2nd','tommyguera','enexoo','emyinflorence','nicoleads1','perrycreatives','timsayer','krydecom','jesselancaster'].includes(post.category) && post.status === 'approved' && post.scheduledAt ? `
                                 <button class="btn btn-post-now" onclick="postNow('${post.id}')">🚀 Post Now (Override Schedule)</button>
                             ` : ''}
                             <button class="btn btn-delete" onclick="markPosted('${post.id}')">✅ Mark Posted</button>
