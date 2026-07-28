@@ -540,17 +540,17 @@
                             <div class="post-content">${escapeHtml(post.content)}</div>
                             ${post.adLink ? `
                             <div class="ad-link-block" style="margin-top:1rem;padding:0.85rem;background:#0f172a;border:1px solid #1e40af;border-radius:6px;">
-                                <div style="font-size:0.75rem;color:#93c5fd;font-weight:600;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">📥 Media Source (download & attach native to tweet)</div>
-                                <a href="${post.adLink}" target="_blank" style="color:#60a5fa;font-size:0.8rem;word-break:break-all;text-decoration:none;">${post.adLink}</a>
-                                <button onclick="navigator.clipboard.writeText('${post.adLink}');this.textContent='✓ copied';setTimeout(()=>this.textContent='📋 copy link',1500)" style="margin-left:0.5rem;padding:0.2rem 0.6rem;background:#1e40af;color:#fff;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;">📋 copy link</button>
+                                <div style="font-size:0.75rem;color:#93c5fd;font-weight:600;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">🔗 Ad Link — Click to download media, then paste in first reply (30-90s after main tweet)</div>
+                                <a href="${post.adLink}" target="_blank" style="color:#60a5fa;font-size:0.8rem;word-break:break-all;text-decoration:none;display:block;margin-bottom:0.5rem;">${post.adLink}</a>
+                                ${post.replyContent ? `
+                                <div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1e293b;">
+                                    <div style="font-size:0.7rem;color:#6ee7b7;margin-bottom:0.25rem;">First reply text:</div>
+                                    <div style="color:#e2e8f0;font-size:0.85rem;margin-bottom:0.4rem;font-style:italic;">${escapeHtml(post.replyContent)}</div>
+                                </div>
+                                ` : ''}
+                                <button onclick="navigator.clipboard.writeText(this.dataset.txt);this.textContent='✓ copied reply text';setTimeout(()=>this.textContent='📋 copy reply text',1500)" data-txt="${escapeHtml(post.replyContent || post.adLink)}" style="padding:0.25rem 0.7rem;background:#059669;color:#fff;border:none;border-radius:4px;font-size:0.75rem;cursor:pointer;">📋 copy reply text</button>
+                                <button onclick="navigator.clipboard.writeText(this.dataset.url);this.textContent='✓ copied url';setTimeout(()=>this.textContent='📋 copy url only',1500)" data-url="${post.adLink}" style="margin-left:0.4rem;padding:0.25rem 0.7rem;background:#1e40af;color:#fff;border:none;border-radius:4px;font-size:0.75rem;cursor:pointer;">📋 copy url only</button>
                             </div>
-                            ${post.replyContent ? `
-                            <div class="first-reply-block" style="margin-top:0.5rem;padding:0.85rem;background:#0f172a;border:1px solid #059669;border-radius:6px;">
-                                <div style="font-size:0.75rem;color:#6ee7b7;font-weight:600;margin-bottom:0.35rem;text-transform:uppercase;letter-spacing:0.05em;">💬 First Reply (post 30-90s after main tweet)</div>
-                                <div style="color:#e2e8f0;font-size:0.85rem;margin-bottom:0.4rem;">${escapeHtml(post.replyContent)}</div>
-                                <button onclick="navigator.clipboard.writeText(${JSON.stringify(post.replyContent)});this.textContent='✓ copied';setTimeout(()=>this.textContent='📋 copy reply',1500)" style="padding:0.2rem 0.6rem;background:#059669;color:#fff;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;">📋 copy reply</button>
-                            </div>
-                            ` : ''}
                             ` : ''}
                         </div>
 
