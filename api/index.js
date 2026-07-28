@@ -818,6 +818,7 @@ app.post('/api/content', (req, res) => {
         scheduledAt,
         category: req.body.category || null,
         contentType: req.body.contentType || null,
+        adLink: req.body.adLink || null,
         mediaUrl: req.body.mediaUrl || null,
         mediaType: req.body.mediaType || null,
         videoUrl: req.body.videoUrl || null,
@@ -855,7 +856,7 @@ app.put('/api/content/:id', (req, res) => {
     const item = getContent(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     
-    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category', 'threadMedia'];
+    const fields = ['content', 'title', 'mediaUrl', 'videoUrl', 'mediaType', 'status', 'target', 'replyContent', 'scheduledAt', 'scheduledStatus', 'postTarget', 'category', 'threadMedia', 'adLink'];
     for (const f of fields) {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
