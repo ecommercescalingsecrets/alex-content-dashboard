@@ -496,6 +496,14 @@
                 return;
             }
             
+            // Sort chronologically by scheduledAt ASC (earliest first), unscheduled at bottom
+            filtered.sort((a, b) => {
+                if (!a.scheduledAt && !b.scheduledAt) return 0;
+                if (!a.scheduledAt) return 1;
+                if (!b.scheduledAt) return -1;
+                return new Date(a.scheduledAt) - new Date(b.scheduledAt);
+            });
+
             const html = filtered.map(post => {
                 const tweets = splitIntoTweets(post.content);
                 const isThreaded = tweets.length > 1;
