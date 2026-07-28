@@ -43,6 +43,9 @@ try { db.prepare('ALTER TABLE content ADD COLUMN category TEXT').run(); } catch(
 // Thread media array (per-tweet media for thread posts)
 try { db.prepare('ALTER TABLE content ADD COLUMN threadMedia TEXT').run(); } catch(e) {}
 
+// Ad link (permanent share URL for Mitch to download media + paste in first reply)
+try { db.prepare('ALTER TABLE content ADD COLUMN adLink TEXT').run(); } catch(e) {}
+
 // Settings table for LinkedIn tokens etc.
 db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`);
 
@@ -50,8 +53,8 @@ const stmts = {
   getAll: db.prepare('SELECT * FROM content'),
   get: db.prepare('SELECT * FROM content WHERE id = ?'),
   upsert: db.prepare(`INSERT OR REPLACE INTO content 
-    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory, replyContent, postTarget, linkedinPostId, category, threadMedia)
-    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory, @replyContent, @postTarget, @linkedinPostId, @category, @threadMedia)`),
+    (id, title, mediaUrl, videoUrl, mediaType, content, status, target, createdAt, approvedAt, scheduledAt, scheduledStatus, tweetId, tweetIds, postedAt, feedbackHistory, replyContent, postTarget, linkedinPostId, category, threadMedia, adLink)
+    VALUES (@id, @title, @mediaUrl, @videoUrl, @mediaType, @content, @status, @target, @createdAt, @approvedAt, @scheduledAt, @scheduledStatus, @tweetId, @tweetIds, @postedAt, @feedbackHistory, @replyContent, @postTarget, @linkedinPostId, @category, @threadMedia, @adLink)`),
   delete: db.prepare('DELETE FROM content WHERE id = ?'),
   count: db.prepare('SELECT COUNT(*) as cnt FROM content'),
 };
@@ -87,6 +90,7 @@ function serialize(item) {
     linkedinPostId: item.linkedinPostId || null,
     category: item.category || null,
     threadMedia: item.threadMedia ? JSON.stringify(item.threadMedia) : null,
+    adLink: item.adLink || null,
   };
 }
 
