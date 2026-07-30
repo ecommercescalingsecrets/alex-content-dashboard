@@ -393,13 +393,33 @@ async function scheduleChecker() {
         // skipped forever. Still exclude terminal states (posted/posting/
         // blocked/failed) so we don't double-post or retry quarantined items.
         const TERMINAL_SCHED_STATES = new Set(['posted', 'posting', 'blocked', 'failed']);
-        const itemsToPost = allContent.filter(item =>
+        const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+        const candidates = allContent.filter(item =>
             item.scheduledAt &&
             (item.status === 'approved' || item.status === 'scheduled') &&
             item.category !== 'reply' &&
             !TERMINAL_SCHED_STATES.has(item.scheduledStatus) &&
             new Date(item.scheduledAt) <= now
         );
+
+        // STALE GUARD: quarantine ancient scheduled items so they don't ambush
+        // the queue and cascade through the 5-min gap rule, delaying today's
+        // legitimately-timed posts. Anything scheduled >6h ago goes to review.
+        const itemsToPost = [];
+        for (const item of candidates) {
+            const ageMs = now - new Date(item.scheduledAt);
+            if (ageMs > STALE_MS) {
+                const ageH = Math.round(ageMs / 3600000);
+                console.log(`🗄️  STALE: ${item.title?.slice(0,40)} scheduled ${ageH}h ago — moving to review.`);
+                item.scheduledStatus = 'blocked';
+                item.status = 'review';
+                item.feedback = (item.feedback || '') + `\n[AUTO] Quarantined: scheduledAt was ${ageH}h in the past. Reschedule to re-enable.`;
+                upsertContent(item);
+                continue;
+            }
+            itemsToPost.push(item);
+        }
 
         if (itemsToPost.length > 0) {
             console.log(`⏰ Found ${itemsToPost.length} scheduled item(s) to post at ${now.toISOString()}`);
