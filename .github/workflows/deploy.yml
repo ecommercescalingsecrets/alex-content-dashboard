@@ -1,0 +1,84 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci || npm install
+
+      - name: Validate JS syntax
+        run: node scripts/validate.js
+
+      - name: Trigger Railway deploy
+        id: trigger
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENV_ID: ${{ secrets.RAILWAY_ENV_ID }}
+        run: |
+          set -e
+          SHA=$(git rev-parse HEAD)
+          echo "SHA=$SHA"
+
+          RESULT=$(curl -sS -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceDeployV2(serviceId: \\\"$RAILWAY_SERVICE_ID\\\", environmentId: \\\"$RAILWAY_ENV_ID\\\", commitSha: \\\"$SHA\\\") }\"}")
+          echo "Response: $RESULT"
+          DEPLOY_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('serviceInstanceDeployV2') or 'FAILED')")
+          if [ "$DEPLOY_ID" = "FAILED" ]; then
+            echo "🚨 Deploy trigger failed"; exit 1
+          fi
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENV_ID: ${{ secrets.RAILWAY_ENV_ID }}
+        run: |
+          for i in $(seq 1 60); do
+            sleep 10
+            STATUS=$(curl -sS -X POST https://backboard.railway.com/graphql/v2 \
+              -H "Authorization: Bearer $RAILWAY_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"{deployments(first:1,input:{serviceId:\\\"$RAILWAY_SERVICE_ID\\\",environmentId:\\\"$RAILWAY_ENV_ID\\\"}){edges{node{status}}}}\"}" \
+              | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['deployments']['edges'][0]['node']['status'])")
+            echo "[$((i*10))s] $STATUS"
+            case "$STATUS" in
+              SUCCESS) echo "✅ Deployed"; exit 0 ;;
+              FAILED|CRASHED) echo "🚨 Deploy $STATUS"; exit 1 ;;
+            esac
+          done
+          echo "⏰ Timed out"; exit 1
+
+      - name: Health check
+        run: |
+          sleep 5
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://web-production-c72a.up.railway.app/api/health)
+          [ "$HTTP" = "200" ] || { echo "🚨 Health check HTTP $HTTP"; exit 1; }
+          echo "✅ Health OK"
+
+      - name: Smoke test
+        env:
+          BASE_URL: https://web-production-c72a.up.railway.app
+        run: node scripts/smoke.js
