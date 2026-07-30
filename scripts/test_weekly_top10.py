@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Test version of weekly top 10 supplement brands script
@@ -10,7 +11,7 @@ from collections import defaultdict
 
 # API Configuration  
 GETHOOKD_BASE_URL = "https://app.gethookd.ai/api/v1"
-GETHOOKD_TOKEN = "gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0"
+GETHOOKD_TOKEN = os.environ.get('GETHOOKD_API_KEY') or (_ for _ in ()).throw(RuntimeError('GETHOOKD_API_KEY not set'))
 
 # Reduced search terms for testing
 SEARCH_TERMS = ["supplements", "protein", "vitamins"]

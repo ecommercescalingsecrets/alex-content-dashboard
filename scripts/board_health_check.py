@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Board Health Check — PERMANENT FIX
@@ -13,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 
 DASHBOARD = "https://web-production-c72a.up.railway.app"
 GETHOOKD = "https://app.gethookd.ai/api/v1"
-GH_TOKEN = "gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0"
+GH_TOKEN = os.environ.get('GETHOOKD_API_KEY') or (_ for _ in ()).throw(RuntimeError('GETHOOKD_API_KEY not set'))
 GH = {'Authorization': f'Bearer {GH_TOKEN}'}
 MIN_ADS = 100
 

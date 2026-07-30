@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Twitter Reply Guy Automation for @gethookdai
@@ -28,7 +29,7 @@ TWITTER_CONFIG = {
 }
 
 GETHOOKD_CONFIG = {
-    'api_key': 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0',
+    'api_key': os.environ.get('GETHOOKD_API_KEY') or (_ for _ in ()).throw(RuntimeError('GETHOOKD_API_KEY not set')),
     'base_url': 'https://app.gethookd.ai/api/v1'
 }
 

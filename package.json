@@ -4,7 +4,10 @@
   "description": "Tactical content dashboard for @FedotOff90",
   "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.js"
+    "start": "node api/index.js",
+    "validate": "node scripts/validate.js",
+    "smoke": "node scripts/smoke.js",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
@@ -12,5 +15,8 @@
     "multer": "^2.1.1",
     "node-fetch": "^2.6.7",
     "twitter-api-v2": "^1.15.0"
+  },
+  "engines": {
+    "node": ">=20 <22"
   }
 }

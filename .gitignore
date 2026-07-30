@@ -1,2 +1,15 @@
 node_modules/
 data/
+
+# Secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Editor / OS
+.DS_Store
+.vscode/
+*.log
+_tmp_check_*.js

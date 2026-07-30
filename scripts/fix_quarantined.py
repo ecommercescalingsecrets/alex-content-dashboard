@@ -1,10 +1,11 @@
+import os
 #!/usr/bin/env python3
 """Fix quarantined posts by adding Gethookd share URLs."""
 import requests, json, re, time
 
 CONTENT_API = "https://web-production-c72a.up.railway.app/api/content"
 GETHOOKD_BASE_URL = "https://app.gethookd.ai/api/v1"
-GETHOOKD_TOKEN = "gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0"
+GETHOOKD_TOKEN = os.environ.get('GETHOOKD_API_KEY') or (_ for _ in ()).throw(RuntimeError('GETHOOKD_API_KEY not set'))
 HEADERS = {"Authorization": f"Bearer {GETHOOKD_TOKEN}"}
 
 def has_emoji(text):
