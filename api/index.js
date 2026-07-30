@@ -785,14 +785,31 @@ app.post('/api/content/:id/post', async (req, res) => {
 });
 
 // Helper: find nearest open slot (no other post within 30 min)
-function findOpenSlot(requestedAt, excludeId) {
+// SCOPE-AWARE (2026-07-30): @gethookdai main feed (category="" or null) and
+// ghost accounts (all other categories) live on SEPARATE calendars and must NOT
+// block each other. Replies are always ignored (they don't occupy timeline slots).
+// Two posts only collide if they share the same "scheduling scope":
+//   - scope "gethookdai-main" = (category=="" or category==null) AND category!="reply"
+//   - scope "<ghost-cat>"     = any other category value (each ghost gets its own scope)
+function schedulingScope(post) {
+    const cat = post.category;
+    if (cat === 'reply') return null; // replies never block
+    if (!cat) return 'gethookdai-main'; // "" or null → @gethookdai main feed
+    return `ghost:${cat}`;
+}
+
+function findOpenSlot(requestedAt, excludeId, incomingCategory) {
     const allContent = getAllContent();
     const requested = new Date(requestedAt);
+    const incomingScope = schedulingScope({ category: incomingCategory });
+    // If incoming is a reply, no scheduling conflict check needed
+    if (incomingScope === null) return requestedAt;
+
     const scheduled = allContent.filter(p =>
         p.scheduledAt &&
         p.id !== excludeId &&
         (p.scheduledStatus === 'scheduled' || p.status === 'posted') &&
-        p.category !== 'reply'
+        schedulingScope(p) === incomingScope  // ONLY same-scope posts can collide
     );
 
     // Check if requested slot is clear (30 min buffer)
@@ -811,12 +828,12 @@ function findOpenSlot(requestedAt, excludeId) {
             return diff < 30;
         });
         if (candidateClear) {
-            console.log(`📅 Schedule conflict: moved ${requestedAt} → ${candidate.toISOString()} (+${offset}min)`);
+            console.log(`📅 Schedule conflict (scope=${incomingScope}): moved ${requestedAt} → ${candidate.toISOString()} (+${offset}min)`);
             return candidate.toISOString();
         }
     }
     // Fallback: use original (shouldn't happen)
-    console.log(`⚠️ No open slot found within 6h of ${requestedAt}, using original`);
+    console.log(`⚠️ No open slot found within 6h of ${requestedAt} (scope=${incomingScope}), using original`);
     return requestedAt;
 }
 
@@ -824,9 +841,9 @@ app.post('/api/content', (req, res) => {
     const id = 'post-' + Date.now();
     let scheduledAt = req.body.scheduledAt || null;
 
-    // Auto-resolve scheduling conflicts (30 min minimum gap)
+    // Auto-resolve scheduling conflicts (30 min minimum gap, scope-aware)
     if (scheduledAt && req.body.scheduledStatus === 'scheduled') {
-        scheduledAt = findOpenSlot(scheduledAt, id);
+        scheduledAt = findOpenSlot(scheduledAt, id, req.body.category);
     }
 
     const item = {
@@ -882,9 +899,9 @@ app.put('/api/content/:id', (req, res) => {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
 
-    // Auto-resolve scheduling conflicts on update too
+    // Auto-resolve scheduling conflicts on update too (scope-aware — pass merged category)
     if (req.body.scheduledAt && item.scheduledStatus === 'scheduled') {
-        item.scheduledAt = findOpenSlot(item.scheduledAt, item.id);
+        item.scheduledAt = findOpenSlot(item.scheduledAt, item.id, item.category);
     }
     
     upsertContent(item);
