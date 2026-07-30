@@ -237,8 +237,8 @@ async function postToLinkedIn(content, mediaUrl) {
 }
 
 // GetHookd API configuration
-const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY;
-if (!GETHOOKD_API_KEY) console.warn('⚠️  GETHOOKD_API_KEY not set — Gethookd features will fail');
+const GETHOOKD_API_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
+if (!process.env.GETHOOKD_API_KEY) console.warn('⚠️  GETHOOKD_API_KEY not set on Railway — using inlined fallback. Rotate + set in Railway UI, then remove fallback.');
 const GETHOOKD_BASE_URL = 'https://app.gethookd.ai/api/v1';
 const swipeBuilder = new SwipeFileBuilder();
 
@@ -1388,7 +1388,7 @@ app.get('/api/validate-media', (req, res) => {
 // Auto-repair: re-download broken media from Gethookd API
 app.post('/api/media/auto-repair', async (req, res) => {
     const GETHOOKD_API = 'https://api.gethookd.ai/api/v1';
-    const GETHOOKD_KEY = process.env.GETHOOKD_API_KEY;
+    const GETHOOKD_KEY = process.env.GETHOOKD_API_KEY || 'gh_3ZgE6JQdC0xMcHYvO8JprHdfWE83jjuhHSv8kMWp9184aba0';
     const allContent = getAllContent();
     const results = { repaired: 0, failed: 0, skipped: 0, details: [] };
     
