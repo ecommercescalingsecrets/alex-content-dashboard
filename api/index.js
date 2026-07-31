@@ -899,6 +899,14 @@ app.put('/api/content/:id', (req, res) => {
         if (req.body[f] !== undefined) item[f] = req.body[f];
     }
 
+    // Auto-stamp postedAt when status flips to 'posted' if caller didn't set one.
+    // Fix locked 2026-07-31: Mitch's VA UI flips status without postedAt on Zed/Henry,
+    // breaking per-day analytics for 400+ ghost posts. Any PUT that lands with status=posted
+    // but no postedAt now gets stamped server-side.
+    if (item.status === 'posted' && !item.postedAt) {
+        item.postedAt = new Date().toISOString();
+    }
+
     // Auto-resolve scheduling conflicts on update too (scope-aware — pass merged category)
     if (req.body.scheduledAt && item.scheduledStatus === 'scheduled') {
         item.scheduledAt = findOpenSlot(item.scheduledAt, item.id, item.category);
