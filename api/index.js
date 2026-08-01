@@ -396,10 +396,28 @@ async function scheduleChecker() {
         const TERMINAL_SCHED_STATES = new Set(['posted', 'posting', 'blocked', 'failed']);
         const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
 
+        // GHOST FLEET GUARD (Aug 1 2026): the auto-poster only has @gethookdai
+        // credentials. Any ghost-fleet category post that reaches the scheduler
+        // would silently post to @gethookdai as pollution. Ghost accounts are
+        // manually posted by Mitch from the review queue, so hard-skip them
+        // here even if they somehow land in status=approved/scheduled.
+        // Audit Aug 1 2026 confirmed 23 pollution posts in the prior 3d from
+        // this exact path. Do NOT remove without also gating postItemToTwitter
+        // on per-category token routing.
+        const GHOST_FLEET_CATEGORIES = new Set([
+            'zednilm1', 'henrycrochemore', 'tobiaraviglie', 'raffaellothe2nd',
+            'tommyguera', 'emyinflorence', 'steveadsguy',
+            // Also block legacy dead slugs in case old approved rows exist
+            'edwardiavinel', 'jesselancaster', 'matthewsilver', 'wapilaura',
+            'krydecom', 'marksaint', 'nicoleads1', 'perrycreatives',
+            'timsayer', 'jackolivieri', 'enexoo'
+        ]);
+
         const candidates = allContent.filter(item =>
             item.scheduledAt &&
             (item.status === 'approved' || item.status === 'scheduled') &&
             item.category !== 'reply' &&
+            !GHOST_FLEET_CATEGORIES.has((item.category || '').toLowerCase()) &&
             !TERMINAL_SCHED_STATES.has(item.scheduledStatus) &&
             new Date(item.scheduledAt) <= now
         );
