@@ -49,6 +49,46 @@ try { db.prepare('ALTER TABLE content ADD COLUMN adLink TEXT').run(); } catch(e)
 // Settings table for LinkedIn tokens etc.
 db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`);
 
+// Follow targets table (Twitter handles for Mitch to follow)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS follow_targets (
+    handle TEXT PRIMARY KEY,
+    profile_url TEXT NOT NULL,
+    added_at INTEGER,
+    followed_at INTEGER
+  )
+`);
+
+const followTargetStmts = {
+  listPending: db.prepare('SELECT handle, profile_url, added_at FROM follow_targets WHERE followed_at IS NULL ORDER BY added_at ASC'),
+  markFollowed: db.prepare('UPDATE follow_targets SET followed_at = ? WHERE handle = ?'),
+  bulkInsert: db.prepare('INSERT OR IGNORE INTO follow_targets (handle, profile_url, added_at, followed_at) VALUES (?, ?, ?, NULL)'),
+};
+
+function listPendingFollowTargets() {
+  return followTargetStmts.listPending.all();
+}
+
+function markFollowTargetFollowed(handle) {
+  const info = followTargetStmts.markFollowed.run(Date.now(), handle);
+  return info.changes > 0;
+}
+
+function bulkInsertFollowTargets(targets) {
+  const now = Date.now();
+  const insertMany = db.transaction((items) => {
+    let inserted = 0;
+    for (const t of items) {
+      if (!t || !t.handle || !t.profile_url) continue;
+      const h = String(t.handle).replace(/^@/, '').toLowerCase();
+      const info = followTargetStmts.bulkInsert.run(h, t.profile_url, now);
+      if (info.changes > 0) inserted++;
+    }
+    return inserted;
+  });
+  return insertMany(targets || []);
+}
+
 const stmts = {
   getAll: db.prepare('SELECT * FROM content'),
   get: db.prepare('SELECT * FROM content WHERE id = ?'),
@@ -125,4 +165,4 @@ function setSetting(key, value) {
   db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)').run(key, value, new Date().toISOString());
 }
 
-module.exports = { getAllContent, getContent, upsertContent, deleteContent, getCount, db, getSetting, setSetting };
+module.exports = { getAllContent, getContent, upsertContent, deleteContent, getCount, db, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets };

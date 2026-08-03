@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { TwitterApi } = require('twitter-api-v2');
-const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting } = require('./db');
+const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets } = require('./db');
 const SwipeFileBuilder = require('../swipe-file-builder');
 
 // Auto-seed on first boot if DB is empty
@@ -1208,6 +1208,54 @@ app.post('/api/content/secondary', async (req, res) => {
 app.listen(port, () => {
     console.log(`Dashboard running on port ${port}`);
     console.log(`📦 Database has ${getCount()} posts`);
+
+    // Seed follow_targets with initial test handles (INSERT OR IGNORE = safe to re-run)
+    try {
+        const seedHandles = [
+            'ecomchasedimond', 'taylorholiday', 'moiz_ali', 'web_smith',
+            'preston_rutherford', 'seangraz', 'nick_shackelford',
+            'andrewfaris', 'tobi', 'harleyf'
+        ];
+        const seedTargets = seedHandles.map(h => ({
+            handle: h,
+            profile_url: `https://twitter.com/${h}`
+        }));
+        const inserted = bulkInsertFollowTargets(seedTargets);
+        if (inserted > 0) console.log(`🎯 Seeded ${inserted} follow_targets`);
+    } catch (e) {
+        console.warn('follow_targets seed skipped:', e.message);
+    }
+});
+
+// ===== Follow Targets API =====
+app.get('/api/follow-targets', (req, res) => {
+    try {
+        res.json(listPendingFollowTargets());
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/follow-targets/:handle/followed', (req, res) => {
+    try {
+        const handle = String(req.params.handle || '').replace(/^@/, '').toLowerCase();
+        const ok = markFollowTargetFollowed(handle);
+        if (!ok) return res.status(404).json({ error: 'handle not found' });
+        res.json({ ok: true, handle });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/follow-targets/bulk', (req, res) => {
+    try {
+        const targets = (req.body && req.body.targets) || [];
+        if (!Array.isArray(targets)) return res.status(400).json({ error: 'targets must be an array' });
+        const inserted = bulkInsertFollowTargets(targets);
+        res.json({ inserted });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Migration endpoint - update CTA text in all posts

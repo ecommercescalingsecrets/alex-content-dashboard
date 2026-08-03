@@ -309,6 +309,46 @@
             margin-bottom: 0.5rem; 
         }
         .post-meta .badge { margin-left: auto; }
+        /* Follow Targets tab */
+        .follow-targets-header {
+            color: #f1f5f9;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 1rem 0 1.5rem 0;
+        }
+        .follow-targets-header .count {
+            color: #94a3b8;
+            font-weight: 400;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+        }
+        .follow-target-row {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .handle-link {
+            color: #60a5fa;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .handle-link:hover { text-decoration: underline; }
+        .followed-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .followed-btn:hover { background: #047857; }
     </style>
 </head>
 <body>
@@ -366,11 +406,13 @@
             <button class="filter-btn" data-filter="timsayer" style="border-color: #e879f9; color: #e879f9;">🐦 timsayer (AF)</button>
             <button class="filter-btn" data-filter="krydecom" style="border-color: #facc15; color: #facc15;">🐦 krydecom (GH)</button>
             <button class="filter-btn" data-filter="jesselancaster" style="border-color: #4ade80; color: #4ade80;">🐦 jesselancaster (AF)</button>
+            <button class="filter-btn" data-filter="follow-targets" style="border-color: #10b981; color: #10b981;">🎯 Follow Targets</button>
         </div>
         
         <div id="content">
             <div class="loading">⏳ Loading content...</div>
         </div>
+        <div id="follow-targets-view" style="display:none;"></div>
     </div>
 
     <script>
@@ -394,6 +436,19 @@
                 btn.classList.toggle('active', btn.dataset.filter === filter);
             });
 
+            // Toggle follow-targets view vs normal content view
+            const contentEl = document.getElementById('content');
+            const followEl = document.getElementById('follow-targets-view');
+            if (filter === 'follow-targets') {
+                if (contentEl) contentEl.style.display = 'none';
+                if (followEl) followEl.style.display = '';
+                renderFollowTargets();
+                return;
+            } else {
+                if (contentEl) contentEl.style.display = '';
+                if (followEl) followEl.style.display = 'none';
+            }
+
             if (filter === 'gethookd') {
                 renderGetHookdBrowser();
                 return;
@@ -405,6 +460,63 @@
             }
 
             renderContent();
+        }
+
+        async function renderFollowTargets() {
+            const view = document.getElementById('follow-targets-view');
+            if (!view) return;
+            view.innerHTML = '<div class="loading">⏳ Loading follow targets...</div>';
+            try {
+                const resp = await fetch('/api/follow-targets');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const targets = await resp.json();
+                const header = `<div class="follow-targets-header">Follow Targets — @gethookdai<span class="count">(${targets.length} remaining)</span></div>`;
+                if (!targets.length) {
+                    view.innerHTML = header + '<div style="color:#94a3b8;padding:1rem;">🎉 All caught up — no pending follows.</div>';
+                    return;
+                }
+                const rows = targets.map(t => {
+                    const handle = String(t.handle).replace(/"/g, '&quot;');
+                    const url = String(t.profile_url).replace(/"/g, '&quot;');
+                    return `<div class="follow-target-row" data-handle="${handle}">
+                        <a href="${url}" target="_blank" class="handle-link">@${handle}</a>
+                        <button class="followed-btn" data-handle="${handle}">Followed ✓</button>
+                    </div>`;
+                }).join('');
+                view.innerHTML = header + rows;
+
+                view.querySelectorAll('.followed-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const handle = btn.dataset.handle;
+                        const row = view.querySelector(`.follow-target-row[data-handle="${handle}"]`);
+                        const parent = row ? row.parentNode : null;
+                        const next = row ? row.nextSibling : null;
+                        // Optimistic remove
+                        if (row) row.remove();
+                        // Update count in header optimistically
+                        const countEl = view.querySelector('.follow-targets-header .count');
+                        if (countEl) {
+                            const remaining = view.querySelectorAll('.follow-target-row').length;
+                            countEl.textContent = `(${remaining} remaining)`;
+                        }
+                        try {
+                            const r = await fetch(`/api/follow-targets/${encodeURIComponent(handle)}/followed`, { method: 'POST' });
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                        } catch (err) {
+                            alert(`Failed to mark @${handle} followed: ${err.message}`);
+                            // Restore row
+                            if (row && parent) parent.insertBefore(row, next);
+                            const countEl2 = view.querySelector('.follow-targets-header .count');
+                            if (countEl2) {
+                                const remaining = view.querySelectorAll('.follow-target-row').length;
+                                countEl2.textContent = `(${remaining} remaining)`;
+                            }
+                        }
+                    });
+                });
+            } catch (e) {
+                view.innerHTML = `<div style="color:#f87171;padding:1rem;">Failed to load follow targets: ${e.message}</div>`;
+            }
         }
         
         function updateStats() {
