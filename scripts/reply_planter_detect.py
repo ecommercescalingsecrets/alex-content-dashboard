@@ -252,21 +252,27 @@ def seed_fake_rows():
 def main():
     kw_override = os.environ.get("REPLY_PLANTER_KEYWORDS")
     keywords = [k.strip() for k in kw_override.split(",")] if kw_override else DEFAULT_KEYWORDS
+    verbose = bool(os.environ.get("REPLY_PLANTER_VERBOSE"))
 
     if not BEARER:
-        print("⚠️  TWITTER_BEARER_TOKEN not set — seeding 2 fake rows for UI demo.")
-        n = seed_fake_rows()
-        print(f"SEEDED {n} fake rows.")
+        # Silent no-op when bearer missing in cron context. Manual seed
+        # test is triggered via REPLY_PLANTER_VERBOSE=1 (see task deliverable).
+        if verbose:
+            print("⚠️  TWITTER_BEARER_TOKEN not set — seeding 2 fake rows for UI demo.")
+            n = seed_fake_rows()
+            print(f"SEEDED {n} fake rows.")
         return 0
 
     since = (datetime.now(timezone.utc) - timedelta(hours=LOOKBACK_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     inserted = 0
+    inserted_log = []
     for kw in keywords:
         if inserted >= MAX_ROWS_PER_RUN:
             break
         try:
             resp = twitter_recent_search(kw, since)
         except Exception as e:
+            # Real errors DO surface (non-empty stderr → cron alerts)
             print(f"⚠️  search failed for {kw!r}: {e}", file=sys.stderr)
             continue
         tweets = resp.get("data", []) or []
@@ -291,8 +297,8 @@ def main():
 
             ghost = pick_ghost()
             if not ghost:
-                print("all ghosts hit daily cap; stopping this run.")
-                return 0
+                # daily cap reached fleet-wide → silent stop
+                break
 
             reply = build_reply(kw, text, ghost)
             row = {
@@ -308,10 +314,14 @@ def main():
             out = insert_row(row)
             if out.get("inserted"):
                 inserted += 1
-                print(f"+ {ghost} ← @{handle}: {kw}")
+                inserted_log.append(f"+ {ghost} ← @{handle}: {kw}")
         time.sleep(1)  # gentle throttle between keyword queries
 
-    print(f"INSERTED {inserted} new rows.")
+    # Silent when nothing was inserted (watchdog pattern for no_agent cron)
+    if inserted > 0:
+        for line in inserted_log:
+            print(line)
+        print(f"Reply Planter: inserted {inserted} new rows. Review at https://web-production-c72a.up.railway.app (🌱 tab)")
     return 0
 
 
