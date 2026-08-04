@@ -349,6 +349,30 @@
             font-weight: 600;
         }
         .followed-btn:hover { background: #047857; }
+
+        /* Reply Planter tab */
+        .rp-header { color: #f1f5f9; font-size: 1.4rem; font-weight: 700; margin: 1rem 0 1rem 0; }
+        .rp-header .count { color: #94a3b8; font-weight: 400; font-size: 1rem; margin-left: 0.5rem; }
+        .rp-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .rp-filters select, .rp-filters input { background:#0f172a; color:#f1f5f9; border:1px solid #334155; padding:0.4rem 0.6rem; border-radius:6px; }
+        .rp-table { width: 100%; border-collapse: collapse; }
+        .rp-row { background:#1e293b; border:1px solid #334155; border-radius:8px; padding:0.75rem 1rem; margin-bottom:0.5rem; display:grid; grid-template-columns: 110px 140px 1fr 110px 130px 1.2fr 110px 150px; gap:0.6rem; align-items:start; font-size:0.85rem; color:#e2e8f0; }
+        .rp-row .rp-detected { color:#94a3b8; }
+        .rp-row .rp-tweet { color:#cbd5e1; }
+        .rp-row .rp-tweet a { color:#60a5fa; text-decoration:none; }
+        .rp-row .rp-tweet a:hover { text-decoration:underline; }
+        .rp-row textarea { width:100%; min-height:70px; background:#0f172a; color:#f1f5f9; border:1px solid #334155; border-radius:6px; padding:0.4rem; font-family: inherit; font-size:0.8rem; resize:vertical; }
+        .rp-row select { background:#0f172a; color:#f1f5f9; border:1px solid #334155; padding:0.3rem; border-radius:4px; }
+        .rp-actions { display:flex; flex-direction:column; gap:0.3rem; }
+        .rp-actions button { padding:0.35rem 0.5rem; border-radius:4px; border:none; cursor:pointer; font-size:0.75rem; font-weight:600; }
+        .rp-btn-posted { background:#059669; color:white; }
+        .rp-btn-skip { background:#64748b; color:white; }
+        .rp-btn-copy { background:#1d4ed8; color:white; }
+        .rp-status-pending { color:#fbbf24; }
+        .rp-status-posted { color:#10b981; }
+        .rp-status-skipped { color:#94a3b8; }
+        .rp-ghost { color:#f472b6; font-weight:600; }
+        .rp-keyword { color:#a78bfa; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -407,12 +431,14 @@
             <button class="filter-btn" data-filter="krydecom" style="border-color: #facc15; color: #facc15;">🐦 krydecom (GH)</button>
             <button class="filter-btn" data-filter="jesselancaster" style="border-color: #4ade80; color: #4ade80;">🐦 jesselancaster (AF)</button>
             <button class="filter-btn" data-filter="follow-targets" style="border-color: #10b981; color: #10b981;">🎯 Follow Targets</button>
+            <button class="filter-btn" data-filter="reply-planter" style="border-color: #f59e0b; color: #f59e0b;">🌱 Reply Planter</button>
         </div>
         
         <div id="content">
             <div class="loading">⏳ Loading content...</div>
         </div>
         <div id="follow-targets-view" style="display:none;"></div>
+        <div id="reply-planter-view" style="display:none;"></div>
     </div>
 
     <script>
@@ -439,14 +465,23 @@
             // Toggle follow-targets view vs normal content view
             const contentEl = document.getElementById('content');
             const followEl = document.getElementById('follow-targets-view');
+            const rpEl = document.getElementById('reply-planter-view');
             if (filter === 'follow-targets') {
                 if (contentEl) contentEl.style.display = 'none';
                 if (followEl) followEl.style.display = '';
+                if (rpEl) rpEl.style.display = 'none';
                 renderFollowTargets();
+                return;
+            } else if (filter === 'reply-planter') {
+                if (contentEl) contentEl.style.display = 'none';
+                if (followEl) followEl.style.display = 'none';
+                if (rpEl) rpEl.style.display = '';
+                renderReplyPlanter();
                 return;
             } else {
                 if (contentEl) contentEl.style.display = '';
                 if (followEl) followEl.style.display = 'none';
+                if (rpEl) rpEl.style.display = 'none';
             }
 
             if (filter === 'gethookd') {
@@ -516,6 +551,106 @@
                 });
             } catch (e) {
                 view.innerHTML = `<div style="color:#f87171;padding:1rem;">Failed to load follow targets: ${e.message}</div>`;
+            }
+        }
+
+        // ===== Reply Planter =====
+        let rpState = { status: 'pending', keyword: '', ghost: '' };
+        function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        async function renderReplyPlanter() {
+            const view = document.getElementById('reply-planter-view');
+            if (!view) return;
+            view.innerHTML = '<div class="loading">⏳ Loading reply planter...</div>';
+            try {
+                const params = new URLSearchParams();
+                if (rpState.status) params.set('status', rpState.status);
+                if (rpState.keyword) params.set('keyword', rpState.keyword);
+                if (rpState.ghost) params.set('ghost', rpState.ghost);
+                const resp = await fetch('/api/reply-planter?' + params.toString());
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const rows = await resp.json();
+
+                const allKw = Array.from(new Set(rows.map(r => r.matched_keyword).filter(Boolean))).sort();
+                const allGh = Array.from(new Set(rows.map(r => r.assigned_ghost).filter(Boolean))).sort();
+
+                const header = `<div class="rp-header">🌱 Reply Planter <span class="count">(${rows.length} shown)</span></div>`;
+                const filters = `
+                    <div class="rp-filters">
+                        <select id="rp-status">
+                            <option value="">all statuses</option>
+                            <option value="pending"${rpState.status==='pending'?' selected':''}>pending</option>
+                            <option value="posted"${rpState.status==='posted'?' selected':''}>posted</option>
+                            <option value="skipped"${rpState.status==='skipped'?' selected':''}>skipped</option>
+                        </select>
+                        <select id="rp-keyword">
+                            <option value="">all keywords</option>
+                            ${allKw.map(k => `<option value="${escapeHtml(k)}"${rpState.keyword===k?' selected':''}>${escapeHtml(k)}</option>`).join('')}
+                        </select>
+                        <select id="rp-ghost">
+                            <option value="">all ghosts</option>
+                            ${allGh.map(g => `<option value="${escapeHtml(g)}"${rpState.ghost===g?' selected':''}>${escapeHtml(g)}</option>`).join('')}
+                        </select>
+                        <button class="rp-btn-copy" style="padding:0.4rem 0.8rem;border:none;border-radius:6px;cursor:pointer;color:white;" id="rp-refresh">Refresh</button>
+                    </div>`;
+
+                const headerRow = `<div class="rp-row" style="background:#0f172a;font-weight:700;color:#94a3b8;font-size:0.75rem;">
+                    <div>Detected</div><div>Author</div><div>Tweet</div><div>Keyword</div><div>Ghost</div><div>Suggested reply</div><div>Status</div><div>Actions</div>
+                </div>`;
+
+                const body = rows.length ? rows.map(r => {
+                    const detected = (r.detected_at || '').replace('T',' ').slice(0,16);
+                    const author = r.author_handle ? `@${escapeHtml(r.author_handle)}` : (escapeHtml(r.author_name || ''));
+                    const tweetUrl = escapeHtml(r.tweet_url || '');
+                    const text = escapeHtml((r.tweet_text || '').slice(0, 220));
+                    return `<div class="rp-row" data-id="${r.id}">
+                        <div class="rp-detected">${escapeHtml(detected)}</div>
+                        <div>${author}</div>
+                        <div class="rp-tweet"><a href="${tweetUrl}" target="_blank">${tweetUrl.replace('https://','')}</a><div style="color:#94a3b8;margin-top:0.3rem;font-size:0.75rem;">${text}</div></div>
+                        <div class="rp-keyword">${escapeHtml(r.matched_keyword || '')}</div>
+                        <div class="rp-ghost">${escapeHtml(r.assigned_ghost || '')}</div>
+                        <div><textarea class="rp-reply-text">${escapeHtml(r.suggested_reply || '')}</textarea></div>
+                        <div><span class="rp-status-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span></div>
+                        <div class="rp-actions">
+                            <button class="rp-btn-copy" data-action="copy">Copy</button>
+                            <button class="rp-btn-posted" data-action="posted">Mark posted</button>
+                            <button class="rp-btn-skip" data-action="skip">Skip</button>
+                        </div>
+                    </div>`;
+                }).join('') : '<div style="color:#94a3b8;padding:1rem;">No reply planter rows match these filters.</div>';
+
+                view.innerHTML = header + filters + headerRow + body;
+
+                view.querySelector('#rp-status').addEventListener('change', e => { rpState.status = e.target.value; renderReplyPlanter(); });
+                view.querySelector('#rp-keyword').addEventListener('change', e => { rpState.keyword = e.target.value; renderReplyPlanter(); });
+                view.querySelector('#rp-ghost').addEventListener('change', e => { rpState.ghost = e.target.value; renderReplyPlanter(); });
+                view.querySelector('#rp-refresh').addEventListener('click', () => renderReplyPlanter());
+
+                view.querySelectorAll('.rp-actions button').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const row = btn.closest('.rp-row');
+                        const id = row.dataset.id;
+                        const action = btn.dataset.action;
+                        const replyText = row.querySelector('.rp-reply-text').value;
+                        if (action === 'copy') {
+                            try { await navigator.clipboard.writeText(replyText); btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+                            catch (e) { alert('Copy failed: ' + e.message); }
+                            return;
+                        }
+                        const status = action === 'posted' ? 'posted' : 'skipped';
+                        try {
+                            const r = await fetch(`/api/reply-planter/${id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status, suggested_reply: replyText }),
+                            });
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                            renderReplyPlanter();
+                        } catch (e) { alert('Update failed: ' + e.message); }
+                    });
+                });
+            } catch (e) {
+                view.innerHTML = `<div style="color:#f87171;padding:1rem;">Failed to load reply planter: ${e.message}</div>`;
             }
         }
         

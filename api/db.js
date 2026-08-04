@@ -89,6 +89,74 @@ function bulkInsertFollowTargets(targets) {
   return insertMany(targets || []);
 }
 
+// ===== Reply Planter table (tweets to reply-to via ghost accounts) =====
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reply_planter (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tweet_url TEXT UNIQUE NOT NULL,
+    tweet_id TEXT,
+    author_handle TEXT,
+    author_name TEXT,
+    tweet_text TEXT,
+    matched_keyword TEXT,
+    assigned_ghost TEXT,
+    suggested_reply TEXT,
+    status TEXT DEFAULT 'pending',
+    detected_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    posted_at TEXT,
+    notes TEXT
+  )
+`);
+try { db.prepare('CREATE INDEX IF NOT EXISTS idx_reply_planter_status ON reply_planter(status)').run(); } catch(e) {}
+try { db.prepare('CREATE INDEX IF NOT EXISTS idx_reply_planter_detected ON reply_planter(detected_at)').run(); } catch(e) {}
+
+const replyPlanterStmts = {
+  list: db.prepare('SELECT * FROM reply_planter ORDER BY detected_at DESC LIMIT ?'),
+  insert: db.prepare(`INSERT OR IGNORE INTO reply_planter
+    (tweet_url, tweet_id, author_handle, author_name, tweet_text, matched_keyword, assigned_ghost, suggested_reply, status, detected_at, notes)
+    VALUES (@tweet_url, @tweet_id, @author_handle, @author_name, @tweet_text, @matched_keyword, @assigned_ghost, @suggested_reply, @status, @detected_at, @notes)`),
+  get: db.prepare('SELECT * FROM reply_planter WHERE id = ?'),
+  updateStatus: db.prepare('UPDATE reply_planter SET status = ?, posted_at = ?, notes = COALESCE(?, notes), suggested_reply = COALESCE(?, suggested_reply) WHERE id = ?'),
+  countGhostToday: db.prepare(`SELECT COUNT(*) as cnt FROM reply_planter WHERE assigned_ghost = ? AND date(detected_at) = date('now')`),
+};
+
+function listReplyPlanter({ status, keyword, ghost, limit = 500 } = {}) {
+  let rows = replyPlanterStmts.list.all(limit);
+  if (status) rows = rows.filter(r => r.status === status);
+  if (keyword) rows = rows.filter(r => r.matched_keyword === keyword);
+  if (ghost) rows = rows.filter(r => r.assigned_ghost === ghost);
+  return rows;
+}
+
+function insertReplyPlanter(row) {
+  const payload = {
+    tweet_url: row.tweet_url,
+    tweet_id: row.tweet_id || null,
+    author_handle: row.author_handle || null,
+    author_name: row.author_name || null,
+    tweet_text: row.tweet_text || null,
+    matched_keyword: row.matched_keyword || null,
+    assigned_ghost: row.assigned_ghost || null,
+    suggested_reply: row.suggested_reply || null,
+    status: row.status || 'pending',
+    detected_at: row.detected_at || new Date().toISOString(),
+    notes: row.notes || null,
+  };
+  const info = replyPlanterStmts.insert.run(payload);
+  return { inserted: info.changes > 0, id: info.lastInsertRowid };
+}
+
+function updateReplyPlanter(id, { status, notes, suggested_reply } = {}) {
+  const posted_at = status === 'posted' ? new Date().toISOString() : null;
+  const info = replyPlanterStmts.updateStatus.run(status || null, posted_at, notes || null, suggested_reply || null, id);
+  if (info.changes === 0) return null;
+  return replyPlanterStmts.get.get(id);
+}
+
+function countGhostRepliesToday(ghost) {
+  return replyPlanterStmts.countGhostToday.get(ghost).cnt;
+}
+
 const stmts = {
   getAll: db.prepare('SELECT * FROM content'),
   get: db.prepare('SELECT * FROM content WHERE id = ?'),
@@ -165,4 +233,4 @@ function setSetting(key, value) {
   db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)').run(key, value, new Date().toISOString());
 }
 
-module.exports = { getAllContent, getContent, upsertContent, deleteContent, getCount, db, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets };
+module.exports = { getAllContent, getContent, upsertContent, deleteContent, getCount, db, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets, listReplyPlanter, insertReplyPlanter, updateReplyPlanter, countGhostRepliesToday };

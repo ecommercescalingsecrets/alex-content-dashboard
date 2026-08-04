@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { TwitterApi } = require('twitter-api-v2');
-const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets } = require('./db');
+const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets, listReplyPlanter, insertReplyPlanter, updateReplyPlanter, countGhostRepliesToday } = require('./db');
 const SwipeFileBuilder = require('../swipe-file-builder');
 
 // Auto-seed on first boot if DB is empty
@@ -1253,6 +1253,53 @@ app.post('/api/follow-targets/bulk', (req, res) => {
         if (!Array.isArray(targets)) return res.status(400).json({ error: 'targets must be an array' });
         const inserted = bulkInsertFollowTargets(targets);
         res.json({ inserted });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ===== Reply Planter API =====
+app.get('/api/reply-planter', (req, res) => {
+    try {
+        const { status, keyword, ghost, limit } = req.query;
+        const rows = listReplyPlanter({
+            status: status || undefined,
+            keyword: keyword || undefined,
+            ghost: ghost || undefined,
+            limit: limit ? parseInt(limit, 10) : 500,
+        });
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/reply-planter', (req, res) => {
+    try {
+        const row = req.body || {};
+        if (!row.tweet_url) return res.status(400).json({ error: 'tweet_url required' });
+        const out = insertReplyPlanter(row);
+        res.status(out.inserted ? 201 : 200).json(out);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.patch('/api/reply-planter/:id', (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (!id) return res.status(400).json({ error: 'invalid id' });
+        const updated = updateReplyPlanter(id, req.body || {});
+        if (!updated) return res.status(404).json({ error: 'not found' });
+        res.json(updated);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/reply-planter/ghost-count/:ghost', (req, res) => {
+    try {
+        res.json({ ghost: req.params.ghost, count_today: countGhostRepliesToday(req.params.ghost) });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
