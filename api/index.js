@@ -855,7 +855,44 @@ function findOpenSlot(requestedAt, excludeId, incomingCategory) {
     return requestedAt;
 }
 
+// Validator (locked 2026-08-09) — reject reply-category posts where the
+// source-tweet URL user does NOT appear in the leading @mentions of the reply body.
+// Root cause: generator was assembling drafts with URL/text pairs mismatched, causing
+// 21.5% of posted replies to land on the wrong tweet (audit 2026-08-10, 267 posts / 52 misfires).
+// When Mitch posts the text, X threads under the FIRST @mention, not the URL — so mismatched
+// drafts silently land on random people's tweets.
+function validateReplyPairing(content) {
+    if (!content) return { ok: true };
+    const urlMatch = content.match(/(?:x|twitter)\.com\/(\w+)\/status\/\d+/i);
+    if (!urlMatch) return { ok: false, reason: 'reply content has no source tweet URL' };
+    const intendedHandle = urlMatch[1].toLowerCase();
+    // Strip leading URL line to find where the actual reply body starts
+    const body = content.replace(/^https?:\/\/\S+\s*/gm, '').trim();
+    const leadMatch = body.match(/^((?:@\w+\s+)+)/);
+    if (!leadMatch) {
+        return { ok: false, reason: `reply body does not lead with @mention (intended @${intendedHandle})` };
+    }
+    const leadingHandles = (leadMatch[1].match(/@(\w+)/g) || []).map(h => h.slice(1).toLowerCase());
+    if (!leadingHandles.includes(intendedHandle)) {
+        return { ok: false, reason: `leading @mentions [${leadingHandles.join(',')}] do not include intended @${intendedHandle}` };
+    }
+    return { ok: true };
+}
+
 app.post('/api/content', (req, res) => {
+    // HARD GATE: reject mismatched reply drafts at ingestion (locked 2026-08-09).
+    if ((req.body.category || '').toLowerCase() === 'reply') {
+        const check = validateReplyPairing(req.body.content);
+        if (!check.ok) {
+            console.log(`🚫 REPLY-PAIRING BLOCK: ${check.reason}`);
+            return res.status(400).json({
+                error: 'reply-pairing-mismatch',
+                reason: check.reason,
+                hint: 'Reply body must start with @mention of the same user as the source URL.',
+            });
+        }
+    }
+
     const id = 'post-' + Date.now();
     let scheduledAt = req.body.scheduledAt || null;
 
