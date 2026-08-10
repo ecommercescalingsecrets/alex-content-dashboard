@@ -666,7 +666,31 @@ async function postItemToTwitter(item) {
     // Upload single mediaUrl for non-thread posts (or thread tweet 0 fallback)
     if (item.mediaUrl && !threadMedia) {
         try {
-            const mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
+            let mediaPath;
+            if (/^https?:\/\//i.test(item.mediaUrl)) {
+                // Remote URL — download to /media first (locked 2026-08-09).
+                // Twitter API needs a local file path. Prior behaviour called
+                // path.basename on the URL, which never matched a local file,
+                // so all http-URL media silently dropped. Now we materialise
+                // it. Use adId + type hint for filename when possible.
+                const adMatch = (item.content || '').match(/share\/ad\/(\d+)/);
+                const adId = adMatch ? adMatch[1] : 'remote';
+                const isVideo = (item.mediaType || '').toLowerCase() === 'video';
+                const ext = isVideo ? 'mp4' : 'jpg';
+                const filename = `media_${adId}.${ext}`;
+                mediaPath = path.join(MEDIA_DIR, filename);
+                if (!fs.existsSync(mediaPath) || fs.statSync(mediaPath).size === 0) {
+                    console.log(`Fetching remote media: ${item.mediaUrl.slice(0, 80)}...`);
+                    const resp = await fetch(item.mediaUrl);
+                    if (!resp.ok) throw new Error(`fetch ${resp.status}`);
+                    const buf = Buffer.from(await resp.arrayBuffer());
+                    if (buf.length === 0) throw new Error('empty body');
+                    fs.writeFileSync(mediaPath, buf);
+                    console.log(`Downloaded ${buf.length} bytes → ${filename}`);
+                }
+            } else {
+                mediaPath = path.join(MEDIA_DIR, path.basename(item.mediaUrl));
+            }
             if (fs.existsSync(mediaPath)) {
                 console.log(`Uploading media: ${mediaPath} (${fs.statSync(mediaPath).size} bytes)`);
                 mediaId = await twitterClient.v1.uploadMedia(mediaPath);
