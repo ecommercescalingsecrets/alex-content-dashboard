@@ -855,6 +855,105 @@ function findOpenSlot(requestedAt, excludeId, incomingCategory) {
     return requestedAt;
 }
 
+// ============================================================================
+// Media auto-resolver (locked 2026-08-09)
+// ============================================================================
+// Root cause: Tier 3 brand-printing cron hardcoded `mediaType: "image"` in every
+// draft. When the seed ad was actually a video (asset_type='video'), the cron
+// still shipped a thumbnail JPG → live tweet gets an image instead of video →
+// 3-5x fewer impressions than a native video tweet.
+//
+// Example that triggered the fix: tweet 2086223346404900927 (Enerra Health)
+// → dashboard post-1785679873579 → mediaType='image' /media/media_130231452.jpg
+// → but ad 130231452 is display_format='video', 80s .mp4.
+//
+// Fix scope: any POST /api/content whose content body includes a Gethookd
+// share URL (share/ad/{id}) triggers server-side media resolution. If the
+// caller supplied a thumbnail URL or nothing, we replace it with the ad's
+// primary_media.download_url and set mediaType correctly. Video ALWAYS wins
+// over image when both exist. Non-fatal — if resolution fails, we log and
+// keep the caller's original mediaUrl (or null) so posts still ship.
+async function resolveGethookdMedia(content, existingMediaUrl, existingMediaType) {
+    if (!content) return null;
+    const adMatch = content.match(/share\/ad\/(\d+)/);
+    if (!adMatch) return null;
+    const adId = adMatch[1];
+
+    // Signal that the current mediaUrl is a Gethookd thumbnail (needs upgrade)
+    const isThumbnail = existingMediaUrl && /variant=thumbnail/i.test(existingMediaUrl);
+    // Signal that no local file exists yet (needs materialisation)
+    const isEmpty = !existingMediaUrl;
+    // Signal that mediaType is wrong (says image but ad is a video, or vice-versa)
+    // we always check the API to know for sure
+
+    try {
+        const adResp = await fetch(`https://app.gethookd.ai/api/v1/ads/${adId}`, {
+            headers: { 'Authorization': `Bearer ${GETHOOKD_API_KEY}` }
+        });
+        if (!adResp.ok) {
+            console.warn(`[media-resolver] ad ${adId}: API ${adResp.status}`);
+            return null;
+        }
+        const wrapped = await adResp.json();
+        const ad = wrapped.data || wrapped.ad || wrapped;
+
+        // Prefer the ad's declared primary_media, fall back to media[0].
+        const primary = ad.primary_media || (Array.isArray(ad.media) ? ad.media[0] : null);
+        if (!primary) {
+            console.warn(`[media-resolver] ad ${adId}: no primary_media`);
+            return null;
+        }
+
+        const isVideo = (
+            (primary.type || '').toLowerCase() === 'video' ||
+            (ad.asset_type || '').toLowerCase() === 'video' ||
+            (ad.display_format || '').toLowerCase() === 'video'
+        );
+
+        // For video ads: use download_url (never thumbnail_url). For image ads:
+        // download_url IS the image.
+        const sourceUrl = primary.download_url || primary.url;
+        if (!sourceUrl) {
+            console.warn(`[media-resolver] ad ${adId}: no download_url on primary_media`);
+            return null;
+        }
+
+        // If caller passed a URL that's already the full download URL for this
+        // ad AND mediaType matches, no work to do.
+        if (!isEmpty && !isThumbnail && existingMediaUrl.includes(`/media/${adId}/`) &&
+            existingMediaType === (isVideo ? 'video' : 'image')) {
+            return null; // already correct
+        }
+
+        // Download to local /media so it survives Gethookd signature expiry
+        const ext = isVideo ? 'mp4' : 'jpg';
+        const filename = `media_${adId}.${ext}`;
+        const dest = path.join(MEDIA_DIR, filename);
+
+        // If the correct file already exists on disk and matches type, reuse
+        if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
+            return { mediaUrl: '/media/' + filename, mediaType: isVideo ? 'video' : 'image', resolved: true, source: 'cache' };
+        }
+
+        const mediaResp = await fetch(sourceUrl);
+        if (!mediaResp.ok) {
+            console.warn(`[media-resolver] ad ${adId}: download HTTP ${mediaResp.status}`);
+            return null;
+        }
+        const buf = Buffer.from(await mediaResp.arrayBuffer());
+        if (buf.length === 0) {
+            console.warn(`[media-resolver] ad ${adId}: downloaded 0 bytes`);
+            return null;
+        }
+        fs.writeFileSync(dest, buf);
+        console.log(`[media-resolver] ad ${adId}: saved ${filename} (${buf.length} bytes, ${isVideo ? 'video' : 'image'})`);
+        return { mediaUrl: '/media/' + filename, mediaType: isVideo ? 'video' : 'image', resolved: true, source: 'fresh' };
+    } catch (e) {
+        console.error(`[media-resolver] ad ${adId} threw: ${e.message}`);
+        return null;
+    }
+}
+
 // Validator (locked 2026-08-09) — reject reply-category posts where the
 // source-tweet URL user does NOT appear in the leading @mentions of the reply body.
 // Root cause: generator was assembling drafts with URL/text pairs mismatched, causing
@@ -879,7 +978,7 @@ function validateReplyPairing(content) {
     return { ok: true };
 }
 
-app.post('/api/content', (req, res) => {
+app.post('/api/content', async (req, res) => {
     // HARD GATE: reject mismatched reply drafts at ingestion (locked 2026-08-09).
     if ((req.body.category || '').toLowerCase() === 'reply') {
         const check = validateReplyPairing(req.body.content);
@@ -891,6 +990,22 @@ app.post('/api/content', (req, res) => {
                 hint: 'Reply body must start with @mention of the same user as the source URL.',
             });
         }
+    }
+
+    // MEDIA AUTO-RESOLVER (locked 2026-08-09).
+    // If content has a Gethookd share URL, ensure mediaUrl points to the ad's
+    // TRUE primary asset (video wins over image) with the correct mediaType.
+    // Never trust caller-supplied mediaType/mediaUrl for Gethookd-anchored posts.
+    let resolvedMediaUrl = req.body.mediaUrl || null;
+    let resolvedMediaType = req.body.mediaType || null;
+    try {
+        const r = await resolveGethookdMedia(req.body.content, resolvedMediaUrl, resolvedMediaType);
+        if (r && r.resolved) {
+            resolvedMediaUrl = r.mediaUrl;
+            resolvedMediaType = r.mediaType;
+        }
+    } catch (e) {
+        console.error('[media-resolver] non-fatal:', e.message);
     }
 
     const id = 'post-' + Date.now();
@@ -912,8 +1027,8 @@ app.post('/api/content', (req, res) => {
         category: req.body.category || null,
         contentType: req.body.contentType || null,
         adLink: req.body.adLink || null,
-        mediaUrl: req.body.mediaUrl || null,
-        mediaType: req.body.mediaType || null,
+        mediaUrl: resolvedMediaUrl,
+        mediaType: resolvedMediaType,
         videoUrl: req.body.videoUrl || null,
         threadMedia: req.body.threadMedia || null,
         postTarget: req.body.postTarget || 'twitter',
@@ -1562,7 +1677,7 @@ app.get('/api/validate-media', (req, res) => {
 
 // Auto-repair: re-download broken media from Gethookd API
 app.post('/api/media/auto-repair', async (req, res) => {
-    const GETHOOKD_API = 'https://api.gethookd.ai/api/v1';
+    const GETHOOKD_API = 'https://app.gethookd.ai/api/v1';
     const GETHOOKD_KEY = process.env.GETHOOKD_API_KEY || 'gh_XIs0bMoS4t5M56evRtx4ePO59alDkJGuW06hVjvNaa5d391e';
     const allContent = getAllContent();
     const results = { repaired: 0, failed: 0, skipped: 0, details: [] };
@@ -1618,25 +1733,38 @@ app.post('/api/media/auto-repair', async (req, res) => {
                 continue;
             }
             
-            // Find best media URL
+            // Find best media URL — prefer video by TYPE, not extension (Gethookd
+            // download URLs have no extension, they carry ?signature=... — the old
+            // .mp4-suffix check missed 100% of them and always fell through to jpg).
             let mediaUrl = null;
             let isVideo = false;
-            
-            // Prefer video
+
+            // Also check top-level ad flags (some responses put type on the ad, not media)
+            const adAssetType = (adData.data?.asset_type || adData.asset_type || '').toLowerCase();
+            const adDisplayFormat = (adData.data?.display_format || adData.display_format || '').toLowerCase();
+            const adSaysVideo = adAssetType === 'video' || adDisplayFormat === 'video';
+
             for (const m of media) {
-                const url = m.url || m.thumbnail_url || '';
-                if (url.endsWith('.mp4')) { mediaUrl = url; isVideo = true; break; }
+                const t = (m.type || '').toLowerCase();
+                if (t === 'video' || adSaysVideo) {
+                    mediaUrl = m.download_url || m.url || m.thumbnail_url;
+                    if (mediaUrl) { isVideo = true; break; }
+                }
             }
             // Fallback to image
             if (!mediaUrl) {
                 for (const m of media) {
-                    const url = m.url || m.thumbnail_url || '';
-                    if (url.match(/\.(jpg|jpeg|png|webp)/i)) { mediaUrl = url; break; }
+                    const t = (m.type || '').toLowerCase();
+                    if (t === 'image' || t === 'photo') {
+                        mediaUrl = m.download_url || m.url || m.thumbnail_url;
+                        if (mediaUrl) break;
+                    }
                 }
             }
-            // Last resort: any URL
+            // Last resort: any URL from first media entry
             if (!mediaUrl && media[0]) {
-                mediaUrl = media[0].url || media[0].thumbnail_url;
+                mediaUrl = media[0].download_url || media[0].url || media[0].thumbnail_url;
+                if ((media[0].type || '').toLowerCase() === 'video') isVideo = true;
             }
             
             if (!mediaUrl) {
