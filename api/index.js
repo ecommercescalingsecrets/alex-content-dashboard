@@ -1115,6 +1115,11 @@ app.delete('/api/content/:id', (req, res) => {
     res.json({ success: true });
 });
 
+// Gethookd API audit report (standalone page, not a dashboard tab)
+app.get(['/gethookd-api-audit', '/gethookd-api-audit/'], (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'gethookd-api-audit.html'));
+});
+
 // Swipe Files viewer (public)
 app.get('/swipe-files', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public-swipe-files.html'));
