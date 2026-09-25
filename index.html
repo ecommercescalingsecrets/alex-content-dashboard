@@ -432,6 +432,7 @@
             <button class="filter-btn" data-filter="jesselancaster" style="border-color: #4ade80; color: #4ade80;">🐦 jesselancaster (AF)</button>
             <button class="filter-btn" data-filter="follow-targets" style="border-color: #10b981; color: #10b981;">🎯 Follow Targets</button>
             <button class="filter-btn" data-filter="reply-planter" style="border-color: #f59e0b; color: #f59e0b;">🌱 Reply Planter</button>
+            <button class="filter-btn" data-filter="api-audit" style="border-color: #ef4444; color: #ef4444;">🔧 Gethookd API Audit</button>
         </div>
         
         <div id="content">
@@ -439,6 +440,10 @@
         </div>
         <div id="follow-targets-view" style="display:none;"></div>
         <div id="reply-planter-view" style="display:none;"></div>
+        <div id="api-audit-view" style="display:none;">
+            <div style="text-align:right;margin:0 0 8px;"><a href="/gethookd-api-audit.html" target="_blank" style="color:#93c5fd;font-size:13px;">Open full page ↗</a></div>
+            <iframe id="api-audit-frame" data-src="/gethookd-api-audit.html" style="width:100%;height:85vh;border:1px solid #334155;border-radius:10px;background:#0f172a;"></iframe>
+        </div>
     </div>
 
     <script>
@@ -466,7 +471,19 @@
             const contentEl = document.getElementById('content');
             const followEl = document.getElementById('follow-targets-view');
             const rpEl = document.getElementById('reply-planter-view');
-            if (filter === 'follow-targets') {
+            const auditEl = document.getElementById('api-audit-view');
+            if (auditEl) auditEl.style.display = 'none';
+            if (filter === 'api-audit') {
+                if (contentEl) contentEl.style.display = 'none';
+                if (followEl) followEl.style.display = 'none';
+                if (rpEl) rpEl.style.display = 'none';
+                if (auditEl) {
+                    auditEl.style.display = '';
+                    const fr = document.getElementById('api-audit-frame');
+                    if (fr && !fr.src) fr.src = fr.dataset.src;
+                }
+                return;
+            } else if (filter === 'follow-targets') {
                 if (contentEl) contentEl.style.display = 'none';
                 if (followEl) followEl.style.display = '';
                 if (rpEl) rpEl.style.display = 'none';
@@ -1321,6 +1338,8 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => setFilter(btn.dataset.filter));
             });
+            // Deep link: /#api-audit opens the Gethookd API Audit tab directly
+            if (location.hash === '#api-audit') setTimeout(() => setFilter('api-audit'), 300);
         });
         
         // Initialize

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gethookd API Audit — Sep 25, 2026</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#0f172a; color:#e2e8f0; line-height:1.55; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 26px; margin: 0 0 4px; color:#f8fafc; }
+  h2 { font-size: 20px; margin: 36px 0 12px; color:#f8fafc; border-bottom:1px solid #334155; padding-bottom:8px; }
+  h3 { font-size: 16px; margin: 0 0 8px; color:#f8fafc; }
+  .sub { color:#94a3b8; font-size:14px; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  code { background:#1e293b; padding:1px 6px; border-radius:4px; color:#fbbf24; }
+  pre { background:#020617; border:1px solid #1e293b; border-radius:8px; padding:12px; overflow-x:auto; color:#cbd5e1; margin:8px 0; white-space: pre-wrap; word-break: break-all; }
+  .tldr { background: linear-gradient(135deg,#7f1d1d33,#1e293b); border:1px solid #b91c1c; border-radius:12px; padding:18px 20px; margin:20px 0; }
+  .tldr b { color:#fca5a5; }
+  .stats { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:18px 0; }
+  .stat { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:14px; }
+  .stat .n { font-size:26px; font-weight:700; color:#f8fafc; }
+  .stat .l { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; }
+  .stat.bad .n { color:#f87171; } .stat.ok .n { color:#4ade80; } .stat.warn .n { color:#fbbf24; }
+  table { width:100%; border-collapse: collapse; font-size:13.5px; margin:8px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid #1e293b; vertical-align: top; }
+  th { color:#94a3b8; font-weight:600; background:#111827; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; letter-spacing:.03em; }
+  .p0 { background:#7f1d1d; color:#fecaca; } .p1 { background:#78350f; color:#fde68a; } .p2 { background:#1e3a8a; color:#bfdbfe; } .p3 { background:#334155; color:#cbd5e1; }
+  .ok { color:#4ade80; } .bad { color:#f87171; } .warn { color:#fbbf24; }
+  .issue { background:#111827; border:1px solid #334155; border-left:4px solid #64748b; border-radius:10px; padding:16px 18px; margin:14px 0; }
+  .issue.sev-p0 { border-left-color:#ef4444; } .issue.sev-p1 { border-left-color:#f59e0b; } .issue.sev-p2 { border-left-color:#3b82f6; } .issue.sev-p3 { border-left-color:#64748b; }
+  .issue .head { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+  .issue .id { color:#64748b; font-weight:700; font-size:13px; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  .box { background:#0b1220; border:1px solid #1e293b; border-radius:8px; padding:10px 12px; font-size:13.5px; }
+  .box .lbl { font-size:11px; text-transform:uppercase; color:#94a3b8; letter-spacing:.05em; margin-bottom:4px; font-weight:700; }
+  .fix { background:#052e16; border:1px solid #166534; border-radius:8px; padding:10px 12px; font-size:13.5px; margin-top:10px; }
+  .fix .lbl { color:#4ade80; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+  .toc a { color:#93c5fd; text-decoration:none; } .toc a:hover { text-decoration:underline; }
+  .toc li { margin:3px 0; }
+  .note { background:#1e293b; border-radius:8px; padding:10px 14px; font-size:13px; color:#cbd5e1; }
+  .foot { margin-top:40px; color:#64748b; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>🔧 Gethookd Public API — Audit &amp; Fix List</h1>
+<div class="sub">Audited Sep 25, 2026 · Test case: <b>resilia.shop</b> (shop_id <code>1263</code>) · Base URL <code>https://app.gethookd.ai/api/v1</code> · Prepared for the Gethookd engineering team</div>
+
+<div class="tldr">
+  <b>TL;DR:</b> The numbers on the Shop page match the API: traffic, Trustpilot, active ads count, linked pages and products all line up.
+  The real problem is that <b>you can't pull the ads themselves.</b> Resilia shows <b>8,413</b> active Meta ads in the dashboard,
+  but the public API returns <b>at most ~1,977</b> (~23%). For any single brand it returns <b>50</b>, even when the brand has 2,810.
+  <code>/shops/1263/ads</code> and <code>/shops/1263/analytics</code> return <b>503</b> because the shop is still on the legacy (un-published) data path.
+  We also found 9 smaller bugs: a 500, a broken <code>status</code> enum, breakdown truncation, inconsistent pagination, and wrong HTTP codes.
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="l">Ads on dashboard</div><div class="n">8,413</div></div>
+  <div class="stat bad"><div class="l">Max reachable via API</div><div class="n">~1,977</div></div>
+  <div class="stat bad"><div class="l">Per-brand ceiling</div><div class="n">50</div></div>
+  <div class="stat warn"><div class="l">Linked pages returned</div><div class="n">34 / 49</div></div>
+  <div class="stat bad"><div class="l">P0 blockers</div><div class="n">3</div></div>
+  <div class="stat warn"><div class="l">Total issues</div><div class="n">12</div></div>
+</div>
+
+<div class="note"><b>How to reproduce:</b> every example below runs with
+<code>curl -H "Authorization: Bearer $GETHOOKD_API_KEY" "https://app.gethookd.ai/api/v1/..."</code>.
+All results were captured live on 2026-09-25 between 16:25 and 16:40 UTC.</div>
+
+<h2>Contents</h2>
+<ol class="toc">
+  <li><a href="#match">Dashboard vs API: what matches</a></li>
+  <li><a href="#p0">P0: Blockers (ad inventory unreachable)</a></li>
+  <li><a href="#p1">P1: Correctness bugs</a></li>
+  <li><a href="#p2">P2: API contract / consistency</a></li>
+  <li><a href="#inventory">Endpoint inventory (status of every endpoint tested)</a></li>
+  <li><a href="#roadmap">Fix roadmap (priority order)</a></li>
+  <li><a href="#acceptance">Acceptance tests: how we'll verify the fixes</a></li>
+</ol>
+
+<!-- ============ MATCH ============ -->
+<h2 id="match">1. Dashboard vs API: what matches</h2>
+<table>
+  <tr><th>Dashboard card</th><th>Dashboard value</th><th>API field</th><th>API value</th><th>Match</th></tr>
+  <tr><td>Monthly traffic</td><td>9.9M</td><td><code>GET /shops/1263</code> → <code>monthly_visits</code></td><td>9,883,380</td><td class="ok">✅</td></tr>
+  <tr><td>Traffic chart</td><td>+975.5% (ALL)</td><td><code>GET /shops/1263/traffic</code></td><td>90-day monthly points</td><td class="ok">✅</td></tr>
+  <tr><td>Trustpilot</td><td>4.00 · 559 reviews</td><td><code>trustpilot_rating</code> / <code>trustpilot_review_count</code></td><td>4.00 / 559</td><td class="ok">✅</td></tr>
+  <tr><td>Active Meta Ads</td><td>8,413</td><td><code>live_ads_count</code></td><td>8,413</td><td class="ok">✅</td></tr>
+  <tr><td>Linked pages</td><td>49</td><td><code>GET /shops/1263/linked-pages</code> → <code>linked_brand_count</code></td><td>49 (only 34 in breakdown, see B-04)</td><td class="warn">⚠️</td></tr>
+  <tr><td>Active ads growth</td><td>+33.8%</td><td><code>active_ads_growth_pct</code></td><td>35.48</td><td class="warn">⚠️ 1.7pp drift</td></tr>
+  <tr><td>Products</td><td>15</td><td><code>product_count</code> / <code>/products meta.total</code></td><td>15</td><td class="ok">✅</td></tr>
+  <tr><td>Country / Language / Currency</td><td>US / EN / USD</td><td><code>country_display_code</code> etc.</td><td>US (<i>likely</i>, 80%) / en / USD</td><td class="ok">✅</td></tr>
+  <tr><td>Created</td><td>Estimated Jan 13, 2025</td><td><code>shop_created_at</code></td><td>2025-01-14T01:11Z (estimated)</td><td class="ok">✅ (TZ rounding)</td></tr>
+  <tr><td>Meta Ads tab</td><td>8,413 ads browsable</td><td><code>GET /shops/1263/ads</code></td><td><b>503</b></td><td class="bad">❌</td></tr>
+  <tr><td>Sum of linked-brand ads</td><td>—</td><td>Σ <code>linked_brand_breakdown[].live_ads_count</code></td><td>8,413</td><td class="ok">✅ reconciles</td></tr>
+</table>
+<p class="sub">Every summary number on the card checks out. The ads behind those numbers are what's missing.</p>
+
+<!-- ============ P0 ============ -->
+<h2 id="p0">2. P0: Blockers</h2>
+
+<div class="issue sev-p0">
+  <div class="head"><span class="id">B-01</span><span class="pill p0">P0</span><h3>/shops/{id}/ads returns 503 for legacy (un-published) shops</h3></div>
+  <pre>GET /shops/1263/ads
+→ 503 {"errors":true,"message":"Shop ad publication is not available for this shop yet.",
+       "data":{"publication":null,"coverage":{"status":"pending_cutover"}}}</pre>
+  <div class="grid2">
+    <div class="box"><div class="lbl">Expected</div>Paginated list of the 8,413 ads shown on the Shop → Meta Ads tab.</div>
+    <div class="box"><div class="lbl">Actual</div>503. <code>/shops/1263</code> shows <code>ad_publication: null</code> and <code>ad_data_authority: {"source":"legacy","cutover":false}</code>. The UI reads the legacy data; the API won't.</div>
+  </div>
+  <div class="box" style="margin-top:10px"><div class="lbl">Impact</div>This hits the biggest shops, the ones customers care about most. Also seen on <b>glovbeauty.com</b> (shop 773, 5,577 ads) and <b>kilgourmd.com</b> (shop 5878, 1,118 ads). Meanwhile the small <code>try.resilia.shop</code> (113 ads) <i>is</i> published.</div>
+  <div class="fix"><div class="lbl">Fix</div>Run the publication cutover on every shop with <code>live_ads_count &gt; 0</code> and <code>ad_publication IS NULL</code>, biggest first. Until cutover is done, serve <code>/ads</code> from the legacy source (the same one the UI uses) instead of returning 503. Add a job/metric that tracks "% of shops (weighted by live ads) published".</div>
+</div>
+
+<div class="issue sev-p0">
+  <div class="head"><span class="id">B-02</span><span class="pill p0">P0</span><h3>Hard 50-ads-per-brand ceiling hides ~98% of big brands' inventory</h3></div>
+  <pre>GET /explore?brand_id=1878084&amp;per_page=50&amp;ads_per_brand_limit=50
+→ meta.total = 50, meta.last_page = 50   (brand record says active_ads = 2810)
+
+GET /explore?brand_id=1878084&amp;ads_per_brand_limit=51
+→ 422 "The ads per brand limit field must not be greater than 50"</pre>
+  <table>
+    <tr><th>brand_id</th><th>Brand (linked to resilia.shop)</th><th>active_ads (<code>/brands/{id}</code>)</th><th>/explore total</th><th>Visible</th></tr>
+    <tr><td>1878084</td><td>Resilia</td><td>2,810</td><td>50</td><td class="bad">1.8%</td></tr>
+    <tr><td>4446697</td><td>Vascular Wellness Report</td><td>1,522</td><td>50</td><td class="bad">3.3%</td></tr>
+    <tr><td>4532536</td><td>Everyday Wellness Review</td><td>696</td><td>50</td><td class="bad">7.2%</td></tr>
+    <tr><td>4963935</td><td>Ancient Remedy Co</td><td>693</td><td>50</td><td class="bad">7.2%</td></tr>
+    <tr><td>4532539</td><td>Circulatory Health Report</td><td>634</td><td>50</td><td class="bad">7.9%</td></tr>
+  </table>
+  <div class="grid2">
+    <div class="box"><div class="lbl">Expected</div>Filtering by <code>brand_id</code> returns <i>all</i> of that brand's ads, paged normally.</div>
+    <div class="box"><div class="lbl">Actual</div>Stops at 50. <code>meta.total</code> reports 50 rather than the real count, so callers can't tell the list was cut off.</div>
+  </div>
+  <div class="fix"><div class="lbl">Fix</div>When <code>brand_id</code> is set, <b>don't apply</b> <code>ads_per_brand_limit</code> (it only makes sense for mixed-brand search results). <code>meta.total</code> should be the true count. Use cursor pagination for large brands. If a cap has to stay, return <code>meta.truncated: true</code> and <code>meta.total_available</code>.</div>
+</div>
+
+<div class="issue sev-p0">
+  <div class="head"><span class="id">B-03</span><span class="pill p0">P0</span><h3>/shops/{id}/analytics returns 503 (same cause as B-01)</h3></div>
+  <pre>GET /shops/1263/analytics
+→ 503 "Shop ad publication is not available for this shop yet." coverage.status = "pending_cutover"</pre>
+  <div class="grid2">
+    <div class="box"><div class="lbl">Expected</div>The Active Ads chart data shown on the Shop page (4,358 → 8,413 over time, per page filter).</div>
+    <div class="box"><div class="lbl">Actual</div>503. The API has no way to get the Active Ads time series, even though the dashboard draws it.</div>
+  </div>
+  <div class="fix"><div class="lbl">Fix</div>Serve from the same source the UI chart uses. Resolves automatically once B-01's cutover lands.</div>
+</div>
+
+<!-- ============ P1 ============ -->
+<h2 id="p1">3. P1: Correctness bugs</h2>
+
+<div class="issue sev-p1">
+  <div class="head"><span class="id">B-04</span><span class="pill p1">P1</span><h3>linked_brand_breakdown silently drops 15 of 49 linked pages</h3></div>
+  <pre>GET /shops/1263/linked-pages
+→ linked_brand_count: 49, linked_brand_ids: [49 ids], linked_brand_ids_truncated: false
+→ linked_brand_breakdown: 34 entries   ← 15 missing, no flag
+
+Missing: 234949, 247981, 248301, 340120, 502719, 4273344, 4273346, 4446700,
+         4963946, 6965706, 6965710, 6965728, 6965729, 6965739, 6965750
+(spot-checked 5: Purefield Co., WislowAgatha, Vital Grove, Dr. Michael Rawlings, Herbal Rise, all active_ads = 0)</pre>
+  <div class="fix"><div class="lbl">Fix</div>Return all 49 rows. Include zero-ad brands with <code>live_ads_count: 0</code>, or add <code>breakdown_excludes_zero: true</code>. The count, id list and breakdown must agree. Anyone building a brand roster currently misses about 30% of linked pages.</div>
+</div>
+
+<div class="issue sev-p1">
+  <div class="head"><span class="id">B-05</span><span class="pill p1">P1</span><h3>GET /ads/latest returns 500 Server Error</h3></div>
+  <pre>GET /ads/latest → 500 {"message":"Server Error"}</pre>
+  <div class="fix"><div class="lbl">Fix</div>Most likely the route matches <code>/ads/{id}</code> with id="latest" and crashes on a non-integer cast. Add a numeric constraint on <code>{id}</code> (e.g. <code>-&gt;whereNumber('id')</code>) so this returns 404, or implement <code>/ads/latest</code> for real.</div>
+</div>
+
+<div class="issue sev-p1">
+  <div class="head"><span class="id">B-06</span><span class="pill p1">P1</span><h3>/explore status filter: only "active" works; "inactive" returns 0</h3></div>
+  <pre>status=active    → 200 total=13,486,501
+status=inactive  → 200 total=0            ← should be millions
+status=ACTIVE | Active | paused | 1 | 0 | true | false → 422 "The selected status is invalid."</pre>
+  <div class="fix"><div class="lbl">Fix</div>Wire <code>inactive</code> to the inactive corpus, or remove it from the allowed enum and document that only active ads are indexed. Put the valid values in the 422 message, e.g. <code>"status must be one of: active, inactive"</code>.</div>
+</div>
+
+<div class="issue sev-p1">
+  <div class="head"><span class="id">B-07</span><span class="pill p1">P1</span><h3>Growth % drift between UI card and API</h3></div>
+  <pre>UI:  "+33.8% active ads growth"
+API: active_ads_growth_pct = 35.48</pre>
+  <div class="fix"><div class="lbl">Fix</div>Point the UI card and the API field at the same stored value, or expose the value <i>and</i> its computed-at timestamp so the two can be reconciled. The same staleness is explained in <code>meta.count_basis</code> prose for <code>live_ads_count</code>. Make it machine-readable (<code>meta.as_of</code> per field, or an <code>X-Data-As-Of</code> header).</div>
+</div>
+
+<!-- ============ P2 ============ -->
+<h2 id="p2">4. P2: API contract / consistency</h2>
+
+<div class="issue sev-p2">
+  <div class="head"><span class="id">B-08</span><span class="pill p2">P2</span><h3>Inconsistent pagination params across sibling endpoints</h3></div>
+  <table>
+    <tr><th>Endpoint</th><th><code>per_page</code></th><th><code>limit</code></th></tr>
+    <tr><td><code>/shops/1263/products</code></td><td class="ok">✅</td><td>—</td></tr>
+    <tr><td><code>/shops/1263/ads</code></td><td class="bad">422 Unrecognized</td><td>?</td></tr>
+    <tr><td><code>/shops/1263/similar</code></td><td class="bad">422 Unrecognized</td><td class="ok">✅</td></tr>
+    <tr><td><code>/explore</code>, <code>/shops</code>, <code>/brands</code></td><td class="ok">✅</td><td class="bad">422</td></tr>
+  </table>
+  <div class="fix"><div class="lbl">Fix</div>Use <code>page</code> + <code>per_page</code> everywhere. Accept <code>limit</code> as a deprecated alias for a while.</div>
+</div>
+
+<div class="issue sev-p2">
+  <div class="head"><span class="id">B-09</span><span class="pill p2">P2</span><h3>Unknown routes return 405 "Method not allowed" instead of 404</h3></div>
+  <pre>GET /me, /user, /account, /folders, /swipes, /swipe-files, /ads, /search, /discover,
+    /countries, /languages, /platforms, /formats, /trends, /leaderboard,
+    /brands/{id}/ads, /brands/{id}/stats, /brands/{id}/analytics,
+    /shops/{id}/brands, /shops/{id}/pages, /shops/{id}/stats, /shops/{id}/summary,
+    /niches/{id}/brands, /niches/{id}/shops, /nope   → all 405</pre>
+  <div class="fix"><div class="lbl">Fix</div>405 means "the resource exists but not with this method". These resources don't exist, so return 404. This looks like a catch-all fallback route that returns 405. Change the fallback handler to 404.</div>
+</div>
+
+<div class="issue sev-p2">
+  <div class="head"><span class="id">B-10</span><span class="pill p2">P2</span><h3>Non-existent IDs return 200 with empty data</h3></div>
+  <pre>GET /explore?brand_id=999999999 → 200 {"data":[]}</pre>
+  <div class="fix"><div class="lbl">Fix</div>Validate the ID exists (<code>exists:brands,id</code>) and return 422 <code>"brand_id not found"</code>. Callers currently can't tell "brand has no ads" apart from "wrong ID".</div>
+</div>
+
+<div class="issue sev-p2">
+  <div class="head"><span class="id">B-11</span><span class="pill p2">P2</span><h3>/explore filter set is much thinner than the UI's</h3></div>
+  <p style="font-size:13.5px">Only 10 params are accepted: <code>query, brand_id, page, per_page, niche, language, platform, status, has_transcript, ads_per_brand_limit</code>. About 80 common ones return 422, including the ones the dashboard filters on:</p>
+  <pre>shop_id, domain, landing_domain, landing_page, page_id (FB), country, created_after,
+created_before, min_days_active, asset_type, format, ids, tags, sort, order</pre>
+  <div class="fix"><div class="lbl">Fix</div>Priority adds: <code>shop_id</code> (needed to work around B-01/B-02), <code>landing_domain</code>, <code>country</code>, <code>asset_type</code>, <code>min_days_active</code>, <code>created_after/before</code>, <code>sort</code> (<code>days_active|created_at|last_seen</code>), <code>ids[]</code> (batch lookup).</div>
+</div>
+
+<div class="issue sev-p3">
+  <div class="head"><span class="id">B-12</span><span class="pill p3">P3</span><h3>Missing brand-scoped resources + encoding bug</h3></div>
+  <ul style="font-size:13.5px;margin:4px 0">
+    <li><code>/brands/{id}/ads</code> returns 405. Consumers have to use <code>/explore?brand_id=</code> instead, which is capped (B-02). Add a real brand ads endpoint with no per-brand cap.</li>
+    <li>Tagline mojibake: <code>"ResiliaÂ® offers…"</code> (UTF-8 decoded as Latin-1 during scrape). Shows up in <code>/shops/1263</code> and <code>/shops/1263/similar</code>. It also appears on the dashboard itself ("ResiliaÂ®").</li>
+    <li><code>/shops/1263/similar</code> wraps its list in <code>data.similar_shops</code> while every other list endpoint uses <code>data: [...]</code>. Keep the envelope consistent.</li>
+    <li><code>/shops/{id}</code> has <code>social_handles: []</code> even though Resilia has 49 linked FB pages. Populate from linked pages.</li>
+  </ul>
+</div>
+
+<!-- ============ INVENTORY ============ -->
+<h2 id="inventory">5. Endpoint inventory</h2>
+<table>
+  <tr><th>Endpoint</th><th>Status</th><th>Latency</th><th>Notes</th></tr>
+  <tr><td><code>GET /shops?search=</code></td><td class="ok">200</td><td>~475ms</td><td>Only <code>search=</code>; <code>query=</code>/<code>domain=</code> → 422</td></tr>
+  <tr><td><code>GET /shops/{id}</code></td><td class="ok">200</td><td>~375ms</td><td>Full scalar record</td></tr>
+  <tr><td><code>GET /shops/{id}/products</code></td><td class="ok">200</td><td>~375ms</td><td>Default 9/page</td></tr>
+  <tr><td><code>GET /shops/{id}/traffic</code></td><td class="ok">200</td><td>~320ms</td><td>90-day window</td></tr>
+  <tr><td><code>GET /shops/{id}/similar</code></td><td class="ok">200</td><td>—</td><td><code>limit</code> only (B-08), odd envelope (B-12)</td></tr>
+  <tr><td><code>GET /shops/{id}/linked-pages</code></td><td class="warn">200*</td><td>~530ms</td><td>Breakdown truncated 34/49 (B-04)</td></tr>
+  <tr><td><code>GET /shops/{id}/ads</code></td><td class="bad">503</td><td>~310ms</td><td>Legacy shop (B-01)</td></tr>
+  <tr><td><code>GET /shops/{id}/analytics</code></td><td class="bad">503</td><td>~310ms</td><td>Legacy shop (B-03)</td></tr>
+  <tr><td><code>GET /brands?search=</code></td><td class="ok">200</td><td>~370ms</td><td></td></tr>
+  <tr><td><code>GET /brands/{id}</code></td><td class="ok">200</td><td>—</td><td>Has <code>active_ads</code>, <code>primary_domains</code></td></tr>
+  <tr><td><code>GET /explore</code></td><td class="warn">200*</td><td>0.5–1.3s</td><td>Per-brand cap 50 (B-02); status enum broken (B-06)</td></tr>
+  <tr><td><code>GET /ads/{id}</code></td><td class="ok">200</td><td>~380ms</td><td></td></tr>
+  <tr><td><code>GET /ads/latest</code></td><td class="bad">500</td><td>~220ms</td><td>B-05</td></tr>
+  <tr><td><code>GET /niches</code></td><td class="ok">200</td><td>~330ms</td><td></td></tr>
+  <tr><td><code>GET /boards</code></td><td class="ok">200</td><td>~790ms</td><td></td></tr>
+  <tr><td>25+ guessed routes</td><td class="bad">405</td><td>—</td><td>Should be 404 (B-09)</td></tr>
+</table>
+
+<h3 style="margin-top:20px">Resilia reachability math</h3>
+<table>
+  <tr><th>Method</th><th>Ads reachable</th><th>% of 8,413</th></tr>
+  <tr><td><code>/shops/1263/ads</code></td><td>0 (503)</td><td class="bad">0%</td></tr>
+  <tr><td><code>/explore?brand_id=1878084</code> (main Resilia page)</td><td>50</td><td class="bad">0.6%</td></tr>
+  <tr><td><code>/explore?brand_id=1263</code> (shop id passed by mistake; returns an unrelated brand)</td><td>476</td><td class="bad">n/a: silent ID collision</td></tr>
+  <tr><td><code>/explore?query=resilia.shop&amp;ads_per_brand_limit=50</code></td><td>1,977 (100 pages)</td><td class="warn">23.5%</td></tr>
+  <tr><td>Loop <code>brand_id</code> over all 34 linked brands × 50</td><td>≤ ~1,200</td><td class="bad">≤ 14%</td></tr>
+</table>
+<p class="sub">Note: <code>brand_id=1263</code> returned 476 ads from <b>True Protein</b> (trueprotein.com.au), the brand whose id is 1263. None of them are Resilia. Shop IDs and brand IDs share the same number space with no namespace check, so it's easy to query the wrong thing without any error.</p>
+
+<!-- ============ ROADMAP ============ -->
+<h2 id="roadmap">6. Fix roadmap (priority order)</h2>
+<table>
+  <tr><th>#</th><th>Issue</th><th>Priority</th><th>Est. effort</th><th>Unblocks</th></tr>
+  <tr><td>1</td><td>B-01 + B-03: publish legacy shops / serve legacy fallback</td><td><span class="pill p0">P0</span></td><td>M–L</td><td>Shop ads + analytics for the largest shops</td></tr>
+  <tr><td>2</td><td>B-02: remove per-brand cap when <code>brand_id</code> is set; true <code>meta.total</code></td><td><span class="pill p0">P0</span></td><td>S</td><td>Full brand inventory pulls</td></tr>
+  <tr><td>3</td><td>B-11: add <code>shop_id</code>, <code>landing_domain</code>, <code>country</code>, <code>sort</code> to /explore</td><td><span class="pill p1">P1</span></td><td>M</td><td>Parity with dashboard filters</td></tr>
+  <tr><td>4</td><td>B-04: full linked_brand_breakdown</td><td><span class="pill p1">P1</span></td><td>XS</td><td>Correct brand rosters</td></tr>
+  <tr><td>5</td><td>B-05: /ads/latest 500</td><td><span class="pill p1">P1</span></td><td>XS</td><td>—</td></tr>
+  <tr><td>6</td><td>B-06: status=inactive</td><td><span class="pill p1">P1</span></td><td>S</td><td>Historical / dead-ad research</td></tr>
+  <tr><td>7</td><td>B-07: growth % single source + as_of</td><td><span class="pill p1">P1</span></td><td>S</td><td>UI↔API trust</td></tr>
+  <tr><td>8</td><td>B-08: standardize pagination</td><td><span class="pill p2">P2</span></td><td>S</td><td>—</td></tr>
+  <tr><td>9</td><td>B-09 / B-10: correct 404s + ID validation</td><td><span class="pill p2">P2</span></td><td>XS</td><td>—</td></tr>
+  <tr><td>10</td><td>B-12: /brands/{id}/ads, mojibake, envelope, social_handles</td><td><span class="pill p3">P3</span></td><td>S</td><td>—</td></tr>
+</table>
+
+<!-- ============ ACCEPTANCE ============ -->
+<h2 id="acceptance">7. Acceptance tests (we'll re-run these after fixes)</h2>
+<pre>A1  GET /shops/1263/ads?per_page=50                 → 200, meta.total ≈ 8,413
+A2  GET /shops/1263/analytics                       → 200, time series ends at ≈ 8,413
+A3  GET /explore?brand_id=1878084&amp;per_page=50       → meta.total ≈ 2,810 (== /brands/1878084.active_ads ± partnership ads)
+A4  GET /shops/1263/linked-pages                    → len(linked_brand_breakdown) == linked_brand_count == 49
+A5  GET /ads/latest                                 → 200 or 404 (never 500)
+A6  GET /explore?status=inactive&amp;per_page=1        → meta.total &gt; 0  (or 422 listing valid values)
+A7  GET /shops/1263 active_ads_growth_pct           == value on Shop page card
+A8  GET /shops/1263/similar?per_page=5              → 200
+A9  GET /this-route-does-not-exist                  → 404
+A10 GET /explore?brand_id=999999999                 → 422 / 404
+A11 GET /shops/1263 tagline                         → contains "Resilia®" (no "Â")</pre>
+<p class="sub">Once A1–A4 pass, rerun against glovbeauty.com (773) and kilgourmd.com (5878) to confirm the cutover works across shops.</p>
+
+<div class="foot">Generated by Hermes · Source data captured live from app.gethookd.ai/api/v1 on 2026-09-25 · Questions → Alex</div>
+</div>
+</body>
+</html>
