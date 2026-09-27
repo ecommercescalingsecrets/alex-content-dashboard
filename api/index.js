@@ -486,6 +486,24 @@ async function scheduleChecker() {
 
         const batch = itemsToPost.slice(0, 1);
 
+        // HARD 2H SPACING (Alex, Aug 2 2026 locked rule): never post a main-feed
+        // tweet within 2h of any other main-feed tweet. Slot-fire writes postedAt
+        // back to the dashboard, so this sees Hermes posts too. Added Sep 27 2026
+        // after finding off-grid Railway fires at 06:06/06:30 ET right after the
+        // 06:00 slot post.
+        const TWO_H = 2 * 60 * 60 * 1000;
+        const isMainTw = (it) => (it.postTarget || 'twitter') === 'twitter' &&
+            !HERMES_NON_MAIN.has((it.category || '').toLowerCase()) &&
+            !GHOST_FLEET_CATEGORIES.has((it.category || '').toLowerCase());
+        if (batch.length && isMainTw(batch[0])) {
+            const recentMain = allContent.find(it => it.id !== batch[0].id && it.postedAt && isMainTw(it) &&
+                (now - new Date(it.postedAt)) >= 0 && (now - new Date(it.postedAt)) < TWO_H);
+            if (recentMain) {
+                console.log(`⏳ 2h spacing: ${recentMain.id} posted ${Math.round((now - new Date(recentMain.postedAt))/60000)}min ago — holding ${batch[0].id}.`);
+                return;
+            }
+        }
+
         // Process one post per cycle
         for (const item of batch) {
             // PRE-POST MEDIA CHECK: skip posts with broken/missing media
