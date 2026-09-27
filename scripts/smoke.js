@@ -39,18 +39,22 @@ function assert(name, cond, detail) {
     assert('GET /api/content', list.status === 200 && Array.isArray(list.json));
 
     // 3. Create → PUT → verify metadata whitelist → cleanup
-    const testId = 'smoke-' + Date.now();
+    let testId = 'smoke-' + Date.now();
     const created = await req('POST', '/api/content', {
         id: testId,
         title: 'smoke test — safe to delete',
         content: 'ignore me',
-        category: 'reply',
+        // was 'reply' — reply-pairing guard (0f4a750, Aug 9) rejects bodies without REPLY TO url.
+        // draft + unscheduled + non-main category = never fires.
+        category: 'smoke-test',
         status: 'draft',
         scheduledStatus: 'unscheduled',
         postTarget: 'twitter',
     });
     assert('POST /api/content', created.status === 200 || created.status === 201,
            `got ${created.status}: ${created.text.slice(0, 200)}`);
+    // Server assigns its own id (post-<ts>) and ignores body.id — use the returned one.
+    if (created.json && created.json.id) testId = created.json.id;
 
     // Full metadata whitelist smoke — all fields that MUST round-trip
     const fields = {
