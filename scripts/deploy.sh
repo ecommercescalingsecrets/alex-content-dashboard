@@ -39,6 +39,7 @@ echo ""
 echo "=== Deploying $SHA ==="
 
 # Dedup guard: skip trigger if this SHA is already queued/building/deploying
+export SHA RAILWAY_SERVICE_ID RAILWAY_ENV_ID
 EXISTING=$(python3 - <<PY
 import os, requests, json
 h = {'Authorization': f'Bearer {os.environ["RAILWAY_TOKEN"]}', 'Content-Type': 'application/json'}
