@@ -803,7 +803,12 @@
             } else if (currentFilter === 'replies') {
                 filtered = allPosts.filter(post => post.category === 'reply' && post.status !== 'posted');
             } else if (['zednilm1','henrycrochemore','edwardiavinel','tobiaraviglie','jackolivieri','marksaint','steveadsguy','matthewsilver','wapilaura','raffaellothe2nd','tommyguera','enexoo','emyinflorence','nicoleads1','perrycreatives','timsayer','krydecom','jesselancaster'].includes(currentFilter)) {
-                filtered = allPosts.filter(post => post.category === currentFilter && post.status !== 'posted');
+                // 2026-10-02: ghost tabs show TODAY ONLY (ET). Mitch was pulling future slots and
+                // 5-6 day old proof posts from here, which broke the run-sheet. Past days roll forward nightly.
+                const _today = etDateKey(new Date());
+                filtered = allPosts.filter(post => post.category === currentFilter && post.status === 'approved' && !post.postedAt
+                    && post.scheduledAt && etDateKey(post.scheduledAt) === _today)
+                    .sort((a,b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
             } else {
                 filtered = allPosts.filter(post => post.status === currentFilter && post.category !== 'reply');
             }
