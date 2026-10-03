@@ -803,12 +803,10 @@
             } else if (currentFilter === 'replies') {
                 filtered = allPosts.filter(post => post.category === 'reply' && post.status !== 'posted');
             } else if (['zednilm1','henrycrochemore','edwardiavinel','tobiaraviglie','jackolivieri','marksaint','steveadsguy','matthewsilver','wapilaura','raffaellothe2nd','tommyguera','enexoo','emyinflorence','nicoleads1','perrycreatives','timsayer','krydecom','jesselancaster'].includes(currentFilter)) {
-                // 2026-10-02: ghost tabs show TODAY ONLY (ET). Mitch was pulling future slots and
-                // 5-6 day old proof posts from here, which broke the run-sheet. Past days roll forward nightly.
-                const _today = etDateKey(new Date());
-                filtered = allPosts.filter(post => post.category === currentFilter && post.status === 'approved' && !post.postedAt
-                    && post.scheduledAt && etDateKey(post.scheduledAt) === _today)
-                    .sort((a,b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+                // 2026-10-02 v2: ghost tabs show the FULL unposted queue (approved + review), sorted by slot.
+                // Future-day cards get a red "NOT TODAY" banner (renderContent below) so Mitch doesn't pull early.
+                filtered = allPosts.filter(post => post.category === currentFilter && !post.postedAt
+                    && (post.status === 'approved' || post.status === 'review'));
             } else {
                 filtered = allPosts.filter(post => post.status === currentFilter && post.category !== 'reply');
             }
@@ -842,6 +840,9 @@
                             <span class="badge ${post.status}">${post.status}</span>
                         </div>
 
+                        ${post.scheduledAt && GHOST_HANDLES[(post.category||'').toLowerCase()] && !post.postedAt && etDateKey(post.scheduledAt) > etDateKey(new Date()) ? `
+                            <div style="background:#450a0a;border:1px solid #ef4444;color:#fca5a5;border-radius:6px;padding:.35rem .6rem;margin:.4rem 0;font-weight:700;font-size:.8rem;">⛔ NOT TODAY: queued for ${etDateKey(post.scheduledAt)}. Mitch: only post from 📋 POST TODAY.</div>
+                        ` : ''}
                         ${post.scheduledAt && post.category !== 'reply' ? `
                             <div class="scheduled-info">
                                 <div><strong>📅 Scheduled for:</strong></div>
