@@ -419,17 +419,17 @@ async function scheduleChecker() {
         // xurl with link-in-first-reply. This checker was racing it and firing
         // the SAME post 2-40s apart (14 duplicate tweets Aug 30 → Sep 26,
         // violating the 2h spacing rule). Skip anything slot-fire owns.
-        const HERMES_GRID_MIN = [360, 510, 660, 810, 1110];
+        // Oct 4 2026 (Alex, 90d audit fix #1): off-grid main-feed posts fired by
+        // THIS checker (16:00 / 21:00 / 08:00 / 10:30 ...) averaged ~140 imp and
+        // crowded the real slots. Hermes slot-fire now owns EVERY @gethookdai
+        // main-feed post, on-grid or not. This checker only handles non-main
+        // targets (linkedin, qt, etc). Grid: 06:00/08:30/11:00/12:00/13:30 ET.
+        const HERMES_GRID_MIN = [360, 510, 660, 720, 810];
         const HERMES_NON_MAIN = new Set(['reply','qt','quote-tweet','ghost','ghost-fleet','zednilm1','henrycrochemore','linkedin']);
         const ownedByHermesSlotFire = (item) => {
             if ((item.postTarget || 'twitter') !== 'twitter') return false;
             if (HERMES_NON_MAIN.has((item.category || '').toLowerCase())) return false;
-            const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' })
-                .formatToParts(new Date(item.scheduledAt));
-            const hh = parseInt(parts.find(p => p.type === 'hour').value, 10) % 24;
-            const mm = parseInt(parts.find(p => p.type === 'minute').value, 10);
-            const mins = hh * 60 + mm;
-            return HERMES_GRID_MIN.some(g => Math.abs(mins - g) <= 20);
+            return true;
         };
 
         const candidates = allContent.filter(item =>
