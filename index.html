@@ -818,7 +818,7 @@
             }
             
             // Batches pinned on ghost page tabs, newest first. Add new batch tags at the FRONT of this list.
-            const _BATCHES = [{tag: 'xtra20', label: 'NEW 20', color: '#16a34a'}, {tag: 'bestfmt30', label: 'BATCH 30', color: '#0891b2'}];
+            const _BATCHES = [{tag: 'intelprompt', label: 'PROMPT POST', color: '#9333ea'}, {tag: 'xtra20', label: 'NEW 20', color: '#16a34a'}, {tag: 'bestfmt30', label: 'BATCH 30', color: '#0891b2'}];
             const _batchRank = p => { const i = _BATCHES.findIndex(b => (p.title || '').includes(b.tag)); return i < 0 ? 99 : i; };
             const _isBatch = p => _batchRank(p) < 99;
             // Sort: on ghost page tabs newest batch first, then older batch, then chronologically by scheduledAt ASC, unscheduled at bottom
