@@ -194,7 +194,7 @@ function install(app) {
     });
 
     app.get('/api/whoami', (req, res) => {
-        res.json({ user: req.dashboardUser || null, ip: clientIp(req) });
+        res.json({ user: req.dashboardUser || null, ip: clientIp(req), xff: req.headers['x-forwarded-for'] || null, realIp: req.headers['x-real-ip'] || null, envoy: req.headers['x-envoy-external-address'] || null });
     });
 }
 
