@@ -75,6 +75,8 @@ function readSession(req) {
 }
 
 function clientIp(req) {
+    // Railway's edge sets X-Real-IP to the true client IP (overwrites any client-sent value).
+    if (req.headers['x-real-ip']) return String(req.headers['x-real-ip']).trim();
     const xff = String(req.headers['x-forwarded-for'] || '').split(',').map(s => s.trim()).filter(Boolean);
     return xff.length ? xff[xff.length - 1] : (req.socket.remoteAddress || '');
 }
