@@ -20,6 +20,8 @@ const app = express();
 const port = process.env.PORT || 3333;
 
 app.use(express.json());
+// Team login gate. Must run before static + API routes. See api/auth.js.
+require('./auth').install(app);
 app.use(express.static(path.join(__dirname, '..')));
 
 // Media directory: use Railway volume if available, fallback to local

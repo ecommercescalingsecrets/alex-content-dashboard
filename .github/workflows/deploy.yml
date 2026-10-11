@@ -81,4 +81,5 @@ jobs:
       - name: Smoke test
         env:
           BASE_URL: https://web-production-c72a.up.railway.app
+          DASHBOARD_API_KEY: ${{ secrets.DASHBOARD_API_KEY }}
         run: node scripts/smoke.js

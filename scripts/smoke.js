@@ -9,7 +9,9 @@ const BASE = process.env.BASE_URL || 'https://web-production-c72a.up.railway.app
 const failures = [];
 
 async function req(method, path, body) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    const headers = { 'Content-Type': 'application/json' };
+    if (process.env.DASHBOARD_API_KEY) headers['x-api-key'] = process.env.DASHBOARD_API_KEY;
+    const opts = { method, headers };
     if (body) opts.body = JSON.stringify(body);
     const r = await fetch(BASE + path, opts);
     const text = await r.text();
