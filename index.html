@@ -819,7 +819,7 @@
             }
             
             // Batches pinned on ghost page tabs, newest first. Add new batch tags at the FRONT of this list.
-            const _BATCHES = [{tag: 't1keep', label: 'NO-LINK TAKE · ATTACH AD IMAGE', color: '#f59e0b'}, {tag: 'affkit7', label: 'AFFILIATE 7D', color: '#dc2626'}, {tag: 'intelprompt', label: 'PROMPT POST', color: '#9333ea'}, {tag: 'xtra20', label: 'OLDER 20', color: '#16a34a'}, {tag: 'bestfmt30', label: 'BATCH 30', color: '#0891b2'}];
+            const _BATCHES = [{tag: 't1keep', label: 'NO-LINK TAKE', color: '#f59e0b'}, {tag: 'affkit7', label: 'AFFILIATE 7D', color: '#dc2626'}, {tag: 'intelprompt', label: 'PROMPT POST', color: '#9333ea'}, {tag: 'xtra20', label: 'OLDER 20', color: '#16a34a'}, {tag: 'bestfmt30', label: 'BATCH 30', color: '#0891b2'}];
             const _batchRank = p => { const i = _BATCHES.findIndex(b => (p.title || '').includes(b.tag)); return i < 0 ? 99 : i; };
             const _isBatch = p => _batchRank(p) < 99;
             // Sort: on ghost page tabs newest batch first, then older batch, then chronologically by scheduledAt ASC, unscheduled at bottom
@@ -872,7 +872,14 @@
                         <div class="content-container" ${post.category === 'reply' ? 'style="display:none"' : ''}>
                             <div class="media-section">${!post.mediaUrl ? '' : renderMediaFiles(post)}</div>
                             <div class="post-content">${escapeHtml(post.content)}</div>
-                            ${post.adLink ? `
+                            ${post.adLink && (post.title||'').includes('t1keep') ? `
+                            <div style="margin-top:1rem;padding:0.85rem;background:#451a03;border:2px solid #f59e0b;border-radius:6px;">
+                                <div style="font-size:0.8rem;color:#fcd34d;font-weight:700;margin-bottom:0.5rem;">⚠️ NO-LINK POST: open the ad, download the image, attach it to the tweet. DO NOT paste this link anywhere.</div>
+                                <a href="${post.adLink}" target="_blank" style="color:#fbbf24;font-size:0.85rem;font-weight:600;">Open ad to download image ↗</a>
+                            </div>
+                            ` : (post.title||'').includes('t1keep') ? `
+                            <div style="margin-top:1rem;padding:0.6rem;background:#1c1917;border:1px solid #78716c;border-radius:6px;font-size:0.8rem;color:#d6d3d1;">✍️ Text-only post. No image, no link. Copy and post as is.</div>
+                            ` : post.adLink ? `
                             <div class="ad-link-block" style="margin-top:1rem;padding:0.85rem;background:#0f172a;border:1px solid #1e40af;border-radius:6px;">
                                 <div style="font-size:0.75rem;color:#93c5fd;font-weight:600;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">🔗 Ad Link (source ad; link is already inside the post text for ghost accounts)</div>
                                 <a href="${post.adLink}" target="_blank" style="color:#60a5fa;font-size:0.8rem;word-break:break-all;text-decoration:none;display:block;margin-bottom:0.5rem;">${post.adLink}</a>
