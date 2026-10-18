@@ -2,6 +2,12 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
+// Disk guard MUST run before ./db is required: a full volume crashes the SQLite pragma on boot.
+const diskGuard = require('./disk-guard');
+// An async route throwing (e.g. SQLITE_FULL) must not kill the whole dashboard.
+process.on('unhandledRejection', (e) => { console.error('[unhandledRejection]', (e && e.code) || '', (e && e.message) || e); if (e && e.code === 'SQLITE_FULL') { try { diskGuard.reclaimIfLow('sqlite-full'); } catch {} } });
+try { diskGuard.reclaimIfLow('boot'); } catch (e) { console.error('[disk-guard] boot reclaim failed:', e.message); }
+setInterval(() => { try { diskGuard.reclaimIfLow('interval'); } catch (e) { console.error('[disk-guard]', e.message); } }, 10 * 60 * 1000);
 const { TwitterApi } = require('twitter-api-v2');
 const { getAllContent, getContent, upsertContent, deleteContent, getCount, getSetting, setSetting, listPendingFollowTargets, markFollowTargetFollowed, bulkInsertFollowTargets, listReplyPlanter, insertReplyPlanter, updateReplyPlanter, countGhostRepliesToday } = require('./db');
 const SwipeFileBuilder = require('../swipe-file-builder');
@@ -998,6 +1004,14 @@ async function resolveGethookdMedia(content, existingMediaUrl, existingMediaType
         if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
             return { mediaUrl: '/media/' + filename, mediaType: isVideo ? 'video' : 'image', resolved: true, source: 'cache' };
         }
+        // Disk guard: never download when the volume is nearly full (filled it on 2026-10-18 -> crash loop).
+        if (diskGuard.freeBytes() < diskGuard.MIN_FOR_DOWNLOADS) {
+            diskGuard.reclaimIfLow('resolver');
+            if (diskGuard.freeBytes() < diskGuard.MIN_FOR_DOWNLOADS) {
+                console.warn(`[media-resolver] ad ${adId}: skipped download, disk low`);
+                return null;
+            }
+        }
 
         const mediaResp = await fetch(sourceUrl);
         if (!mediaResp.ok) {
@@ -1104,7 +1118,13 @@ app.post('/api/content', async (req, res) => {
     if (item.scheduledAt && item.scheduledStatus === 'scheduled' && item.status === 'scheduled') {
         item.status = 'approved';
     }
-    upsertContent(item);
+    try {
+        upsertContent(item);
+    } catch (e) {
+        console.error('[POST /api/content] upsert failed:', e.code || '', e.message);
+        if (e.code === 'SQLITE_FULL') diskGuard.reclaimIfLow('sqlite-full');
+        return res.status(507).json({ error: 'storage', code: e.code || null, message: e.message });
+    }
     res.json(item);
 });
 
