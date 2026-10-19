@@ -1628,6 +1628,46 @@ app.post('/api/media/download', async (req, res) => {
     }
 });
 
+// Prune media of posts that are already live on X (approved by Alex 2026-10-18, option 2).
+// Keeps any file referenced by a non-posted row OR by a post published < days ago.
+// POST /api/admin/prune-posted-media  {"days":7,"confirm":"DELETE-POSTED-MEDIA"}  (omit confirm = dry run)
+function prunePostedMedia(days = 7, apply = false) {
+    const re = /\/media\/([A-Za-z0-9_.\-]+\.(?:mp4|mov|webm|m4v|jpg|jpeg|png|gif|webp))/gi;
+    const cutoff = Date.now() - days * 86400000;
+    const keep = new Set(), old = new Set();
+    for (const r of getAllContent()) {
+        const s = JSON.stringify(r);
+        const names = [...s.matchAll(re)].map(m => m[1].toLowerCase());
+        let isOld = false;
+        if (r.status === 'posted') {
+            const t = Date.parse(r.postedAt || r.scheduledAt || r.createdAt || '');
+            isOld = !isNaN(t) && t < cutoff;
+        }
+        for (const n of names) (isOld ? old : keep).add(n);
+    }
+    let files = 0, bytes = 0, deleted = 0;
+    for (const f of fs.readdirSync(MEDIA_DIR)) {
+        const k = f.toLowerCase();
+        if (!old.has(k) || keep.has(k)) continue;
+        const p = path.join(MEDIA_DIR, f);
+        let size = 0; try { size = fs.statSync(p).size; } catch { continue; }
+        files++; bytes += size;
+        if (apply) { try { fs.unlinkSync(p); deleted++; } catch {} }
+    }
+    const out = { days, apply, candidates: files, candidateGB: +(bytes / diskGuard.GB).toFixed(2), deleted, freeGB: +(diskGuard.freeBytes() / diskGuard.GB).toFixed(2) };
+    console.log('[prune-posted-media]', JSON.stringify(out));
+    return out;
+}
+app.post('/api/admin/prune-posted-media', (req, res) => {
+    try {
+        const days = Math.max(1, parseInt((req.body && req.body.days) || 7, 10));
+        const apply = req.body && req.body.confirm === 'DELETE-POSTED-MEDIA';
+        res.json(prunePostedMedia(days, apply));
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+// Fallback for the disk guard: if orphan reclaim isn't enough, prune posted media older than 7 days.
+setInterval(() => { try { if (diskGuard.freeBytes() < 3 * diskGuard.GB) prunePostedMedia(7, true); } catch (e) { console.error('[prune-posted-media]', e.message); } }, 10 * 60 * 1000);
+
 app.get('/api/media/list', (req, res) => {
     const files = fs.existsSync(MEDIA_DIR) ? fs.readdirSync(MEDIA_DIR).map(f => ({
         name: f, size: fs.statSync(path.join(MEDIA_DIR, f)).size
